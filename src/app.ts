@@ -1,8 +1,8 @@
-import fastify, { FastifyInstance } from 'fastify';
-import authPlugin from './plugins/auth';
+import Fastify, { type FastifyInstance } from 'fastify';
+import authPlugin from './plugins/auth.js';
 
 export function buildApp(): FastifyInstance {
-  const app = fastify();
+  const app = Fastify();
 
   app.register(authPlugin);
 

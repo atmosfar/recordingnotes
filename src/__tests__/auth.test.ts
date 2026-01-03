@@ -1,5 +1,5 @@
-import { buildApp } from '../app';
-import { FastifyInstance } from 'fastify';
+import { buildApp } from '../app.js';
+import type { FastifyInstance } from 'fastify';
 
 describe('Auth', () => {
   let app: FastifyInstance;
