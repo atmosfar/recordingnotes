@@ -1,7 +1,7 @@
 # Plan: MVP: Manual Recording Sessions
 
 ## Phase 1: Foundation & Project Setup
-- [ ] Task: Initialize Fastify server with TypeScript and Prisma/SQLite.
+- [~] Task: Initialize Fastify server with TypeScript and Prisma/SQLite.
 - [ ] Task: Set up basic React dashboard with Tailwind CSS.
 - [ ] Task: Implement basic Google OAuth and Local Auth boilerplate.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Project Setup' (Protocol in workflow.md)
