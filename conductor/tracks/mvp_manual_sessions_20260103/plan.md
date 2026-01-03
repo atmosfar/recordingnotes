@@ -3,7 +3,7 @@
 ## Phase 1: Foundation & Project Setup
 - [x] Task: Initialize Fastify server with TypeScript and Prisma/SQLite. [6319357]
 - [x] Task: Set up basic React dashboard with Tailwind CSS. [9fc5398]
-- [ ] Task: Implement basic Google OAuth and Local Auth boilerplate.
+- [x] Task: Implement basic Google OAuth and Local Auth boilerplate. [aabd0fb]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Project Setup' (Protocol in workflow.md)
 
 ## Phase 2: Session & Note Management
