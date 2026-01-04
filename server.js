@@ -82,6 +82,29 @@ app.get('/api/sessions/:id/notes', (req, res) => {
   }
 });
 
+app.get('/api/sessions/:id/export', (req, res) => {
+  try {
+    const session = sessions.getSession(db, req.params.id);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    const list = notes.listNotesBySession(db, req.params.id);
+    
+    let csv = 'Timestamp,Content,Color\n';
+    list.forEach(note => {
+      const content = `"${note.content.replace(/"/g, '""')}"`;
+      csv += `${note.timestamp},${content},${note.color || ''}\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="session-${req.params.id}.csv"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('GET /api/sessions/:id/export error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check or API status
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', database: dbPath });
