@@ -11,8 +11,8 @@
 - [x] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md) [87b70ab]
 
 ## Phase 3: Minimal Web Server
-- [~] Task: Implement basic HTTP/Express server with routing
-- [ ] Task: Create API endpoints for Session management
+- [x] Task: Implement basic HTTP/Express server with routing [a213dcf]
+- [~] Task: Create API endpoints for Session management
 - [ ] Task: Create API endpoints for Note management
 - [ ] Task: Implement CSV export endpoint
 - [ ] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md)
