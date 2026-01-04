@@ -12,8 +12,8 @@
 
 ## Phase 3: Minimal Web Server
 - [x] Task: Implement basic HTTP/Express server with routing [a213dcf]
-- [~] Task: Create API endpoints for Session management
-- [ ] Task: Create API endpoints for Note management
+- [x] Task: Create API endpoints for Session management [f04909a]
+- [~] Task: Create API endpoints for Note management
 - [ ] Task: Implement CSV export endpoint
 - [ ] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md)
 
