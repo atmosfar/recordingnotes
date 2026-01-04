@@ -5,13 +5,13 @@
 - [x] Task: Set up `node:sqlite` database initialization script [18cad80]
 - [x] Task: Conductor - User Manual Verification 'Environment & Project Scaffolding' (Protocol in workflow.md) [eb57c3b]
 
-## Phase 2: Core Backend Logic (Data Layer)
+## Phase 2: Core Backend Logic (Data Layer) [checkpoint: 87b70ab]
 - [x] Task: Create database wrapper for Sessions (CRUD) [7481ccc]
 - [x] Task: Create database wrapper for Notes (Create, List) [b949e95]
-- [~] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md) [87b70ab]
 
 ## Phase 3: Minimal Web Server
-- [ ] Task: Implement basic HTTP/Express server with routing
+- [~] Task: Implement basic HTTP/Express server with routing
 - [ ] Task: Create API endpoints for Session management
 - [ ] Task: Create API endpoints for Note management
 - [ ] Task: Implement CSV export endpoint
