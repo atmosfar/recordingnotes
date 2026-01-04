@@ -91,8 +91,9 @@ app.get('/api/sessions/:id/export', (req, res) => {
     list.forEach((note, index) => {
       const name = `"${note.content.replace(/"/g, '""')}"`;
       const marker = `M${index + 1}`;
+      const color = note.color ? note.color.replace('#', '').toUpperCase() : '';
       // Format: #,Name,Start,End,Length,Color
-      csv += `${marker},${name},${note.timestamp},,,${note.color || ''}\n`;
+      csv += `${marker},${name},${note.timestamp},,,${color}\n`;
     });
 
     const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
