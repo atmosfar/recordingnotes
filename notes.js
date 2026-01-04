@@ -1,4 +1,4 @@
-export function createNote(db, { content, user_id, session_id, timestamp, color = null }) {
+export function createNote(db, { content, user_id = null, session_id, timestamp, color = null }) {
   const stmt = db.prepare(`
     INSERT INTO notes (content, user_id, session_id, timestamp, color)
     VALUES (?, ?, ?, ?, ?)

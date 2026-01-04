@@ -2,6 +2,7 @@ import express from 'express';
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import * as sessions from './sessions.js';
+import * as notes from './notes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -45,6 +46,38 @@ app.get('/api/sessions/:id', (req, res) => {
     }
     res.json(session);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Notes API
+app.post('/api/sessions/:id/notes', (req, res) => {
+  try {
+    const { content, timestamp, color, user_id } = req.body;
+    const session_id = req.params.id;
+    if (!content || !timestamp) {
+      return res.status(400).json({ error: 'Content and timestamp are required' });
+    }
+    const id = notes.createNote(db, { 
+      content, 
+      timestamp, 
+      color, 
+      user_id, 
+      session_id 
+    });
+    res.status(201).json({ id });
+  } catch (error) {
+    console.error('POST /api/sessions/:id/notes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/sessions/:id/notes', (req, res) => {
+  try {
+    const list = notes.listNotesBySession(db, req.params.id);
+    res.json(list);
+  } catch (error) {
+    console.error('GET /api/sessions/:id/notes error:', error);
     res.status(500).json({ error: error.message });
   }
 });
