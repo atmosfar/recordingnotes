@@ -18,8 +18,8 @@
 - [x] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md) [4e67cc3]
 
 ## Phase 4: Vanilla Frontend
-- [~] Task: Create static HTML/CSS layout for the dashboard
-- [ ] Task: Implement Vanilla JS for Session listing and creation
+- [x] Task: Create static HTML/CSS layout for the dashboard [3a2d14d]
+- [~] Task: Implement Vanilla JS for Session listing and creation
 - [ ] Task: Implement Vanilla JS for live Note logging and stream updates
 - [ ] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md)
 
