@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String?  // Nullable for Google auth
+  provider  String   // "google" or "local"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notes     Note[]
+}
+
+model Session {
+  id            Int      @id @default(autoincrement())
+  name          String
+  timestampMode String   // "clock" or "timer"
+  status        String   @default("active") // "active", "completed"
+  startedAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  notes         Note[]
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  content   String
+  authorId  Int?
+  author    User?    @relation(fields: [authorId], references: [id])
+  sessionId Int
+  session   Session  @relation(fields: [sessionId], references: [id])
+  timestamp String   // The formatted timestamp at the moment of creation
+  color     String?  // The selected color from the palette
+  createdAt DateTime @default(now())
+}
