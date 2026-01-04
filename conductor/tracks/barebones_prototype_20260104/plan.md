@@ -10,15 +10,15 @@
 - [x] Task: Create database wrapper for Notes (Create, List) [b949e95]
 - [x] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md) [87b70ab]
 
-## Phase 3: Minimal Web Server
+## Phase 3: Minimal Web Server [checkpoint: 4e67cc3]
 - [x] Task: Implement basic HTTP/Express server with routing [a213dcf]
 - [x] Task: Create API endpoints for Session management [f04909a]
 - [x] Task: Create API endpoints for Note management [3f84d1e]
 - [x] Task: Implement CSV export endpoint [a89e049]
-- [~] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md) [4e67cc3]
 
 ## Phase 4: Vanilla Frontend
-- [ ] Task: Create static HTML/CSS layout for the dashboard
+- [~] Task: Create static HTML/CSS layout for the dashboard
 - [ ] Task: Implement Vanilla JS for Session listing and creation
 - [ ] Task: Implement Vanilla JS for live Note logging and stream updates
 - [ ] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md)
