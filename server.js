@@ -87,14 +87,17 @@ app.get('/api/sessions/:id/export', (req, res) => {
     }
     const list = notes.listNotesBySession(db, req.params.id);
     
-    let csv = 'Timestamp,Content,Color\n';
-    list.forEach(note => {
-      const content = `"${note.content.replace(/"/g, '""')}"`;
-      csv += `${note.timestamp},${content},${note.color || ''}\n`;
+    let csv = '#,Name,Start,End,Length,Color\n';
+    list.forEach((note, index) => {
+      const name = `"${note.content.replace(/"/g, '""')}"`;
+      const marker = `M${index + 1}`;
+      // Format: #,Name,Start,End,Length,Color
+      csv += `${marker},${name},${note.timestamp},,,${note.color || ''}\n`;
     });
 
+    const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="session-${req.params.id}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedName}.csv"`);
     res.send(csv);
   } catch (error) {
     console.error('GET /api/sessions/:id/export error:', error);

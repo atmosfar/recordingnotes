@@ -40,13 +40,14 @@ describe('CSV Export Endpoint', () => {
     });
   });
 
-  test('GET /api/sessions/:id/export should return CSV', async () => {
+  test('GET /api/sessions/:id/export should return REAPER compatible CSV', async () => {
     const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export`);
     const body = await response.text();
     
     assert.strictEqual(response.status, 200);
     assert.ok(response.headers.get('content-type').includes('text/csv'));
-    assert.ok(body.includes('Timestamp,Content,Color'));
-    assert.ok(body.includes('00:01:00,"Test Note",'));
+    assert.ok(response.headers.get('content-disposition').includes('filename="Export_Test.csv"'));
+    assert.ok(body.includes('#,Name,Start,End,Length,Color'));
+    assert.ok(body.includes('M1,"Test Note",00:01:00,,,'));
   });
 });
