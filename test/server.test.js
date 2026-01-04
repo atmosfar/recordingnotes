@@ -29,4 +29,13 @@ describe('Server Basic Functionality', () => {
     assert.strictEqual(response.status, 200);
     assert.strictEqual(body, 'Recording Notes API - Barebones Prototype');
   });
+
+  test('should respond to GET /api/status', async () => {
+    const response = await fetch(`${baseUrl}/api/status`);
+    const data = await response.json();
+    
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(data.status, 'ok');
+    assert.ok(data.database.includes('dev.db'));
+  });
 });
