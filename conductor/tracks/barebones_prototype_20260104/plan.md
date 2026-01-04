@@ -20,8 +20,8 @@
 ## Phase 4: Vanilla Frontend
 - [x] Task: Create static HTML/CSS layout for the dashboard [3a2d14d]
 - [x] Task: Implement Vanilla JS for Session listing and creation [b3063d9]
-- [~] Task: Implement Vanilla JS for live Note logging and stream updates
-- [ ] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md)
+- [x] Task: Implement Vanilla JS for live Note logging and stream updates [e9ba9c9]
+- [~] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md)
 
 ## Phase 5: Final Integration & Cleanup
 - [ ] Task: Final end-to-end testing and styling polish
