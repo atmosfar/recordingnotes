@@ -17,12 +17,12 @@
 - [x] Task: Implement CSV export endpoint [a89e049]
 - [x] Task: Conductor - User Manual Verification 'Minimal Web Server' (Protocol in workflow.md) [4e67cc3]
 
-## Phase 4: Vanilla Frontend
+## Phase 4: Vanilla Frontend [checkpoint: 196300c]
 - [x] Task: Create static HTML/CSS layout for the dashboard [3a2d14d]
 - [x] Task: Implement Vanilla JS for Session listing and creation [b3063d9]
 - [x] Task: Implement Vanilla JS for live Note logging and stream updates [e9ba9c9]
-- [~] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Vanilla Frontend' (Protocol in workflow.md) [196300c]
 
 ## Phase 5: Final Integration & Cleanup
-- [ ] Task: Final end-to-end testing and styling polish
+- [~] Task: Final end-to-end testing and styling polish
 - [ ] Task: Conductor - User Manual Verification 'Final Integration & Cleanup' (Protocol in workflow.md)
