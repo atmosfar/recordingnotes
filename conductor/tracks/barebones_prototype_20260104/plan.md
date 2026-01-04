@@ -6,8 +6,8 @@
 - [x] Task: Conductor - User Manual Verification 'Environment & Project Scaffolding' (Protocol in workflow.md) [eb57c3b]
 
 ## Phase 2: Core Backend Logic (Data Layer)
-- [~] Task: Create database wrapper for Sessions (CRUD)
-- [ ] Task: Create database wrapper for Notes (Create, List)
+- [x] Task: Create database wrapper for Sessions (CRUD) [7481ccc]
+- [~] Task: Create database wrapper for Notes (Create, List)
 - [ ] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md)
 
 ## Phase 3: Minimal Web Server
