@@ -10,10 +10,7 @@ const dbPath = join(process.cwd(), 'dev.db');
 const db = new DatabaseSync(dbPath);
 
 app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('Recording Notes API - Barebones Prototype');
-});
+app.use(express.static('public'));
 
 // Sessions API
 app.post('/api/sessions', (req, res) => {
