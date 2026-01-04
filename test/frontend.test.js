@@ -35,6 +35,6 @@ describe('Static File Serving', () => {
     const body = await response.text();
     
     assert.strictEqual(response.status, 200);
-    assert.ok(body.includes('App Initialized'));
+    assert.ok(body.includes('currentSessionId'));
   });
 });
