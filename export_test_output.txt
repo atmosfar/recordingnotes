@@ -1,0 +1,22 @@
+(node:35553) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+NODE_ENV: undefined
+▶ CSV Export Endpoint
+  ✔ GET /api/sessions/:id/export should return CSV (4.103667ms)
+✔ CSV Export Endpoint (75.723459ms)
+ℹ Error: A resource generated asynchronous activity after the test ended. This activity created the error "Error: listen EADDRINUSE: address already in use :::3000" which triggered an uncaughtException event, caught by the test runner.
+✖ test/export.test.js (335.349083ms)
+ℹ tests 2
+ℹ suites 1
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 343.041
+
+✖ failing tests:
+
+test at test/export.test.js:1:1
+✖ test/export.test.js (335.349083ms)
+  'test failed'
