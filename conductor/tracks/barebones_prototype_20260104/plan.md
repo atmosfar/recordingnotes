@@ -1,9 +1,9 @@
 # Plan: Barebones Prototype
 
 ## Phase 1: Environment & Project Scaffolding
-- [ ] Task: Initialize project with minimal `package.json` and basic scripts
-- [ ] Task: Set up `node:sqlite` database initialization script
-- [ ] Task: Conductor - User Manual Verification 'Environment & Project Scaffolding' (Protocol in workflow.md)
+- [x] Task: Initialize project with minimal `package.json` and basic scripts [18cad80]
+- [x] Task: Set up `node:sqlite` database initialization script [18cad80]
+- [~] Task: Conductor - User Manual Verification 'Environment & Project Scaffolding' (Protocol in workflow.md)
 
 ## Phase 2: Core Backend Logic (Data Layer)
 - [ ] Task: Create database wrapper for Sessions (CRUD)
