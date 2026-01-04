@@ -1,0 +1,62 @@
+
+> recordingnotes@0.1.0 test
+> NODE_ENV=test node --test test/*.test.js
+
+(node:45712) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Database Initialization
+  ✔ should create tables correctly (10.575125ms)
+✔ Database Initialization (11.681542ms)
+✔ environment has express installed (1.499584ms)
+(node:45714) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ CSV Export Endpoint
+  ✔ GET /api/sessions/:id/export should return CSV (4.276916ms)
+✔ CSV Export Endpoint (215.9115ms)
+(node:45715) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Static File Serving
+  ✔ should serve index.html (74.32475ms)
+  ✔ should serve app.js (4.158958ms)
+✔ Static File Serving (90.63575ms)
+(node:45716) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Note Database Operations
+  ✔ should create and list notes for a session (8.034875ms)
+  ✔ should list multiple notes in order (5.797958ms)
+✔ Note Database Operations (27.297167ms)
+(node:45717) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Note API Endpoints
+  ✔ POST /api/sessions/:id/notes should create a note (8.566542ms)
+  ✔ GET /api/sessions/:id/notes should list notes (3.102042ms)
+✔ Note API Endpoints (129.14725ms)
+(node:45718) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Server Basic Functionality
+  ✔ should serve index.html at root (102.071417ms)
+  ✔ should respond to GET /api/status (3.575708ms)
+✔ Server Basic Functionality (108.828958ms)
+(node:45722) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Session CRUD Operations
+  ✔ should create and retrieve a session (2.443458ms)
+  ✔ should list all sessions (5.309042ms)
+  ✔ should update a session (4.771833ms)
+  ✔ should delete a session (1.684208ms)
+✔ Session CRUD Operations (17.2055ms)
+(node:45723) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ Session API Endpoints
+  ✔ POST /api/sessions should create a session (92.509708ms)
+  ✔ GET /api/sessions should list sessions (5.192ms)
+  ✔ GET /api/sessions/:id should return a session (7.762833ms)
+✔ Session API Endpoints (110.496166ms)
+ℹ tests 18
+ℹ suites 8
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 826.804833
