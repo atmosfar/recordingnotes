@@ -7,8 +7,8 @@
 
 ## Phase 2: Core Backend Logic (Data Layer)
 - [x] Task: Create database wrapper for Sessions (CRUD) [7481ccc]
-- [~] Task: Create database wrapper for Notes (Create, List)
-- [ ] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md)
+- [x] Task: Create database wrapper for Notes (Create, List) [b949e95]
+- [~] Task: Conductor - User Manual Verification 'Core Backend Logic (Data Layer)' (Protocol in workflow.md)
 
 ## Phase 3: Minimal Web Server
 - [ ] Task: Implement basic HTTP/Express server with routing
