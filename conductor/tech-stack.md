@@ -1,19 +1,21 @@
-# Tech Stack
+# Tech Stack (Simplified)
 
 ## Backend
-- **Framework:** Node.js with Fastify (TypeScript). Fastify is chosen for its high performance and excellent TypeScript support, providing a robust foundation for a real-time server.
-- **Real-time Communication:** Socket.io for bi-directional, real-time synchronization of notes and user presence.
-- **Authentication:** Passport.js (or similar) with Google OAuth 2.0 strategy for domain-restricted login, and a local strategy for manual allowlist users.
+- **Core Runtime:** Node.js (Stable LTS).
+- **Web Server:** Node.js built-in `http` module or a minimal framework like `express` for basic routing.
+- **Native Modules:** Utilizing Node.js built-in modules where possible (e.g., `crypto` for auth tokens, `fs` for file handling).
 
 ## Frontend
-- **Framework:** React (TypeScript). Leverages a component-based architecture for a reactive and maintainable dashboard.
-- **Styling:** Tailwind CSS. Enables a utility-first approach to create a clean, minimalist, and responsive user interface with minimal custom CSS.
-- **State Management:** React Context API or a lightweight library like Zustand to manage shared session state and collaborative features.
+- **Language:** Plain Vanilla JavaScript (ES6+).
+- **Templating:** Server-side rendered (SSR) HTML using simple template literals or a lightweight library, or plain static HTML with client-side DOM manipulation.
+- **Styling:** Standard CSS3 with CSS Variables for theme management. No pre-processors or utility frameworks.
 
-## Database & Storage
-- **Database:** SQLite. A lightweight, serverless, file-based database that simplifies deployment and is ideal for an open-source project aimed at easy setup.
-- **ORM:** Prisma or Drizzle ORM. Provides type-safe database access and simplifies migrations while working with SQLite.
+## Database
+- **Engine:** `node:sqlite` (Node.js native SQLite module).
+- **Management:** Raw SQL queries to maintain full transparency and zero dependency on ORMs like Prisma.
 
-## Deployment & DevOps
-- **Containerization:** Docker. To ensure consistent environments and "one-click" deployment for users.
-- **CI/CD:** GitHub Actions for automated testing and linting.
+## Communication
+- **Real-time:** Server-Sent Events (SSE) for one-way updates (session notifications) and standard `fetch` API for note creation and updates.
+
+## Authentication
+- **Mechanism:** Simple session-based authentication using cookies and a local user table.

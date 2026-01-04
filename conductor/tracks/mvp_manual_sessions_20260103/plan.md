@@ -7,7 +7,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Project Setup' (Protocol in workflow.md)
 
 ## Phase 2: Session & Note Management
-- [ ] Task: Write Tests for Session and Note CRUD operations.
+- [~] Task: Write Tests for Session and Note CRUD operations.
 - [ ] Task: Implement Session creation API and UI (Mode selection: Time-of-Day vs Session).
 - [ ] Task: Implement Note creation API with Socket.io integration.
 - [ ] Task: Build the real-time note stream component with color coding support.
