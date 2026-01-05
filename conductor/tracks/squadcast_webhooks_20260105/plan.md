@@ -16,16 +16,16 @@
 - [x] Task: Create `scripts/simulate-webhook.js` utility for local testing [9f4c97d]
 - [x] Task: Conductor - User Manual Verification 'Webhook Endpoint Implementation' (Protocol in workflow.md) [221c9f1]
 
-## Phase 3: Client-Side Timer & UI Updates
+## Phase 3: Client-Side Timer & UI Updates [checkpoint: 2b04485]
 - [x] Task: Update API endpoint `GET /api/sessions/:id` to return `started_at` and `stopped_at` [c3aa19f]
 - [x] Task: Modify `public/app.js` to detect "Recording" state based on session data [c3aa19f]
 - [x] Task: Implement `updateElapsedTimer` function in `public/app.js` to calculate time from `started_at` [c3aa19f]
 - [x] Task: Update UI in `public/index.html` to show a "🔴 RECORDING" indicator when active [c3aa19f]
 - [x] Task: Ensure the "Send Note" logic uses elapsed time if `started_at` is present [c3aa19f]
-- [~] Task: Conductor - User Manual Verification 'Client-Side Timer & UI Updates' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Client-Side Timer & UI Updates' (Protocol in workflow.md) [2b04485]
 
 ## Phase 4: Final Verification & Localtunnel Setup
-- [ ] Task: Manual end-to-end verification using `simulate-webhook.js`
+- [~] Task: Manual end-to-end verification using `simulate-webhook.js`
 - [ ] Task: Document steps for using `localtunnel` to test with live SquadCast payloads
 - [ ] Task: Final code cleanup and refactoring
 - [ ] Task: Conductor - User Manual Verification 'Final Verification & Localtunnel Setup' (Protocol in workflow.md)
