@@ -36,6 +36,6 @@ describe('Server Basic Functionality', () => {
     
     assert.strictEqual(response.status, 200);
     assert.strictEqual(data.status, 'ok');
-    assert.ok(data.database.includes('dev.db'));
+    assert.ok(data.database.includes('dev.db') || data.database.includes('test.db'));
   });
 });

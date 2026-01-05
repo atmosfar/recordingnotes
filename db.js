@@ -1,10 +1,22 @@
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 
-const dbPath = join(process.cwd(), 'dev.db');
-const db = new DatabaseSync(dbPath);
+let dbInstance = null;
+
+export function getDb() {
+  if (!dbInstance) {
+    const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+    dbInstance = new DatabaseSync(dbPath);
+  }
+  return dbInstance;
+}
+
+export function resetDbInstance() {
+  dbInstance = null;
+}
 
 export function initDb() {
+  const db = getDb();
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,9 +29,11 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      external_id TEXT,
       timestamp_mode TEXT DEFAULT 'clock',
       status TEXT DEFAULT 'active',
       started_at DATETIME,
+      stopped_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -35,7 +49,21 @@ export function initDb() {
       FOREIGN KEY (session_id) REFERENCES sessions (id)
     );
   `);
+
+  // Migration for existing sessions table
+  const info = db.prepare("PRAGMA table_info(sessions)").all();
+  const columnNames = info.map(c => c.name);
+  if (!columnNames.includes('external_id')) {
+    db.exec("ALTER TABLE sessions ADD COLUMN external_id TEXT");
+    console.log('Added external_id column to sessions table');
+  }
+  if (!columnNames.includes('stopped_at')) {
+    db.exec("ALTER TABLE sessions ADD COLUMN stopped_at DATETIME");
+    console.log('Added stopped_at column to sessions table');
+  }
+
+  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
   console.log('Database initialized at', dbPath);
 }
 
-export default db;
+export default getDb;

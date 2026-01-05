@@ -1,12 +1,17 @@
-export function createSession(db, { name, timestamp_mode = 'clock' }) {
-  const stmt = db.prepare('INSERT INTO sessions (name, timestamp_mode) VALUES (?, ?)');
-  const result = stmt.run(name, timestamp_mode);
+export function createSession(db, { name, timestamp_mode = 'clock', external_id = null }) {
+  const stmt = db.prepare('INSERT INTO sessions (name, timestamp_mode, external_id) VALUES (?, ?, ?)');
+  const result = stmt.run(name, timestamp_mode, external_id);
   return result.lastInsertRowid;
 }
 
 export function getSession(db, id) {
   const stmt = db.prepare('SELECT * FROM sessions WHERE id = ?');
   return stmt.get(id);
+}
+
+export function getSessionByExternalId(db, external_id) {
+  const stmt = db.prepare('SELECT * FROM sessions WHERE external_id = ?');
+  return stmt.get(external_id);
 }
 
 export function listSessions(db) {

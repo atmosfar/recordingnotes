@@ -1,27 +1,34 @@
 import express from 'express';
-import { DatabaseSync } from 'node:sqlite';
-import { join } from 'node:path';
+import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
-const dbPath = join(process.cwd(), 'dev.db');
-const db = new DatabaseSync(dbPath);
+
+// Initialize database
+initDb();
+const db = getDb();
 
 app.use(express.json());
 app.use(express.static('public'));
 
+// Health check or API status
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'ok', database: process.env.DB_PATH || 'dev.db' });
+});
+
 // Sessions API
 app.post('/api/sessions', (req, res) => {
   try {
-    const { name, timestamp_mode } = req.body;
+    const { name, timestamp_mode, external_id } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Session name is required' });
     }
-    const id = sessions.createSession(db, { name, timestamp_mode });
+    const id = sessions.createSession(db, { name, timestamp_mode, external_id });
     res.status(201).json({ id });
   } catch (error) {
+    console.error('POST /api/sessions error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -31,6 +38,7 @@ app.get('/api/sessions', (req, res) => {
     const list = sessions.listSessions(db);
     res.json(list);
   } catch (error) {
+    console.error('GET /api/sessions error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -43,6 +51,7 @@ app.get('/api/sessions/:id', (req, res) => {
     }
     res.json(session);
   } catch (error) {
+    console.error('GET /api/sessions/:id error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -104,11 +113,6 @@ app.get('/api/sessions/:id/export', (req, res) => {
     console.error('GET /api/sessions/:id/export error:', error);
     res.status(500).json({ error: error.message });
   }
-});
-
-// Health check or API status
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'ok', database: dbPath });
 });
 
 if (process.env.NODE_ENV !== 'test') {
