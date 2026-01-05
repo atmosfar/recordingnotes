@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'node:http';
 
 const PORT = 3000;
 const PATH = '/api/webhooks/squadcast';
@@ -66,7 +66,7 @@ function sendWebhook(type) {
 
 const type = process.argv[2];
 if (!type) {
-  console.log('Usage: node simulate-webhook.js <created|started|stopped>');
+  console.log('Usage: node scripts/simulate-webhook.js <created|started|stopped>');
   process.exit(0);
 }
 
