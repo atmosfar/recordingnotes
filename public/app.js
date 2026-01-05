@@ -27,10 +27,12 @@ function updateClock() {
         
         // Show recording indicator
         const infoEl = document.getElementById('session-info');
-        if (!currentSession.stopped_at && !infoEl.innerHTML.includes('🔴')) {
-            infoEl.innerHTML = `🔴 RECORDING: \${currentSession.name}`;
-        } else if (currentSession.stopped_at) {
-            infoEl.textContent = `FINISHED: \${currentSession.name}`;
+        if (!currentSession.stopped_at) {
+            if (!infoEl.innerHTML.includes('🔴')) {
+                infoEl.innerHTML = `🔴 RECORDING: ${currentSession.name}`;
+            }
+        } else {
+            infoEl.textContent = `FINISHED: ${currentSession.name}`;
         }
     } else {
         const now = new Date();
@@ -78,10 +80,10 @@ async function createSession() {
 
 async function selectSession(id) {
     currentSessionId = id;
-    window.location.hash = `#/session/\${id}`;
+    window.location.hash = `#/session/${id}`;
     renderSessionList(window.lastSessions || []);
     
-    const res = await fetch(`/api/sessions/\${id}`);
+    const res = await fetch(`/api/sessions/${id}`);
     currentSession = await res.json();
     
     document.getElementById('session-info').textContent = currentSession.name;
@@ -179,23 +181,23 @@ updateThemeIcon(localStorage.getItem('theme') === 'dark');
 
 document.getElementById('export-btn').onclick = () => {
     if (currentSessionId) {
-        window.location.href = `/api/sessions/\${currentSessionId}/export`;
+        window.location.href = `/api/sessions/${currentSessionId}/export`;
     }
 };
 
 setInterval(async () => {
     if (currentSessionId) {
-        // Fetch session updates to detect start/stop
-        const res = await fetch(`/api/sessions/\${currentSessionId}`);
-        currentSession = await res.json();
+        const res = await fetch(`/api/sessions/${currentSessionId}`);
+        const session = await res.json();
+        currentSession = session;
         
         fetchNotes(currentSessionId);
     }
-}, 1000); // Polling session data every second for state changes
+}, 1000);
 
 async function fetchNotes(sessionId) {
     if (!sessionId) return;
-    const res = await fetch(`/api/sessions/\${sessionId}/notes`);
+    const res = await fetch(`/api/sessions/${sessionId}/notes`);
     const notes = await res.json();
     renderNotes(notes);
 }
@@ -207,13 +209,13 @@ function renderNotes(notes) {
         const div = document.createElement('div');
         div.className = 'note';
         if (note.color) {
-            div.style.borderLeft = `4px solid \${note.color}`;
+            div.style.borderLeft = `4px solid ${note.color}`;
             const tint = note.color.length === 7 ? note.color + '15' : note.color;
             div.style.backgroundColor = tint;
         }
         div.innerHTML = `
-            <span class="timestamp">\${note.timestamp}</span>
-            <span class="content">\${note.content}</span>
+            <span class="timestamp">${note.timestamp}</span>
+            <span class="content">${note.content}</span>
         `;
         stream.appendChild(div);
     });
@@ -234,7 +236,7 @@ async function sendNote() {
         timestamp = new Date().toTimeString().split(' ')[0];
     }
 
-    const res = await fetch(`/api/sessions/\${currentSessionId}/notes`, {
+    const res = await fetch(`/api/sessions/${currentSessionId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, timestamp, color: selectedColor })
