@@ -6,10 +6,6 @@ import * as notes from './notes.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Initialize database
-initDb();
-const db = getDb();
-
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -21,6 +17,8 @@ app.get('/api/status', (req, res) => {
 // Sessions API
 app.post('/api/sessions', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const { name, timestamp_mode, external_id } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Session name is required' });
@@ -35,15 +33,25 @@ app.post('/api/sessions', (req, res) => {
 
 // SquadCast Webhooks
 app.post('/api/webhooks/squadcast', (req, res) => {
+  console.log('--- Received SquadCast Webhook ---');
+  console.log('Event Name:', req.body.name);
+  console.log('Payload:', JSON.stringify(req.body, null, 2));
+  
   try {
+    initDb();
+    const db = getDb();
     const { name, sessionID, sessionTitle } = req.body;
     
-    if (name === 'recording_session.created') {
-      const id = sessions.createSession(db, { 
-        name: sessionTitle || 'Untitled SquadCast Session', 
-        external_id: sessionID 
-      });
-      return res.status(201).json({ id });
+    if (name === 'recording_session.created' || name === 'participant.joined') {
+      const existing = sessions.getSessionByExternalId(db, sessionID);
+      if (!existing) {
+        const id = sessions.createSession(db, { 
+          name: sessionTitle || 'Untitled SquadCast Session', 
+          external_id: sessionID 
+        });
+        return res.status(201).json({ id, status: 'created_via_workaround' });
+      }
+      return res.status(200).json({ id: existing.id, status: 'already_exists' });
     }
 
     if (name === 'recording.started') {
@@ -70,7 +78,8 @@ app.post('/api/webhooks/squadcast', (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    res.status(400).json({ error: 'Unsupported event' });
+    // For any other events we don't handle yet, return 200 to prevent retries
+    res.status(200).json({ status: 'ignored', message: `Unsupported event: ${name}` });
   } catch (error) {
     console.error('SquadCast Webhook Error:', error);
     res.status(500).json({ error: error.message });
@@ -80,6 +89,8 @@ app.post('/api/webhooks/squadcast', (req, res) => {
 
 app.get('/api/sessions', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const list = sessions.listSessions(db);
     res.json(list);
   } catch (error) {
@@ -90,6 +101,8 @@ app.get('/api/sessions', (req, res) => {
 
 app.get('/api/sessions/:id', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
@@ -104,6 +117,8 @@ app.get('/api/sessions/:id', (req, res) => {
 // Notes API
 app.post('/api/sessions/:id/notes', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const { content, timestamp, color, user_id } = req.body;
     const session_id = req.params.id;
     if (!content || !timestamp) {
@@ -125,6 +140,8 @@ app.post('/api/sessions/:id/notes', (req, res) => {
 
 app.get('/api/sessions/:id/notes', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const list = notes.listNotesBySession(db, req.params.id);
     res.json(list);
   } catch (error) {
@@ -135,6 +152,8 @@ app.get('/api/sessions/:id/notes', (req, res) => {
 
 app.get('/api/sessions/:id/export', (req, res) => {
   try {
+    initDb();
+    const db = getDb();
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
@@ -166,5 +185,5 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { app, db };
+export { app };
 export default app;

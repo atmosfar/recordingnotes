@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 
 let dbInstance = null;
+let initializedPaths = new Set();
 
 export function getDb() {
   if (!dbInstance) {
@@ -13,9 +14,13 @@ export function getDb() {
 
 export function resetDbInstance() {
   dbInstance = null;
+  initializedPaths.clear();
 }
 
 export function initDb() {
+  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+  if (initializedPaths.has(dbPath)) return;
+
   const db = getDb();
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -62,7 +67,7 @@ export function initDb() {
     console.log('Added stopped_at column to sessions table');
   }
 
-  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+  initializedPaths.add(dbPath);
   console.log('Database initialized at', dbPath);
 }
 

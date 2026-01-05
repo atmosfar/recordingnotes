@@ -1,6 +1,10 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import app, { db } from '../server.js';
+import { unlinkSync, existsSync } from 'node:fs';
+import app from '../server.js';
+import { getDb, resetDbInstance } from '../db.js';
+
+const testDbPath = 'test-notes-api.db';
 
 describe('Note API Endpoints', () => {
   let server;
@@ -8,6 +12,11 @@ describe('Note API Endpoints', () => {
   let sessionId;
 
   before(async () => {
+    if (existsSync(testDbPath)) {
+        try { unlinkSync(testDbPath); } catch (e) {}
+    }
+    process.env.DB_PATH = testDbPath;
+    resetDbInstance();
     return new Promise((resolve) => {
       server = app.listen(0, async () => {
         const { port } = server.address();
@@ -22,6 +31,17 @@ describe('Note API Endpoints', () => {
         const created = await createRes.json();
         sessionId = created.id;
         
+        resolve();
+      });
+    });
+  });
+
+  after(() => {
+    return new Promise((resolve) => {
+      server.close(() => {
+        if (existsSync(testDbPath)) {
+            try { unlinkSync(testDbPath); } catch (e) {}
+        }
         resolve();
       });
     });
