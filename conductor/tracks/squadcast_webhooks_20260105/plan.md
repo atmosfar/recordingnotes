@@ -25,7 +25,7 @@
 - [x] Task: Conductor - User Manual Verification 'Client-Side Timer & UI Updates' (Protocol in workflow.md) [2b04485]
 
 ## Phase 4: Final Verification & Localtunnel Setup
-- [~] Task: Manual end-to-end verification using `simulate-webhook.js`
-- [ ] Task: Document steps for using `localtunnel` to test with live SquadCast payloads
-- [ ] Task: Final code cleanup and refactoring
-- [ ] Task: Conductor - User Manual Verification 'Final Verification & Localtunnel Setup' (Protocol in workflow.md)
+- [x] Task: Manual end-to-end verification using `simulate-webhook.js` [551951e]
+- [x] Task: Document steps for using `localtunnel` to test with live SquadCast payloads [551951e]
+- [x] Task: Final code cleanup and refactoring [551951e]
+- [~] Task: Conductor - User Manual Verification 'Final Verification & Localtunnel Setup' (Protocol in workflow.md)
