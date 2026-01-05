@@ -33,6 +33,51 @@ app.post('/api/sessions', (req, res) => {
   }
 });
 
+// SquadCast Webhooks
+app.post('/api/webhooks/squadcast', (req, res) => {
+  try {
+    const { name, sessionID, sessionTitle } = req.body;
+    
+    if (name === 'recording_session.created') {
+      const id = sessions.createSession(db, { 
+        name: sessionTitle || 'Untitled SquadCast Session', 
+        external_id: sessionID 
+      });
+      return res.status(201).json({ id });
+    }
+
+    if (name === 'recording.started') {
+      const session = sessions.getSessionByExternalId(db, sessionID);
+      if (session) {
+        sessions.updateSession(db, session.id, { 
+          started_at: new Date().toISOString(),
+          status: 'active'
+        });
+        return res.status(200).json({ status: 'started' });
+      }
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (name === 'recording.stopped') {
+      const session = sessions.getSessionByExternalId(db, sessionID);
+      if (session) {
+        sessions.updateSession(db, session.id, { 
+          stopped_at: new Date().toISOString(),
+          status: 'completed'
+        });
+        return res.status(200).json({ status: 'stopped' });
+      }
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.status(400).json({ error: 'Unsupported event' });
+  } catch (error) {
+    console.error('SquadCast Webhook Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 app.get('/api/sessions', (req, res) => {
   try {
     const list = sessions.listSessions(db);
