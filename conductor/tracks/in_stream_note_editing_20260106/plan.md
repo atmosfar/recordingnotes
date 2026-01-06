@@ -18,8 +18,8 @@
 - [x] Task: Implement `saveEdit` function in `public/app.js` to call the PATCH API and update the UI [ce74795]
 - [x] Task: Conductor - User Manual Verification 'Editor Behavior & Saving' (Protocol in workflow.md) [bac2b39]
 
-## Phase 4: Mobile & Final Polish
+## Phase 4: Mobile & Final Polish [checkpoint: 1fb6050]
 - [x] Task: Add tap-to-reveal logic for the Edit button on mobile devices [ce74795]
 - [x] Task: Refine icon button styling for accessibility and "clean & minimalist" guidelines [ce74795]
 - [x] Task: Final end-to-end testing of the full edit lifecycle [ce74795]
-- [~] Task: Conductor - User Manual Verification 'Mobile & Final Polish' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Mobile & Final Polish' (Protocol in workflow.md) [1fb6050]
