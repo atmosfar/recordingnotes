@@ -16,3 +16,13 @@ export function listNotesBySession(db, session_id) {
   return stmt.all(session_id);
 }
 
+export function getNote(db, id) {
+  const stmt = db.prepare('SELECT * FROM notes WHERE id = ?');
+  return stmt.get(id);
+}
+
+export function updateNote(db, id, content) {
+  const stmt = db.prepare('UPDATE notes SET content = ? WHERE id = ?');
+  return stmt.run(content, id);
+}
+
