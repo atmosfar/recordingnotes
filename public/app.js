@@ -357,6 +357,17 @@ function renderNotes(notes) {
             cancelBtn.onclick = () => toggleEditMode(div, false);
             saveBtn.onclick = () => saveEdit(div);
 
+            // Tap to reveal actions on mobile
+            div.onclick = (e) => {
+                if (window.innerWidth <= 768 && !div.classList.contains('editing')) {
+                    // Hide other revealed actions first
+                    document.querySelectorAll('.note.reveal-actions').forEach(n => {
+                        if (n !== div) n.classList.remove('reveal-actions');
+                    });
+                    div.classList.toggle('reveal-actions');
+                }
+            };
+
             stream.appendChild(div);
             stream.scrollTop = stream.scrollHeight;
         }

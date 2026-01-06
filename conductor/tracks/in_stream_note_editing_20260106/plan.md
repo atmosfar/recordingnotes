@@ -19,7 +19,7 @@
 - [x] Task: Conductor - User Manual Verification 'Editor Behavior & Saving' (Protocol in workflow.md) [bac2b39]
 
 ## Phase 4: Mobile & Final Polish
-- [~] Task: Add tap-to-reveal logic for the Edit button on mobile devices
-- [ ] Task: Refine icon button styling for accessibility and "clean & minimalist" guidelines
-- [ ] Task: Final end-to-end testing of the full edit lifecycle
-- [ ] Task: Conductor - User Manual Verification 'Mobile & Final Polish' (Protocol in workflow.md)
+- [x] Task: Add tap-to-reveal logic for the Edit button on mobile devices [ce74795]
+- [x] Task: Refine icon button styling for accessibility and "clean & minimalist" guidelines [ce74795]
+- [x] Task: Final end-to-end testing of the full edit lifecycle [ce74795]
+- [~] Task: Conductor - User Manual Verification 'Mobile & Final Polish' (Protocol in workflow.md)
