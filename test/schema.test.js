@@ -75,4 +75,19 @@ describe('Database Schema Updates', () => {
     dbCheck.close();
     unlinkSync(migrationDbPath);
   });
+
+  test('should have REAL timestamp column in notes table', async () => {
+    process.env.DB_PATH = testDbPath;
+    const { initDb, resetDbInstance } = await import(`../db.js?notes=${Date.now()}`);
+    resetDbInstance();
+    initDb();
+
+    const db = new DatabaseSync(testDbPath);
+    const info = db.prepare("PRAGMA table_info(notes)").all();
+    const timestampCol = info.find(c => c.name === 'timestamp');
+
+    assert.strictEqual(timestampCol.type, 'REAL', 'notes.timestamp should be REAL');
+    
+    db.close();
+  });
 });

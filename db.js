@@ -47,7 +47,7 @@ export function initDb() {
       content TEXT NOT NULL,
       user_id INTEGER,
       session_id INTEGER NOT NULL,
-      timestamp TEXT NOT NULL,
+      timestamp REAL NOT NULL,
       color TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id),
