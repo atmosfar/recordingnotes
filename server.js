@@ -150,6 +150,29 @@ app.get('/api/sessions/:id/notes', (req, res) => {
   }
 });
 
+app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
+  try {
+    initDb();
+    const db = getDb();
+    const { content } = req.body;
+    const { note_id } = req.params;
+    
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+    
+    const result = notes.updateNote(db, note_id, content);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    res.json({ status: 'updated' });
+  } catch (error) {
+    console.error('PATCH /api/sessions/:session_id/notes/:note_id error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 /**
  * Formats duration in seconds to HH:MM:SS.mmm
  * @param {number} seconds 

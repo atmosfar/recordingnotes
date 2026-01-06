@@ -78,4 +78,37 @@ describe('Note API Endpoints', () => {
     assert.ok(data.length >= 1);
     assert.strictEqual(data[0].content, 'API Test Note');
   });
+
+  test('PATCH /api/sessions/:session_id/notes/:note_id should update a note', async () => {
+    // Create a note first
+    const createRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: 'Note to be edited',
+        timestamp: 456.789,
+        color: 'red'
+      })
+    });
+    const { id: noteId } = await createRes.json();
+
+    // Update it
+    const updateRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes/${noteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: 'Successfully edited note'
+      })
+    });
+    const updateData = await updateRes.json();
+
+    assert.strictEqual(updateRes.status, 200);
+    assert.strictEqual(updateData.status, 'updated');
+
+    // Verify change
+    const getRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`);
+    const notes = await getRes.json();
+    const updatedNote = notes.find(n => n.id === noteId);
+    assert.strictEqual(updatedNote.content, 'Successfully edited note');
+  });
 });
