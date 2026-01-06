@@ -35,7 +35,7 @@ describe('CSV Export Endpoint', () => {
         await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: 'Test Note', timestamp: '00:01:00' })
+          body: JSON.stringify({ content: 'Test Note', timestamp: 60.0 })
         });
         
         resolve();
@@ -60,12 +60,12 @@ describe('CSV Export Endpoint', () => {
     });
   });
 
-  test('GET /api/sessions/:id/export should return REAPER compatible CSV', async () => {
-    // Add a note with color to test formatting
-    const colorNoteRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
+  test('GET /api/sessions/:id/export should return REAPER compatible CSV with millisecond precision', async () => {
+    // Add a note with specific float seconds
+    await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: 'Colored Note', timestamp: '00:02:00', color: '#ff4d4d' })
+        body: JSON.stringify({ content: 'Precise Note', timestamp: 123.456, color: '#2ecc71' })
     });
 
     const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export`);
@@ -73,7 +73,7 @@ describe('CSV Export Endpoint', () => {
     
     assert.strictEqual(response.status, 200);
     assert.ok(response.headers.get('content-type').includes('text/csv'));
-    // Check no # and UPPERCASE
-    assert.ok(body.includes('M2,"Colored Note",00:02:00,,,FF4D4D'));
+    // 123.456s = 00:02:03.456
+    assert.ok(body.includes('M2,"Precise Note",00:02:03.456,,,2ECC71'));
   });
 });

@@ -150,6 +150,22 @@ app.get('/api/sessions/:id/notes', (req, res) => {
   }
 });
 
+/**
+ * Formats duration in seconds to HH:MM:SS.mmm
+ * @param {number} seconds 
+ * @returns {string}
+ */
+function formatDuration(seconds) {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return [
+    hrs.toString().padStart(2, '0'),
+    mins.toString().padStart(2, '0'),
+    secs.toFixed(3).padStart(6, '0')
+  ].join(':');
+}
+
 app.get('/api/sessions/:id/export', (req, res) => {
   try {
     initDb();
@@ -165,8 +181,9 @@ app.get('/api/sessions/:id/export', (req, res) => {
       const name = `"${note.content.replace(/"/g, '""')}"`;
       const marker = `M${index + 1}`;
       const color = note.color ? note.color.replace('#', '').toUpperCase() : '';
+      const timestamp = formatDuration(note.timestamp);
       // Format: #,Name,Start,End,Length,Color
-      csv += `${marker},${name},${note.timestamp},,,${color}\n`;
+      csv += `${marker},${name},${timestamp},,,${color}\n`;
     });
 
     const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
