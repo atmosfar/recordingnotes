@@ -2,16 +2,38 @@ let currentSessionId = null;
 let currentSession = null;
 let selectedColor = "";
 
-// Time formatting helper
-function formatDuration(ms) {
-    const seconds = Math.floor((ms / 1000) % 60);
-    const minutes = Math.floor((ms / (1000 * 60)) % 60);
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    return [
-        hours.toString().padStart(2, '0'),
-        minutes.toString().padStart(2, '0'),
-        seconds.toString().padStart(2, '0')
-    ].join(':');
+/**
+ * Formats duration in seconds to HH:MM:SS.s or HH:MM:SS.mmm
+ * @param {number} seconds - Total seconds
+ * @param {number} precision - Decimal places (1 for UI, 3 for export)
+ * @returns {string} Formatted time string
+ */
+function formatDuration(seconds, precision = 0) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const hh = hrs.toString().padStart(2, '0');
+    const mm = mins.toString().padStart(2, '0');
+    
+    // Handle floating point precision for seconds
+    const ss = precision > 0 
+        ? secs.toFixed(precision).padStart(precision + 3, '0')
+        : Math.floor(secs).toString().padStart(2, '0');
+
+    return `${hh}:${mm}:${ss}`;
+}
+
+/**
+ * Gets total seconds since the start of the current day (UTC)
+ * @returns {number} Floating point seconds
+ */
+function getSecondsSinceMidnight() {
+    const now = new Date();
+    return (now.getUTCHours() * 3600) + 
+           (now.getUTCMinutes() * 60) + 
+           now.getUTCSeconds() + 
+           (now.getUTCMilliseconds() / 1000);
 }
 
 // Live Clock & Timer
@@ -22,8 +44,10 @@ function updateClock() {
     if (currentSession && currentSession.started_at) {
         const start = new Date(currentSession.started_at).getTime();
         const end = currentSession.stopped_at ? new Date(currentSession.stopped_at).getTime() : Date.now();
-        const elapsed = end - start;
-        clockEl.textContent = formatDuration(elapsed);
+        const elapsedSeconds = (end - start) / 1000;
+        
+        // UI display uses 0.1s precision
+        clockEl.textContent = formatDuration(elapsedSeconds, 1);
         
         // Show recording indicator
         const infoEl = document.getElementById('session-info');
@@ -35,11 +59,14 @@ function updateClock() {
             infoEl.textContent = `FINISHED: ${currentSession.name}`;
         }
     } else {
+        // Time-of-Day mode for header clock (usually just HH:MM:SS is fine for non-recording)
         const now = new Date();
         clockEl.textContent = now.toTimeString().split(' ')[0];
     }
 }
-setInterval(updateClock, 1000);
+
+// Update clock every 100ms for smooth 0.1s precision
+setInterval(updateClock, 100);
 updateClock();
 
 async function fetchSessions() {
@@ -92,7 +119,7 @@ async function selectSession(id) {
     document.getElementById('sidebar').classList.remove('open');
     
     fetchNotes(id);
-    updateClock(); // Immediate update
+    updateClock(); 
 }
 
 function handleHash() {
@@ -213,8 +240,12 @@ function renderNotes(notes) {
             const tint = note.color.length === 7 ? note.color + '15' : note.color;
             div.style.backgroundColor = tint;
         }
+        
+        // note.timestamp is now a REAL (floating point seconds)
+        const displayTime = formatDuration(note.timestamp, 1);
+        
         div.innerHTML = `
-            <span class="timestamp">${note.timestamp}</span>
+            <span class="timestamp">${displayTime}</span>
             <span class="content">${note.content}</span>
         `;
         stream.appendChild(div);
@@ -231,9 +262,9 @@ async function sendNote() {
     if (currentSession && currentSession.started_at) {
         const start = new Date(currentSession.started_at).getTime();
         const end = currentSession.stopped_at ? new Date(currentSession.stopped_at).getTime() : Date.now();
-        timestamp = formatDuration(end - start);
+        timestamp = (end - start) / 1000; // Store as floating point seconds
     } else {
-        timestamp = new Date().toTimeString().split(' ')[0];
+        timestamp = getSecondsSinceMidnight();
     }
 
     const res = await fetch(`/api/sessions/${currentSessionId}/notes`, {
