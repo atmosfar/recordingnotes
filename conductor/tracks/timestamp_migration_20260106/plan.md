@@ -7,11 +7,11 @@
 - [x] Task: Conductor - User Manual Verification 'Database & Schema Reset' (Protocol in workflow.md) [2bf7542]
 
 ## Phase 2: Client-Side Refactor
-- [~] Task: Refactor `formatDuration` in `public/app.js` to support variable precision (`.s` vs `.mmm`)
-- [ ] Task: Update `sendNote` in `public/app.js` to calculate and send timestamps as floats
-- [ ] Task: Update `updateClock` and `renderNotes` in `public/app.js` to show 0.1s precision
-- [ ] Task: Increase `updateClock` interval to 100ms
-- [ ] Task: Conductor - User Manual Verification 'Client-Side Refactor' (Protocol in workflow.md)
+- [x] Task: Refactor `formatDuration` in `public/app.js` to support variable precision (`.s` vs `.mmm`) [25d7802]
+- [x] Task: Update `sendNote` in `public/app.js` to calculate and send timestamps as floats [25d7802]
+- [x] Task: Update `updateClock` and `renderNotes` in `public/app.js` to show 0.1s precision [25d7802]
+- [x] Task: Increase `updateClock` interval to 100ms [25d7802]
+- [~] Task: Conductor - User Manual Verification 'Client-Side Refactor' (Protocol in workflow.md)
 
 ## Phase 3: Server-Side Export & Final Integration
 - [ ] Task: Implement a time-formatting utility in `server.js` (or shared helper) for CSV export
