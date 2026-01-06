@@ -12,14 +12,14 @@
 - [x] Task: Implement `toggleEditMode` in `public/app.js` to swap static text with a `<textarea>` [ce74795]
 - [~] Task: Conductor - User Manual Verification 'Frontend "Edit Mode" Foundations' (Protocol in workflow.md)
 
-## Phase 3: Editor Behavior & Saving
+## Phase 3: Editor Behavior & Saving [checkpoint: bac2b39]
 - [x] Task: Implement auto-expanding logic for the `<textarea>` based on content length [ce74795]
 - [x] Task: Add event listeners for `Enter` (save), `Shift+Enter` (newline), `Escape` (cancel), and `blur` (cancel) [ce74795]
 - [x] Task: Implement `saveEdit` function in `public/app.js` to call the PATCH API and update the UI [ce74795]
-- [~] Task: Conductor - User Manual Verification 'Editor Behavior & Saving' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Editor Behavior & Saving' (Protocol in workflow.md) [bac2b39]
 
 ## Phase 4: Mobile & Final Polish
-- [ ] Task: Add tap-to-reveal logic for the Edit button on mobile devices
+- [~] Task: Add tap-to-reveal logic for the Edit button on mobile devices
 - [ ] Task: Refine icon button styling for accessibility and "clean & minimalist" guidelines
 - [ ] Task: Final end-to-end testing of the full edit lifecycle
 - [ ] Task: Conductor - User Manual Verification 'Mobile & Final Polish' (Protocol in workflow.md)
