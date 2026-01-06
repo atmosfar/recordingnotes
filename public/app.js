@@ -291,27 +291,191 @@ async function fetchNotes(sessionId) {
 
 function renderNotes(notes) {
     const stream = document.getElementById('note-stream');
-    stream.innerHTML = '';
+    
+    // Clear empty state message if notes exist
+    if (notes.length > 0) {
+        const emptyMsg = stream.querySelector('div[style*="color: var(--secondary-color)"]');
+        if (emptyMsg) emptyMsg.remove();
+    } else if (stream.children.length === 0) {
+        stream.innerHTML = '<div style="color: var(--secondary-color); text-align: center; margin-top: 2rem;">No notes yet.</div>';
+    }
+
+    // Track current editing state to avoid overwriting
+    const editingNoteId = document.querySelector('.note.editing')?.dataset.noteId;
+
+    // We'll rebuild the stream only if no one is editing, or use a more careful update
+    // For simplicity in this POC, we'll keep existing elements if they're being edited.
+    
+    const existingNotes = Array.from(stream.querySelectorAll('.note'));
+    const existingIds = new Set(existingNotes.map(n => n.dataset.noteId));
+
     notes.forEach(note => {
-        const div = document.createElement('div');
-        div.className = 'note';
-        if (note.color) {
-            div.style.borderLeft = `4px solid ${note.color}`;
-            const tint = note.color.length === 7 ? note.color + '15' : note.color;
-            div.style.backgroundColor = tint;
+        if (note.id.toString() === editingNoteId) return; // Skip update for the note being edited
+
+        const existingEl = existingNotes.find(n => n.dataset.noteId === note.id.toString());
+        
+        if (existingEl) {
+            // Update content only if it changed and not focused
+            const contentEl = existingEl.querySelector('.content');
+            if (contentEl && contentEl.textContent !== note.content) {
+                contentEl.textContent = note.content;
+            }
+            // Update color if needed
+            if (note.color) {
+                existingEl.style.borderLeft = `4px solid ${note.color}`;
+                const tint = note.color.length === 7 ? note.color + '15' : note.color;
+                existingEl.style.backgroundColor = tint;
+            }
+        } else {
+            // Create new note
+            const div = document.createElement('div');
+            div.className = 'note';
+            div.dataset.noteId = note.id;
+            if (note.color) {
+                div.style.borderLeft = `4px solid ${note.color}`;
+                const tint = note.color.length === 7 ? note.color + '15' : note.color;
+                div.style.backgroundColor = tint;
+            }
+            
+            const displayTime = formatDuration(note.timestamp, 1);
+            
+            div.innerHTML = `
+                <span class="timestamp">${displayTime}</span>
+                <span class="content">${note.content}</span>
+                <div class="note-actions">
+                    <button class="edit-btn" title="Edit Note">✎</button>
+                    <button class="save-btn" title="Save" style="display:none;">✓</button>
+                    <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
+                </div>
+            `;
+
+            const editBtn = div.querySelector('.edit-btn');
+            const saveBtn = div.querySelector('.save-btn');
+            const cancelBtn = div.querySelector('.cancel-btn');
+
+            editBtn.onclick = () => toggleEditMode(div, true);
+            cancelBtn.onclick = () => toggleEditMode(div, false);
+            saveBtn.onclick = () => saveEdit(div);
+
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
         }
-        
-        // note.timestamp is now a REAL (floating point seconds)
-        const displayTime = formatDuration(note.timestamp, 1);
-        
-        div.innerHTML = `
-            <span class="timestamp">${displayTime}</span>
-            <span class="content">${note.content}</span>
-        `;
-        stream.appendChild(div);
     });
-    stream.scrollTop = stream.scrollHeight;
+
+    // Remove notes that no longer exist (optional, but good for cleanup)
+    const newIds = new Set(notes.map(n => n.id.toString()));
+    existingNotes.forEach(n => {
+        if (!newIds.has(n.dataset.noteId) && n.dataset.noteId !== editingNoteId) {
+            n.remove();
+        }
+    });
 }
+
+/**
+ * Saves the edited content of a note.
+ * @param {HTMLElement} noteEl 
+ */
+async function saveEdit(noteEl) {
+    const noteId = noteEl.dataset.noteId;
+    const textarea = noteEl.querySelector('textarea');
+    const newContent = textarea.value.trim();
+
+    if (!newContent) return;
+
+    const res = await fetch(`/api/sessions/${currentSessionId}/notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newContent })
+    });
+
+    if (res.ok) {
+        // Exit edit mode and let the next heartbeat update the text
+        activeEditingId = null;
+        const span = document.createElement('span');
+        span.className = 'content';
+        span.textContent = newContent;
+        textarea.replaceWith(span);
+
+        noteEl.classList.remove('editing');
+        noteEl.querySelector('.edit-btn').style.display = 'inline-block';
+        noteEl.querySelector('.save-btn').style.display = 'none';
+        noteEl.querySelector('.cancel-btn').style.display = 'none';
+        
+        fetchNotes(currentSessionId);
+    }
+}
+
+/**
+ * Toggles edit mode for a specific note element.
+ * @param {HTMLElement} noteEl - The note container element.
+ * @param {boolean} editing - Whether to enter or exit edit mode.
+ */
+function toggleEditMode(noteEl, editing) {
+    const contentEl = noteEl.querySelector('.content');
+    const editBtn = noteEl.querySelector('.edit-btn');
+    const saveBtn = noteEl.querySelector('.save-btn');
+    const cancelBtn = noteEl.querySelector('.cancel-btn');
+
+    if (editing) {
+        noteEl.classList.add('editing');
+        const currentText = contentEl.textContent;
+        noteEl.dataset.originalContent = currentText; // Store for cancellation
+
+        const textarea = document.createElement('textarea');
+        textarea.value = currentText;
+        contentEl.replaceWith(textarea);
+        
+        // Auto-expand logic
+        const adjustHeight = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        };
+        textarea.oninput = adjustHeight;
+        
+        // Shortcuts
+        textarea.onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveEdit(noteEl);
+            } else if (e.key === 'Escape') {
+                toggleEditMode(noteEl, false);
+            }
+        };
+
+        // Blur handling (cancel if not clicking save/cancel)
+        textarea.onblur = (e) => {
+            // Use setTimeout to allow click events on buttons to fire first
+            setTimeout(() => {
+                if (noteEl.classList.contains('editing') && 
+                    document.activeElement !== saveBtn && 
+                    document.activeElement !== cancelBtn) {
+                    toggleEditMode(noteEl, false);
+                }
+            }, 150);
+        };
+
+        textarea.focus();
+        adjustHeight();
+
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+        cancelBtn.style.display = 'inline-block';
+    } else {
+        noteEl.classList.remove('editing');
+        const textarea = noteEl.querySelector('textarea');
+        const originalText = noteEl.dataset.originalContent;
+
+        const span = document.createElement('span');
+        span.className = 'content';
+        span.textContent = originalText;
+        textarea.replaceWith(span);
+
+        editBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+    }
+}
+
 
 async function sendNote() {
     const input = document.getElementById('note-input');
