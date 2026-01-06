@@ -5,6 +5,7 @@ A simple, server-hosted system for taking live timestamped notes during podcast 
 
 ## Core Features (v1.0)
 - **Manual Sessions:** Create a session with a title.
+- **SquadCast Integration (POC):** Automate session creation and timer triggers via SquadCast.fm webhooks.
 - **Timestamped Logging:** Add notes that automatically capture the current time (Time-of-Day or elapsed session time).
 - **Collaborative Stream:** A single scrolling list of notes that updates for all connected users.
 - **CSV Export:** Basic download of session notes in a CSV format compatible with most editors.

@@ -12,5 +12,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: SquadCast Webhook Integration (POC)
-*Link: [./conductor/tracks/squadcast_webhooks_20260105/](./conductor/tracks/squadcast_webhooks_20260105/)*
+## [~] Track: Millisecond Timestamp Migration (REAL)
+*Link: [./conductor/tracks/timestamp_migration_20260106/](./conductor/tracks/timestamp_migration_20260106/)*
