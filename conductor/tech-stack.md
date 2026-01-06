@@ -12,7 +12,7 @@
 
 ## Database
 - **Engine:** `node:sqlite` (Node.js native SQLite module).
-- **Management:** Raw SQL queries to maintain full transparency and zero dependency on ORMs like Prisma.
+- **Management:** Raw SQL queries. Timestamps are stored as `REAL` (floating-point seconds) for millisecond precision.
 
 ## Communication
 - **Real-time:** Server-Sent Events (SSE) for one-way updates (session notifications) and standard `fetch` API for note creation and updates.

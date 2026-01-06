@@ -12,5 +12,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [~] Track: Millisecond Timestamp Migration (REAL)
+## [X] Track: Millisecond Timestamp Migration (REAL)
 *Link: [./conductor/tracks/timestamp_migration_20260106/](./conductor/tracks/timestamp_migration_20260106/)*
+
+---
+
+## [~] Track: "First-Keystroke" Timestamp Capture
+*Link: [./conductor/tracks/first_keystroke_timestamp_20260106/](./conductor/tracks/first_keystroke_timestamp_20260106/)*

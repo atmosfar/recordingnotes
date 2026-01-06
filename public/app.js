@@ -1,6 +1,8 @@
 let currentSessionId = null;
 let currentSession = null;
 let selectedColor = "";
+let activeDraftTimestamp = null;
+let draftResetTimeout = null;
 
 /**
  * Formats duration in seconds to HH:MM:SS.s or HH:MM:SS.mmm
@@ -34,6 +36,39 @@ function getSecondsSinceMidnight() {
            (now.getUTCMinutes() * 60) + 
            now.getUTCSeconds() + 
            (now.getUTCMilliseconds() / 1000);
+}
+
+/**
+ * Captures the current timestamp for a new draft note if not already set.
+ */
+function captureDraftTimestamp() {
+    if (activeDraftTimestamp !== null) return;
+
+    if (currentSession && currentSession.started_at) {
+        const start = new Date(currentSession.started_at).getTime();
+        const now = Date.now();
+        activeDraftTimestamp = (now - start) / 1000;
+    } else {
+        activeDraftTimestamp = getSecondsSinceMidnight();
+    }
+    
+    updateDraftDisplay();
+}
+
+/**
+ * Updates the visual display of the draft timestamp.
+ */
+function updateDraftDisplay() {
+    const displayEl = document.getElementById('draft-timestamp-display');
+    if (!displayEl) return;
+
+    if (activeDraftTimestamp !== null) {
+        const displayTime = formatDuration(activeDraftTimestamp, 1);
+        displayEl.textContent = displayTime;
+        displayEl.style.display = 'block';
+    } else {
+        displayEl.style.display = 'none';
+    }
 }
 
 // Live Clock & Timer
@@ -188,6 +223,27 @@ document.getElementById('send-note-btn').onclick = sendNote;
 document.getElementById('note-input').onkeypress = (e) => {
     if (e.key === 'Enter') sendNote();
 };
+document.getElementById('note-input').oninput = (e) => {
+    const value = e.target.value;
+    
+    if (value.length > 0) {
+        // If typing, clear any pending reset timeout and capture if needed
+        if (draftResetTimeout) {
+            clearTimeout(draftResetTimeout);
+            draftResetTimeout = null;
+        }
+        captureDraftTimestamp();
+    } else {
+        // If empty, start the 500ms cooldown before clearing the timestamp
+        if (!draftResetTimeout) {
+            draftResetTimeout = setTimeout(() => {
+                activeDraftTimestamp = null;
+                draftResetTimeout = null;
+                updateDraftDisplay();
+            }, 500);
+        }
+    }
+};
 document.getElementById('menu-toggle').onclick = () => {
     document.getElementById('sidebar').classList.toggle('open');
 };
@@ -262,13 +318,16 @@ async function sendNote() {
     const content = input.value.trim();
     if (!content || !currentSessionId) return;
 
-    let timestamp;
-    if (currentSession && currentSession.started_at) {
-        const start = new Date(currentSession.started_at).getTime();
-        const end = currentSession.stopped_at ? new Date(currentSession.stopped_at).getTime() : Date.now();
-        timestamp = (end - start) / 1000; // Store as floating point seconds
-    } else {
-        timestamp = getSecondsSinceMidnight();
+    // Use activeDraftTimestamp if set, otherwise fallback to current time
+    let timestamp = activeDraftTimestamp;
+    if (timestamp === null) {
+        if (currentSession && currentSession.started_at) {
+            const start = new Date(currentSession.started_at).getTime();
+            const now = Date.now();
+            timestamp = (now - start) / 1000;
+        } else {
+            timestamp = getSecondsSinceMidnight();
+        }
     }
 
     const res = await fetch(`/api/sessions/${currentSessionId}/notes`, {
@@ -279,6 +338,12 @@ async function sendNote() {
     
     if (res.ok) {
         input.value = '';
+        activeDraftTimestamp = null; // Clear draft state
+        if (draftResetTimeout) {
+            clearTimeout(draftResetTimeout);
+            draftResetTimeout = null;
+        }
+        updateDraftDisplay();
         fetchNotes(currentSessionId);
     }
 }

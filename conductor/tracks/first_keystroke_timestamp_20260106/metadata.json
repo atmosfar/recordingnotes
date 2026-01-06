@@ -1,0 +1,8 @@
+{
+  "track_id": "first_keystroke_timestamp_20260106",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-06T12:00:00Z",
+  "updated_at": "2026-01-06T12:00:00Z",
+  "description": "Capture the note timestamp at the first keystroke instead of when sending, ensuring long notes are correctly associated with the recording time."
+}
