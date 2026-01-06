@@ -14,6 +14,6 @@
 - [x] Task: Conductor - User Manual Verification 'UI Implementation' (Protocol in workflow.md) [c812f94]
 
 ## Phase 3: Integration & Testing
-- [~] Task: Write manual verification steps to test the 500ms grace period behavior
-- [ ] Task: Verify that both "Elapsed Timer" and "Time-of-Day" modes work correctly with the new capture logic
-- [ ] Task: Conductor - User Manual Verification 'Integration & Testing' (Protocol in workflow.md)
+- [x] Task: Write manual verification steps to test the 500ms grace period behavior [a44db30]
+- [x] Task: Verify that both "Elapsed Timer" and "Time-of-Day" modes work correctly with the new capture logic [a44db30]
+- [x] Task: Conductor - User Manual Verification 'Integration & Testing' (Protocol in workflow.md) [a44db30]
