@@ -59,9 +59,13 @@ function updateClock() {
             infoEl.textContent = `FINISHED: ${currentSession.name}`;
         }
     } else {
-        // Time-of-Day mode for header clock (usually just HH:MM:SS is fine for non-recording)
+        // Time-of-Day mode for header clock with 0.1s precision
         const now = new Date();
-        clockEl.textContent = now.toTimeString().split(' ')[0];
+        const localSecondsSinceMidnight = (now.getHours() * 3600) + 
+                                         (now.getMinutes() * 60) + 
+                                         now.getSeconds() + 
+                                         (now.getMilliseconds() / 1000);
+        clockEl.textContent = formatDuration(localSecondsSinceMidnight, 1);
     }
 }
 
