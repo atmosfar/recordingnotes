@@ -2,7 +2,7 @@
 
 ## Phase 1: Backend API Support
 - [x] Task: Create `updateNote` function in `notes.js` to modify the `content` of a note [644dd4b]
-- [ ] Task: Implement `PATCH /api/sessions/:session_id/notes/:note_id` endpoint in `server.js`
+- [x] Task: Implement `PATCH /api/sessions/:session_id/notes/:note_id` endpoint in `server.js` [9cd3a14]
 - [ ] Task: Write unit tests in `test/notes_api.test.js` for the update functionality
 - [ ] Task: Conductor - User Manual Verification 'Backend API Support' (Protocol in workflow.md)
 
