@@ -13,8 +13,8 @@
 - [x] Task: Increase `updateClock` interval to 100ms [25d7802]
 - [x] Task: Conductor - User Manual Verification 'Client-Side Refactor' (Protocol in workflow.md) [838b132]
 
-## Phase 3: Server-Side Export & Final Integration
+## Phase 3: Server-Side Export & Final Integration [checkpoint: e4d3e36]
 - [x] Task: Implement a time-formatting utility in `server.js` (or shared helper) for CSV export [5516ca8]
 - [x] Task: Update `GET /api/sessions/:id/export` to format `REAL` seconds into `HH:MM:SS.mmm` [5516ca8]
 - [x] Task: Update `test/export.test.js` to verify high-precision CSV output [5516ca8]
-- [~] Task: Conductor - User Manual Verification 'Server-Side Export & Final Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Server-Side Export & Final Integration' (Protocol in workflow.md) [e4d3e36]
