@@ -111,7 +111,12 @@ function renderSessionList(sessions) {
     list.innerHTML = '';
     sessions.forEach(session => {
         const item = document.createElement('div');
-        item.className = 'session-item' + (session.id === currentSessionId ? ' active' : '');
+        item.className = 'session-item';
+        if (session.id.toString() === currentSessionId?.toString()) {
+            item.classList.add('active');
+            // Use setTimeout to ensure the DOM has updated before scrolling
+            setTimeout(() => item.scrollIntoView({ block: 'nearest' }), 0);
+        }
         item.textContent = session.name;
         item.onclick = () => selectSession(session.id);
         list.appendChild(item);
@@ -303,8 +308,10 @@ function toggleOverflow(open) {
 }
 
 async function init() {
-    await fetchSessions();
     const match = window.location.hash.match(/#\/session\/(\d+)/);
+    if (match) currentSessionId = match[1];
+
+    await fetchSessions();
     if (match) selectSession(match[1]);
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
