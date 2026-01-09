@@ -1,7 +1,7 @@
 # Plan: Fix Session Switching Note Concatenation
 
 ## Phase 1: Implementation
-- [ ] Task: Update `public/app.js` to clear the `#note-stream` container when a new session is selected in `selectSession`.
+- [x] Task: Update `public/app.js` to clear the `#note-stream` container when a new session is selected in `selectSession`. [7e8ade3]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Refinement (Optional)
