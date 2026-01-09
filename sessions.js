@@ -28,6 +28,8 @@ export function updateSession(db, id, updates) {
 }
 
 export function deleteSession(db, id) {
+  // First delete all notes associated with this session
+  db.prepare('DELETE FROM notes WHERE session_id = ?').run(id);
   const stmt = db.prepare('DELETE FROM sessions WHERE id = ?');
   return stmt.run(id);
 }

@@ -169,6 +169,40 @@ app.get('/api/sessions/:id', (req, res) => {
   }
 });
 
+app.patch('/api/sessions/:id', (req, res) => {
+  try {
+    initDb();
+    const db = getDb();
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Session name is required' });
+    }
+    const result = sessions.updateSession(db, req.params.id, { name });
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    res.json({ status: 'updated' });
+  } catch (error) {
+    console.error('PATCH /api/sessions/:id error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/sessions/:id', (req, res) => {
+  try {
+    initDb();
+    const db = getDb();
+    const result = sessions.deleteSession(db, req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    res.json({ status: 'deleted' });
+  } catch (error) {
+    console.error('DELETE /api/sessions/:id error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Notes API
 app.post('/api/sessions/:id/notes', (req, res) => {
   try {
@@ -224,6 +258,21 @@ app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
     res.json({ status: 'updated' });
   } catch (error) {
     console.error('PATCH /api/sessions/:session_id/notes/:note_id error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/sessions/:session_id/notes/:note_id', (req, res) => {
+  try {
+    initDb();
+    const db = getDb();
+    const result = notes.deleteNote(db, req.params.note_id);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    res.json({ status: 'deleted' });
+  } catch (error) {
+    console.error('DELETE /api/sessions/:session_id/notes/:note_id error:', error);
     res.status(500).json({ error: error.message });
   }
 });

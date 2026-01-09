@@ -26,3 +26,8 @@ export function updateNote(db, id, content) {
   return stmt.run(content, id);
 }
 
+export function deleteNote(db, id) {
+  const stmt = db.prepare('DELETE FROM notes WHERE id = ?');
+  return stmt.run(id);
+}
+
