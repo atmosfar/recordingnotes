@@ -22,5 +22,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: mobile UI tweaks
-*Link: [./conductor/tracks/mobile_ui_tweaks_20260109/](./conductor/tracks/mobile_ui_tweaks_20260109/)*
+## [ ] Track: highlight active session in sidebar from URL
+*Link: [./conductor/tracks/highlight_active_session_20260109/](./conductor/tracks/highlight_active_session_20260109/)*
