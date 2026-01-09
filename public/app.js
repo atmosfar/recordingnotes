@@ -294,9 +294,7 @@ function updateColorSelection(color) {
 
 function toggleColorPicker(open) {
     const popup = document.getElementById('color-picker-popup');
-    const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (popup) popup.classList.toggle('open', open);
-    if (backdrop) backdrop.classList.toggle('open', open);
 }
 
 function toggleOverflow(open) {
@@ -314,20 +312,23 @@ async function init() {
 
     document.getElementById('mobile-color-toggle').onclick = () => toggleColorPicker(true);
     
-    // Updated backdrop click to handle color picker too
     const backdrop = document.getElementById('bottom-sheet-backdrop');
     backdrop.onclick = () => { 
-        toggleColorPicker(false); 
-        toggleOverflow(false); 
         closeSidebarFn();
     };
 
-    // Close overflow menu if clicking anywhere else
+    // Close menus if clicking anywhere else
     document.addEventListener('click', (e) => {
-        const menu = document.getElementById('overflow-menu');
-        const toggle = document.getElementById('overflow-menu-toggle');
-        if (menu && menu.classList.contains('open') && !menu.contains(e.target) && !toggle.contains(e.target)) {
+        const overflowMenu = document.getElementById('overflow-menu');
+        const overflowToggle = document.getElementById('overflow-menu-toggle');
+        if (overflowMenu && overflowMenu.classList.contains('open') && !overflowMenu.contains(e.target) && !overflowToggle.contains(e.target)) {
             toggleOverflow(false);
+        }
+
+        const colorPopup = document.getElementById('color-picker-popup');
+        const colorToggle = document.getElementById('mobile-color-toggle');
+        if (colorPopup && colorPopup.classList.contains('open') && !colorPopup.contains(e.target) && !colorToggle.contains(e.target)) {
+            toggleColorPicker(false);
         }
     });
     
@@ -359,6 +360,7 @@ async function init() {
     };
 
     document.getElementById('close-sidebar').onclick = closeSidebarFn;
+    document.getElementById('overflow-menu-toggle').onclick = () => toggleOverflow(true);
     
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
