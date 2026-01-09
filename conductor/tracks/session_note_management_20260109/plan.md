@@ -6,8 +6,8 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend API Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Note Deletion
-- [ ] Task: Update `public/index.html` and `public/style.css` to add note deletion UI (trash icon).
-- [ ] Task: Update `public/app.js` to handle note deletion requests and UI updates.
+- [x] Task: Update `public/index.html` and `public/style.css` to add note deletion UI (trash icon). [e006c23]
+- [x] Task: Update `public/app.js` to handle note deletion requests and UI updates. [e006c23]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Note Deletion' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Session Management
