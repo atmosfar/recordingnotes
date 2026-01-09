@@ -219,19 +219,22 @@ button#send-note-btn:active, button#export-btn:active { transform: scale(0.98); 
 }
 #bottom-sheet-backdrop.open { display: block; opacity: 1; }
 
-#bottom-sheet {
-    position: fixed; bottom: 0; left: 0; right: 0; 
+.palette-popup {
+    position: absolute; bottom: 70px; right: 1rem;
     background: var(--card-bg); z-index: 1001;
-    border-top-left-radius: 20px; border-top-right-radius: 20px;
-    padding: 1.5rem; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; flex-direction: column; gap: 1.5rem; align-items: center;
+    border-radius: 12px; border: 1px solid var(--border-color);
+    padding: 0.75rem; width: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: none; flex-direction: column; gap: 0.25rem;
 }
-#bottom-sheet.open { transform: translateY(0); }
-.sheet-handle { width: 40px; height: 5px; background: #ccc; border-radius: 10px; }
-.sheet-title { font-weight: bold; }
-.sheet-palette { display: flex; gap: 1.5rem; justify-content: center; width: 100%; }
-.sheet-color-opt { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
-#close-sheet-btn { width: 100%; background: var(--secondary-color); color: #fff; border: none; border-radius: 4px; padding: 0.6rem; }
+.palette-popup.open { display: flex; }
+
+.sheet-palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; justify-content: center; }
+.sheet-color-opt { 
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer; 
+    border: 2px solid transparent; transition: transform 0.1s;
+}
+.sheet-color-opt.selected { border-color: var(--text-color); transform: scale(1.1); }
 
 #overflow-menu {
     position: absolute; top: 100%; right: 1rem;

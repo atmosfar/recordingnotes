@@ -4,224 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Recording Notes</title>
-    <style>
-        :root {
-            --bg-color: #f4f4f9;
-            --text-color: #333;
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --border-color: #ddd;
-            --card-bg: #fff;
-            --overlay-bg: rgba(0,0,0,0.5);
-        }
-
-        body.dark-mode {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --primary-color: #3791ff;
-            --secondary-color: #a0a0a0;
-            --border-color: #333;
-            --card-bg: #1e1e1e;
-            --overlay-bg: rgba(0,0,0,0.7);
-        }
-
-        html { scroll-behavior: smooth; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 4px; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color);
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-        }
-        
-        header {
-            background-color: var(--card-bg); padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100; flex-shrink: 0;
-        }
-        header h1 { font-size: 1.1rem; margin: 0; flex-shrink: 0; }
-        #header-right { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-
-        main { flex: 1; display: flex; overflow: hidden; position: relative; }
-        
-        #sidebar {
-            width: 300px; background-color: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; transition: transform 0.3s ease;
-        }
-        #session-list { flex: 1; overflow-y: auto; }
-        .session-item {
-            padding: 1rem; border-bottom: 1px solid var(--border-color);
-            cursor: pointer; transition: background-color 0.2s;
-        }
-        .session-item:hover { background-color: rgba(0,0,0,0.05); }
-        body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
-        .session-item.active {
-            background-color: rgba(0, 123, 255, 0.1);
-            border-left: 4px solid var(--primary-color);
-            font-weight: bold;
-        }
-        
-        #content { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color); min-width: 0; }
-        #note-stream { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .note {
-            display: grid;
-            grid-template-columns: 85px 1fr auto;
-            gap: 0.75rem;
-            padding: 0.4rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.95rem;
-            align-items: baseline;
-            background-color: var(--card-bg);
-            position: relative;
-        }
-        .note .timestamp { color: var(--secondary-color); font-family: monospace; font-size: 0.85rem; }
-        .note .content { word-break: break-word; }
-
-        .note-actions {
-            display: flex;
-            gap: 0.25rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .note:hover .note-actions {
-            opacity: 1;
-        }
-        .note.editing .note-actions {
-            opacity: 1;
-        }
-        .note.reveal-actions .note-actions {
-            opacity: 1;
-        }
-
-        .note-actions button {
-            background: none;
-            border: none;
-            color: var(--secondary-color);
-            cursor: pointer;
-            padding: 4px 8px; /* Slightly larger hit area */
-            font-size: 1.1rem;
-            border-radius: 4px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .note-actions button:hover {
-            background-color: rgba(0,0,0,0.05);
-            color: var(--primary-color);
-            transform: scale(1.1);
-        }
-        body.dark-mode .note-actions button:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        .note-actions .save-btn { color: #2ecc71; }
-        .note-actions .cancel-btn { color: #ff4d4d; }
-        .note-actions .edit-btn:hover { color: var(--primary-color); }
-        .note-actions .save-btn:hover { background-color: rgba(46, 204, 113, 0.1); }
-        .note-actions .cancel-btn:hover { background-color: rgba(255, 77, 77, 0.1); }
-
-        .note textarea {
-            width: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 0.25rem;
-            font-family: inherit;
-            font-size: inherit;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            resize: none;
-            overflow: hidden;
-        }
-
-        #input-area { padding: 1rem; border-top: 1px solid var(--border-color); background: var(--card-bg); }
-        #input-row { display: flex; gap: 0.75rem; width: 100%; align-items: center; }
-
-        #palette { display: flex; gap: 0.5rem; align-items: center; }
-        .color-opt {
-            width: 22px; height: 22px; border-radius: 50%;
-            cursor: pointer; border: 2px solid transparent;
-            transition: transform 0.1s; flex-shrink: 0;
-        }
-        .color-opt:hover { transform: scale(1.1); }
-        .color-opt.selected { border-color: var(--text-color); transform: scale(1.1); }
-        
-        .color-red { background-color: #ff4d4d; }
-        .color-green { background-color: #2ecc71; }
-        .color-blue { background-color: #3498db; }
-        .color-yellow { background-color: #f1c40f; }
-        .color-none { background-color: #eee; display: flex; align-items: center; justify-content: center; }
-        .color-none::after { content: '×'; color: #999; font-weight: bold; font-size: 14px; line-height: 0; margin-top: -1px; }
-
-        #note-input {
-            flex: 1; padding: 0.75rem; border: 1px solid var(--border-color);
-            border-radius: 4px; font-size: 16px; background-color: var(--bg-color);
-            color: var(--text-color); min-width: 0;
-        }
-        
-        button {
-            padding: 0.6rem 0.8rem; background-color: var(--primary-color);
-            color: #fff; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 0.9rem; white-space: nowrap;
-        }
-
-        /* Mobile Adjustments */
-        #mobile-color-toggle { display: none; }
-        #bottom-sheet-backdrop {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--overlay-bg); z-index: 1000; opacity: 0; transition: opacity 0.3s;
-        }
-        #bottom-sheet {
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: var(--card-bg); z-index: 1001;
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-            padding: 1.5rem; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; flex-direction: column; gap: 1.5rem; align-items: center;
-        }
-        #bottom-sheet.open { transform: translateY(0); }
-        #bottom-sheet-backdrop.open { display: block; opacity: 1; }
-        
-        .sheet-palette { display: flex; gap: 1.5rem; justify-content: center; width: 100%; }
-        .sheet-color-opt { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
-
-        @media (max-width: 768px) {
-            header h1 { font-size: 1rem; }
-            #live-clock { font-size: 0.8rem; }
-            #session-info { display: none; }
-            #palette { display: none; }
-            #mobile-color-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                cursor: pointer;
-                border: 1px solid var(--border-color);
-                background-color: var(--selected-color, #eee);
-                color: #333;
-                flex-shrink: 0;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                transition: background-color 0.2s, transform 0.1s;
-            }
-            #mobile-color-toggle:active { transform: scale(0.95); }
-            #mobile-color-toggle svg { width: 20px; height: 22px; }
-            #menu-toggle { display: block; }
-            #sidebar {
-                position: absolute; left: 0; top: 0; bottom: 0; z-index: 50;
-                transform: translateX(-100%); box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            }
-            #sidebar.open { transform: translateX(0); }
-            .note { grid-template-columns: 70px 1fr; }
-        }
-        
-        #menu-toggle { display: none; background: none; color: var(--primary-color); font-size: 1.5rem; padding: 0.25rem; }
-        #theme-toggle { background: none; color: var(--text-color); font-size: 1.2rem; padding: 0.25rem; }
-    </style>
+    <link rel="stylesheet" href="style.css">
     <script>
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark-mode');
@@ -230,78 +13,85 @@
     </script>
 </head>
 <body>
-    <header>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button id="menu-toggle">☰</button>
-            <h1>RecNotes</h1>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="branding">RecNotes</h1>
+            <button id="close-sidebar" class="mobile-only icon-btn">✕</button>
         </div>
-        <div id="header-right">
-            <button id="theme-toggle" title="Toggle Dark Mode" style="font-size: 1rem;">
-                <svg id="theme-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <!-- Sun path (default) -->
-                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>
-                </svg>
-            </button>
-            <div id="live-clock" style="font-family: monospace; font-weight: bold;">00:00:00</div>
-            <div id="session-info">No Session</div>
-            <button id="export-btn" style="display:none;">Export</button>
-        </div>
-    </header>
-    <main>
-        <div id="sidebar">
-            <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
-                <button id="new-session-btn" style="width: 100%;">+ New Session</button>
-            </div>
+        <div class="sidebar-content">
+            <button id="new-session-btn">+ New Session</button>
             <div id="session-list"></div>
         </div>
-        <div id="content">
-            <div id="note-stream-container" style="flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column;">
-                <div id="note-stream">
-                    <div style="color: var(--secondary-color); text-align: center; margin-top: 2rem;">
-                        Select a session to start taking notes.
-                    </div>
-                </div>
-                <div id="draft-timestamp-display" style="
-                    position: absolute; 
-                    bottom: 1rem; 
-                    left: 1rem; 
-                    background: var(--card-bg); 
-                    border: 1px solid var(--border-color); 
-                    border-radius: 20px; 
-                    padding: 0.25rem 0.75rem; 
-                    font-family: monospace; 
-                    font-size: 16px; 
-                    color: var(--secondary-color); 
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    display: none;
-                    z-index: 10;
-                "></div>
+    </div>
+
+    <div id="app-body">
+        <header style="position: relative;">
+            <div class="header-left">
+                <button id="menu-toggle">☰</button>
+                <h1 id="mobile-session-title">No Session</h1>
             </div>
-            <div id="input-area" style="display:none;">
-                <div id="input-row">
-                    <input type="text" id="note-input" placeholder="Type a note and press Enter...">
-                    <div id="palette">
-                        <div class="color-opt color-none selected" data-color="" title="No color"></div>
-                        <div class="color-opt color-red" data-color="#ff4d4d" title="Red"></div>
-                        <div class="color-opt color-green" data-color="#2ecc71" title="Green"></div>
-                        <div class="color-opt color-blue" data-color="#3498db" title="Blue"></div>
-                        <div class="color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
-                    </div>
-                    <div id="mobile-color-toggle">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
+            <div id="header-right">
+                <div id="live-clock">00:00:00</div>
+                <button id="theme-toggle" title="Toggle Dark Mode" class="desktop-only icon-btn">
+                    <svg id="theme-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>
+                    </svg>
+                </button>
+                <button id="export-btn" class="desktop-only">Export</button>
+                <div id="overflow-menu-toggle" class="mobile-only">⋮</div>
+            </div>
+
+            <div id="overflow-menu">
+                <div class="menu-item" id="mobile-theme-toggle">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
                         </svg>
-                    </div>
-                    <button id="send-note-btn">Send</button>
+                    </span>
+                    <span class="label">Toggle Theme</span>
+                </div>
+                <div class="menu-item" id="mobile-export-btn">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                    </span>
+                    <span class="label">Export CSV</span>
                 </div>
             </div>
-        </div>
-    </main>
+        </header>
+        <main>
+            <div id="content">
+                <div id="note-stream-container">
+                    <div id="note-stream">
+                        <div class="empty-state">Select a session to start taking notes.</div>
+                    </div>
+                    <div id="draft-timestamp-display"></div>
+                </div>
+                <div id="input-area" style="display:none;">
+                    <div id="input-row">
+                        <input type="text" id="note-input" placeholder="Type a note and press Enter...">
+                        <div id="palette">
+                            <div class="color-opt color-none selected" data-color="" title="No color"></div>
+                            <div class="color-opt color-red" data-color="#ff4d4d" title="Red"></div>
+                            <div class="color-opt color-green" data-color="#2ecc71" title="Green"></div>
+                            <div class="color-opt color-blue" data-color="#3498db" title="Blue"></div>
+                            <div class="color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
+                        </div>
+                        <div id="mobile-color-toggle">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
+                            </svg>
+                        </div>
+                        <button id="send-note-btn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <div id="bottom-sheet-backdrop"></div>
-    <div id="bottom-sheet">
-        <div style="width: 40px; height: 5px; background: #ccc; border-radius: 10px;"></div>
-        <div style="font-weight: bold;">Select Note Color</div>
+    <div id="color-picker-popup" class="palette-popup">
         <div class="sheet-palette">
             <div class="sheet-color-opt color-none" data-color="" title="No color"></div>
             <div class="sheet-color-opt color-red" data-color="#ff4d4d" title="Red"></div>
@@ -309,7 +99,6 @@
             <div class="sheet-color-opt color-blue" data-color="#3498db" title="Blue"></div>
             <div class="sheet-color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
         </div>
-        <button id="close-sheet-btn" style="width: 100%; background: var(--secondary-color);">Close</button>
     </div>
 
     <script src="app.js"></script>

@@ -289,13 +289,13 @@ function updateColorSelection(color) {
     selectedColor = color;
     document.querySelectorAll('.color-opt, .sheet-color-opt').forEach(o => o.classList.toggle('selected', o.dataset.color === color));
     const toggle = document.getElementById('mobile-color-toggle');
-    if (toggle) toggle.style.setProperty('--selected-color', color || '#eee');
+    if (toggle) toggle.style.setProperty('--selected-color', color || '');
 }
 
-function toggleSheet(open) {
-    const sheet = document.getElementById('bottom-sheet');
+function toggleColorPicker(open) {
+    const popup = document.getElementById('color-picker-popup');
     const backdrop = document.getElementById('bottom-sheet-backdrop');
-    if (sheet) sheet.classList.toggle('open', open);
+    if (popup) popup.classList.toggle('open', open);
     if (backdrop) backdrop.classList.toggle('open', open);
 }
 
@@ -310,12 +310,18 @@ async function init() {
     if (match) selectSession(match[1]);
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
-    document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleSheet(false); });
+    document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleColorPicker(false); });
 
-    document.getElementById('mobile-color-toggle').onclick = () => toggleSheet(true);
-    document.getElementById('bottom-sheet-backdrop').onclick = () => { toggleSheet(false); toggleOverflow(false); };
-    document.getElementById('close-sheet-btn').onclick = () => toggleSheet(false);
+    document.getElementById('mobile-color-toggle').onclick = () => toggleColorPicker(true);
     
+    // Updated backdrop click to handle color picker too
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
+    backdrop.onclick = () => { 
+        toggleColorPicker(false); 
+        toggleOverflow(false); 
+        closeSidebarFn();
+    };
+
     // Close overflow menu if clicking anywhere else
     document.addEventListener('click', (e) => {
         const menu = document.getElementById('overflow-menu');
@@ -353,12 +359,6 @@ async function init() {
     };
 
     document.getElementById('close-sidebar').onclick = closeSidebarFn;
-    
-    document.getElementById('bottom-sheet-backdrop').onclick = () => { 
-        toggleSheet(false); 
-        toggleOverflow(false); 
-        closeSidebarFn();
-    };
     
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
