@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Testing & Documentation
-- [ ] Task: Create a test script `scripts/test-companion-webhook.js` to simulate Companion requests.
+- [x] Task: Create a test script `scripts/test-companion-webhook.js` to simulate Companion requests. [43a5948]
 - [ ] Task: Verify the full lifecycle (create -> start -> stop) using the test script.
 - [ ] Task: Document the webhook payload and response format for the user to configure in Companion.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Testing & Documentation' (Protocol in workflow.md)
