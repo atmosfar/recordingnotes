@@ -1,8 +1,8 @@
 # Plan: Session and Note Management
 
 ## Phase 1: Backend API Implementation
-- [ ] Task: Update `sessions.js` and `notes.js` to include delete functionality.
-- [ ] Task: Update `server.js` to add `PATCH /api/sessions/:id`, `DELETE /api/sessions/:id`, and `DELETE /api/sessions/:session_id/notes/:note_id` endpoints.
+- [x] Task: Update `sessions.js` and `notes.js` to include delete functionality. [7ed8274]
+- [x] Task: Update `server.js` to add `PATCH /api/sessions/:id`, `DELETE /api/sessions/:id`, and `DELETE /api/sessions/:session_id/notes/:note_id` endpoints. [7ed8274]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend API Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Note Deletion
