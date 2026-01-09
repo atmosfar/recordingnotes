@@ -12,5 +12,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: bitfocus companion webhook integration
-*Link: [./conductor/tracks/bitfocus_companion_webhook_20260109/](./conductor/tracks/bitfocus_companion_webhook_20260109/)*
+## [ ] Track: add functionality to edit session names, delete sessions and delete notes
+*Link: [./conductor/tracks/session_note_management_20260109/](./conductor/tracks/session_note_management_20260109/)*
