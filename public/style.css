@@ -289,7 +289,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         color: #333; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     body.dark-mode #mobile-color-toggle {
-        background-color: var(--selected-color, #2a2a2a);
+        background-color: var(--selected-color, #8c8c8c);
     }
     #mobile-color-toggle svg { width: 20px; height: 22px; }
     

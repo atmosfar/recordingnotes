@@ -310,7 +310,10 @@ async function init() {
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
     document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleColorPicker(false); });
 
-    document.getElementById('mobile-color-toggle').onclick = () => toggleColorPicker(true);
+    document.getElementById('mobile-color-toggle').onclick = () => {
+        const popup = document.getElementById('color-picker-popup');
+        toggleColorPicker(!popup.classList.contains('open'));
+    };
     
     const backdrop = document.getElementById('bottom-sheet-backdrop');
     backdrop.onclick = () => { 
@@ -360,7 +363,10 @@ async function init() {
     };
 
     document.getElementById('close-sidebar').onclick = closeSidebarFn;
-    document.getElementById('overflow-menu-toggle').onclick = () => toggleOverflow(true);
+    document.getElementById('overflow-menu-toggle').onclick = () => {
+        const menu = document.getElementById('overflow-menu');
+        toggleOverflow(!menu.classList.contains('open'));
+    };
     
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
