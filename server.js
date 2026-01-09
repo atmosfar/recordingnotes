@@ -86,6 +86,61 @@ app.post('/api/webhooks/squadcast', (req, res) => {
   }
 });
 
+// Bitfocus Companion Webhooks
+app.post('/api/webhooks/companion', (req, res) => {
+  console.log('--- Received Companion Webhook ---');
+  const { action, id, name } = req.body;
+  console.log('Action:', action, 'ID:', id, 'Name:', name);
+
+  try {
+    initDb();
+    const db = getDb();
+
+    if (action === 'create') {
+      if (!name) {
+        return res.status(400).json({ error: 'Session name is required for create action' });
+      }
+      const newId = sessions.createSession(db, { name });
+      return res.status(201).json({ id: newId });
+    }
+
+    if (action === 'start') {
+      if (!id) {
+        return res.status(400).json({ error: 'Session ID is required for start action' });
+      }
+      const session = sessions.getSession(db, id);
+      if (session) {
+        sessions.updateSession(db, id, { 
+          started_at: new Date().toISOString(),
+          status: 'active'
+        });
+        return res.status(200).json({ status: 'started', id });
+      }
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (action === 'stop') {
+      if (!id) {
+        return res.status(400).json({ error: 'Session ID is required for stop action' });
+      }
+      const session = sessions.getSession(db, id);
+      if (session) {
+        sessions.updateSession(db, id, { 
+          stopped_at: new Date().toISOString(),
+          status: 'completed'
+        });
+        return res.status(200).json({ status: 'stopped', id });
+      }
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.status(400).json({ error: `Invalid or missing action: ${action}` });
+  } catch (error) {
+    console.error('Companion Webhook Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 app.get('/api/sessions', (req, res) => {
   try {
