@@ -190,12 +190,14 @@ function renderNotes(notes) {
                 <span class="content">${note.content}</span>
                 <div class="note-actions">
                     <button class="edit-btn" title="Edit Note">✎</button>
+                    <button class="delete-btn" title="Delete Note">🗑</button>
                     <button class="save-btn" title="Save" style="display:none;">✓</button>
                     <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
                 </div>
             `;
 
             div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
+            div.querySelector('.delete-btn').onclick = () => deleteNote(div);
             div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
             div.querySelector('.save-btn').onclick = () => saveEdit(div);
             div.onclick = () => {
@@ -265,6 +267,24 @@ async function saveEdit(noteEl) {
         noteEl.dataset.originalContent = newContent;
         toggleEditMode(noteEl, false);
         fetchNotes(currentSessionId);
+    }
+}
+
+async function deleteNote(noteEl) {
+    const noteId = noteEl.dataset.noteId;
+    if (!confirm('Are you sure you want to delete this note?')) return;
+
+    const res = await fetch(`/api/sessions/${currentSessionId}/notes/${noteId}`, {
+        method: 'DELETE'
+    });
+
+    if (res.ok) {
+        noteEl.remove();
+        // Check if stream is empty after removal
+        const stream = document.getElementById('note-stream');
+        if (stream && stream.querySelectorAll('.note').length === 0) {
+            stream.innerHTML = '<div class="empty-state">No notes yet.</div>';
+        }
     }
 }
 
