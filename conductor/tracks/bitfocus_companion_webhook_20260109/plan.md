@@ -1,10 +1,10 @@
 # Plan: Bitfocus Companion Webhook Integration
 
 ## Phase 1: Server-Side Implementation
-- [ ] Task: Update `server.js` to include the `POST /api/webhooks/companion` endpoint.
-- [ ] Task: Implement the `create` action to create a new session and return the ID.
-- [ ] Task: Implement the `start` action to set the `started_at` timestamp for a given ID.
-- [ ] Task: Implement the `stop` action to set the `stopped_at` timestamp for a given ID.
+- [x] Task: Update `server.js` to include the `POST /api/webhooks/companion` endpoint. [18f9f60]
+- [x] Task: Implement the `create` action to create a new session and return the ID. [18f9f60]
+- [x] Task: Implement the `start` action to set the `started_at` timestamp for a given ID. [18f9f60]
+- [x] Task: Implement the `stop` action to set the `stopped_at` timestamp for a given ID. [18f9f60]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Testing & Documentation
