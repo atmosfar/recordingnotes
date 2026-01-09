@@ -1,8 +1,8 @@
 # Plan: Mobile UI Tweaks
 
-## Phase 1: Sidebar Interaction Improvement
+## Phase 1: Sidebar Interaction Improvement [checkpoint: 8992cc4]
 - [x] Task: Update the sidebar logic to close when the backdrop/overlay area is tapped. [97c5382]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Sidebar Interaction Improvement' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Sidebar Interaction Improvement' (Protocol in workflow.md)
 
 ## Phase 2: Color Picker Redesign
 - [ ] Task: Update the `#mobile-color-toggle` styles for improved contrast in dark mode (`#2a2a2a`).
