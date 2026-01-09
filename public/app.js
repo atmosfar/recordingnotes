@@ -133,6 +133,7 @@ async function selectSession(id) {
     const exportBtn = document.getElementById('export-btn');
     if (exportBtn) exportBtn.style.display = 'block';
     document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('bottom-sheet-backdrop').classList.remove('open');
     
     fetchNotes(id);
     updateClock(); 
@@ -341,10 +342,23 @@ async function init() {
         }
     };
 
-    document.getElementById('menu-toggle').onclick = () => document.getElementById('sidebar').classList.add('open');
-    document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('menu-toggle').onclick = () => {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('bottom-sheet-backdrop').classList.add('open');
+    };
     
-    document.getElementById('overflow-menu-toggle').onclick = () => toggleOverflow(true);
+    const closeSidebarFn = () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('bottom-sheet-backdrop').classList.remove('open');
+    };
+
+    document.getElementById('close-sidebar').onclick = closeSidebarFn;
+    
+    document.getElementById('bottom-sheet-backdrop').onclick = () => { 
+        toggleSheet(false); 
+        toggleOverflow(false); 
+        closeSidebarFn();
+    };
     
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
