@@ -14,3 +14,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [~] Track: In-Stream Note Editing
 *Link: [./conductor/tracks/in_stream_note_editing_20260106/](./conductor/tracks/in_stream_note_editing_20260106/)*
+
+---
+
+## [ ] Track: bugfix: session switch note concatenation
+*Link: [./conductor/tracks/session_switch_fix_20260109/](./conductor/tracks/session_switch_fix_20260109/)*
