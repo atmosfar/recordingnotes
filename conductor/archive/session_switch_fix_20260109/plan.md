@@ -5,5 +5,5 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Refinement (Optional)
-- [ ] Task: Ensure that the "No notes yet" state is correctly handled after clearing the stream.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Refinement' (Protocol in workflow.md)
+- [x] Task: Ensure that the "No notes yet" state is correctly handled after clearing the stream. [7e8ade3]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Refinement' (Protocol in workflow.md)
