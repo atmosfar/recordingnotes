@@ -1,0 +1,8 @@
+{
+  "track_id": "mobile_ui_tweaks_20260109",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-09T15:00:00Z",
+  "updated_at": "2026-01-09T15:00:00Z",
+  "description": "mobile UI tweaks: color picker popup, dark mode contrast, and outside-click sidebar close"
+}

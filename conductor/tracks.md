@@ -17,5 +17,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: bugfix: session switch note concatenation
+## [~] Track: bugfix: session switch note concatenation
 *Link: [./conductor/tracks/session_switch_fix_20260109/](./conductor/tracks/session_switch_fix_20260109/)*
+
+---
+
+## [ ] Track: mobile UI tweaks
+*Link: [./conductor/tracks/mobile_ui_tweaks_20260109/](./conductor/tracks/mobile_ui_tweaks_20260109/)*
