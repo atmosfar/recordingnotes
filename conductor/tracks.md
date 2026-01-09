@@ -9,3 +9,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [X] Track: Barebones Prototype (Vanilla JS & Node)
 *Link: [./conductor/tracks/barebones_prototype_20260104/](./conductor/tracks/barebones_prototype_20260104/)*
+
+---
+
+## [ ] Track: bitfocus companion webhook integration
+*Link: [./conductor/tracks/bitfocus_companion_webhook_20260109/](./conductor/tracks/bitfocus_companion_webhook_20260109/)*
