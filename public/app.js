@@ -450,7 +450,11 @@ async function init() {
 
     const noteInput = document.getElementById('note-input');
     if (noteInput) {
-        noteInput.onkeypress = (e) => e.key === 'Enter' && sendNote();
+        noteInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                sendNote();
+            }
+        };
         noteInput.oninput = (e) => {
             if (e.target.value.length > 0) {
                 if (draftResetTimeout) { clearTimeout(draftResetTimeout); draftResetTimeout = null; }
