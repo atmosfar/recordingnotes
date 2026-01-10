@@ -115,9 +115,15 @@ main { flex: 1; display: flex; overflow: hidden; position: relative; }
 }
 
 .sidebar-top-actions #manage-sessions-btn {
-    background-color: var(--card-bg);
-    color: var(--secondary-color);
+    background-color: #eee;
+    color: #333;
     border: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .sidebar-top-actions #manage-sessions-btn {
+    background-color: #8c8c8c;
+    color: #121212;
 }
 
 .sidebar-top-actions #manage-sessions-btn.active {
