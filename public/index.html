@@ -19,7 +19,11 @@
             <button id="close-sidebar" class="mobile-only icon-btn">✕</button>
         </div>
         <div class="sidebar-content">
-            <button id="new-session-btn">+ New Session</button>
+            <div class="sidebar-top-actions mobile-only">
+                <button id="new-session-btn-mobile" class="action-btn">+ New</button>
+                <button id="manage-sessions-btn" class="action-btn">✎ Edit</button>
+            </div>
+            <button id="new-session-btn" class="desktop-only">+ New Session</button>
             <div id="session-list"></div>
         </div>
     </div>

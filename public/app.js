@@ -130,7 +130,7 @@ function renderSessionList(sessions) {
         actions.className = 'session-actions';
         actions.innerHTML = `
             <button class="sess-edit-btn" title="Rename">✎</button>
-            <button class="sess-delete-btn" title="Delete">×</button>
+            <button class="sess-delete-btn" title="Delete">🗑</button>
         `;
         
         actions.querySelector('.sess-edit-btn').onclick = (e) => {
@@ -249,7 +249,7 @@ function renderNotes(notes) {
                 <span class="content">${note.content}</span>
                 <div class="note-actions">
                     <button class="edit-btn" title="Edit Note">✎</button>
-                    <button class="delete-btn" title="Delete Note">×</button>
+                    <button class="delete-btn" title="Delete Note">🗑</button>
                     <button class="save-btn" title="Save" style="display:none;">✓</button>
                     <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
                 </div>
@@ -436,14 +436,17 @@ async function init() {
         }
     });
     
+    const handleNewSession = () => {
+        const name = prompt('Enter session name:');
+        if (name) fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
+            .then(res => res.json()).then(data => data.id && fetchSessions().then(() => selectSession(data.id)));
+    };
+
     const newSessionBtn = document.getElementById('new-session-btn');
-    if (newSessionBtn) {
-        newSessionBtn.onclick = () => {
-            const name = prompt('Enter session name:');
-            if (name) fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
-                .then(res => res.json()).then(data => data.id && fetchSessions().then(() => selectSession(data.id)));
-        };
-    }
+    if (newSessionBtn) newSessionBtn.onclick = handleNewSession;
+
+    const newSessionBtnMobile = document.getElementById('new-session-btn-mobile');
+    if (newSessionBtnMobile) newSessionBtnMobile.onclick = handleNewSession;
     
     const sendNoteBtn = document.getElementById('send-note-btn');
     if (sendNoteBtn) sendNoteBtn.onclick = sendNote;
@@ -484,7 +487,7 @@ async function init() {
             const sidebar = document.getElementById('sidebar');
             const isManaging = sidebar.classList.toggle('managing');
             manageSessionsBtn.classList.toggle('active', isManaging);
-            manageSessionsBtn.textContent = isManaging ? 'Done Managing' : 'Manage Sessions';
+            manageSessionsBtn.textContent = isManaging ? 'Done' : '✎ Edit';
         };
     }
 
