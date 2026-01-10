@@ -31,6 +31,17 @@ describe('Session CRUD Operations', () => {
         stopped_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT NOT NULL,
+        user_id INTEGER,
+        session_id INTEGER NOT NULL,
+        timestamp REAL NOT NULL,
+        color TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES sessions (id)
+      );
     `);
   });
 
