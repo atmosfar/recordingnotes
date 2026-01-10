@@ -6,12 +6,12 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend API Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Note Deletion
-- [ ] Task: Update `public/index.html` and `public/style.css` to add note deletion UI (trash icon).
-- [ ] Task: Update `public/app.js` to handle note deletion requests and UI updates.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Note Deletion' (Protocol in workflow.md)
+- [x] Task: Update `public/index.html` and `public/style.css` to add note deletion UI (trash icon). [3ce3cb5]
+- [x] Task: Update `public/app.js` to handle note deletion requests and UI updates. [3ce3cb5]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Note Deletion' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Session Management
-- [x] Task: Update `public/style.css` to handle sidebar session item hover actions and "Manage Sessions" mode. [9d08627]
-- [x] Task: Update `public/app.js` to implement session renaming and deletion logic. [9d08627]
-- [x] Task: Update `public/index.html` to include the "Manage Sessions" button for mobile. [9d08627]
-- [x] Task: Conductor - User Manual Verification 'Phase 3: Frontend Session Management' (Protocol in workflow.md)
+- [x] Task: Update `public/style.css` to handle sidebar session item hover actions and "Manage Sessions" mode. [3ce3cb5]
+- [x] Task: Update `public/app.js` to implement session renaming and deletion logic. [3ce3cb5]
+- [x] Task: Update `public/index.html` to include the "Manage Sessions" button for mobile. [3ce3cb5]
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Frontend Session Management' (Protocol in workflow.md)
