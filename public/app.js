@@ -54,12 +54,10 @@ function updateRecordingState() {
     
     // Update placeholders
     const input = document.getElementById('note-input');
-    if (input) {
-        if (window.innerWidth <= 768) {
-            input.placeholder = "Type a note";
-        } else {
-            input.placeholder = "Type a note and press Enter...";
-        }
+    if (window.innerWidth <= 768) {
+        input.placeholder = "Type a note";
+    } else {
+        input.placeholder = "Type a note and press Enter...";
     }
 }
 
@@ -119,67 +117,10 @@ function renderSessionList(sessions) {
             // Use setTimeout to ensure the DOM has updated before scrolling
             setTimeout(() => item.scrollIntoView({ block: 'nearest' }), 0);
         }
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'session-name';
-        nameSpan.textContent = session.name;
-        nameSpan.onclick = () => selectSession(session.id);
-        item.appendChild(nameSpan);
-
-        const actions = document.createElement('div');
-        actions.className = 'session-actions';
-        actions.innerHTML = `
-            <button class="sess-edit-btn" title="Rename">✎</button>
-            <button class="sess-delete-btn" title="Delete">×</button>
-        `;
-        
-        actions.querySelector('.sess-edit-btn').onclick = (e) => {
-            e.stopPropagation();
-            renameSession(session.id, session.name);
-        };
-        
-        actions.querySelector('.sess-delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            deleteSession(session.id);
-        };
-
-        item.appendChild(actions);
+        item.textContent = session.name;
+        item.onclick = () => selectSession(session.id);
         list.appendChild(item);
     });
-}
-
-async function renameSession(id, oldName) {
-    const newName = prompt('Enter new session name:', oldName);
-    if (!newName || newName === oldName) return;
-
-    const res = await fetch(`/api/sessions/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-    });
-
-    if (res.ok) {
-        fetchSessions();
-    }
-}
-
-async function deleteSession(id) {
-    if (!confirm('Are you sure you want to delete this session and all its notes? This cannot be undone.')) return;
-
-    const res = await fetch(`/api/sessions/${id}`, {
-        method: 'DELETE'
-    });
-
-    if (res.ok) {
-        if (currentSessionId?.toString() === id.toString()) {
-            currentSessionId = null;
-            currentSession = null;
-            window.location.hash = '';
-            document.getElementById('note-stream').innerHTML = '<div class="empty-state">Select a session to start taking notes.</div>';
-            document.getElementById('input-area').style.display = 'none';
-        }
-        fetchSessions();
-    }
 }
 
 async function selectSession(id) {
@@ -196,8 +137,8 @@ async function selectSession(id) {
     document.getElementById('input-area').style.display = 'block';
     const exportBtn = document.getElementById('export-btn');
     if (exportBtn) exportBtn.style.display = 'block';
-    
-    closeSidebarFn();
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('bottom-sheet-backdrop').classList.remove('open');
     
     fetchNotes(id);
     updateClock(); 
@@ -249,14 +190,12 @@ function renderNotes(notes) {
                 <span class="content">${note.content}</span>
                 <div class="note-actions">
                     <button class="edit-btn" title="Edit Note">✎</button>
-                    <button class="delete-btn" title="Delete Note">×</button>
                     <button class="save-btn" title="Save" style="display:none;">✓</button>
                     <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
                 </div>
             `;
 
             div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
-            div.querySelector('.delete-btn').onclick = () => deleteNote(div);
             div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
             div.querySelector('.save-btn').onclick = () => saveEdit(div);
             div.onclick = () => {
@@ -274,7 +213,7 @@ function renderNotes(notes) {
 
 function toggleEditMode(noteEl, editing) {
     const contentEl = noteEl.querySelector('.content');
-    const actions = ['edit-btn', 'save-btn', 'cancel-btn', 'delete-btn'].map(c => noteEl.querySelector('.' + c));
+    const actions = ['edit-btn', 'save-btn', 'cancel-btn'].map(c => noteEl.querySelector('.' + c));
 
     if (editing) {
         noteEl.classList.add('editing');
@@ -294,10 +233,9 @@ function toggleEditMode(noteEl, editing) {
 
         textarea.focus();
         textarea.oninput();
-        actions[0].style.display = 'none'; // edit
-        actions[1].style.display = 'inline-block'; // save
-        actions[2].style.display = 'inline-block'; // cancel
-        if (actions[3]) actions[3].style.display = 'none'; // delete
+        actions[0].style.display = 'none';
+        actions[1].style.display = 'inline-block';
+        actions[2].style.display = 'inline-block';
     } else {
         noteEl.classList.remove('editing');
         const span = document.createElement('span');
@@ -307,7 +245,6 @@ function toggleEditMode(noteEl, editing) {
         actions[0].style.display = 'inline-block';
         actions[1].style.display = 'none';
         actions[2].style.display = 'none';
-        if (actions[3]) actions[3].style.display = 'inline-block';
     }
 }
 
@@ -328,24 +265,6 @@ async function saveEdit(noteEl) {
         noteEl.dataset.originalContent = newContent;
         toggleEditMode(noteEl, false);
         fetchNotes(currentSessionId);
-    }
-}
-
-async function deleteNote(noteEl) {
-    const noteId = noteEl.dataset.noteId;
-    if (!confirm('Are you sure you want to delete this note?')) return;
-
-    const res = await fetch(`/api/sessions/${currentSessionId}/notes/${noteId}`, {
-        method: 'DELETE'
-    });
-
-    if (res.ok) {
-        noteEl.remove();
-        // Check if stream is empty after removal
-        const stream = document.getElementById('note-stream');
-        if (stream && stream.querySelectorAll('.note').length === 0) {
-            stream.innerHTML = '<div class="empty-state">No notes yet.</div>';
-        }
     }
 }
 
@@ -388,13 +307,6 @@ function toggleOverflow(open) {
     if (menu) menu.classList.toggle('open', open);
 }
 
-const closeSidebarFn = () => {
-    const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('bottom-sheet-backdrop');
-    if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
-};
-
 async function init() {
     const match = window.location.hash.match(/#\/session\/(\d+)/);
     if (match) currentSessionId = match[1];
@@ -405,20 +317,15 @@ async function init() {
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
     document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleColorPicker(false); });
 
-    const mobileColorToggle = document.getElementById('mobile-color-toggle');
-    if (mobileColorToggle) {
-        mobileColorToggle.onclick = () => {
-            const popup = document.getElementById('color-picker-popup');
-            toggleColorPicker(!popup.classList.contains('open'));
-        };
-    }
+    document.getElementById('mobile-color-toggle').onclick = () => {
+        const popup = document.getElementById('color-picker-popup');
+        toggleColorPicker(!popup.classList.contains('open'));
+    };
     
     const backdrop = document.getElementById('bottom-sheet-backdrop');
-    if (backdrop) {
-        backdrop.onclick = () => { 
-            closeSidebarFn();
-        };
-    }
+    backdrop.onclick = () => { 
+        closeSidebarFn();
+    };
 
     // Close menus if clicking anywhere else
     document.addEventListener('click', (e) => {
@@ -435,61 +342,38 @@ async function init() {
         }
     });
     
-    const newSessionBtn = document.getElementById('new-session-btn');
-    if (newSessionBtn) {
-        newSessionBtn.onclick = () => {
-            const name = prompt('Enter session name:');
-            if (name) fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
-                .then(res => res.json()).then(data => data.id && fetchSessions().then(() => selectSession(data.id)));
-        };
-    }
+    document.getElementById('new-session-btn').onclick = () => {
+        const name = prompt('Enter session name:');
+        if (name) fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
+            .then(res => res.json()).then(data => data.id && fetchSessions().then(() => selectSession(data.id)));
+    };
     
-    const sendNoteBtn = document.getElementById('send-note-btn');
-    if (sendNoteBtn) sendNoteBtn.onclick = sendNote;
+    document.getElementById('send-note-btn').onclick = sendNote;
+    document.getElementById('note-input').onkeypress = (e) => e.key === 'Enter' && sendNote();
+    document.getElementById('note-input').oninput = (e) => {
+        if (e.target.value.length > 0) {
+            if (draftResetTimeout) { clearTimeout(draftResetTimeout); draftResetTimeout = null; }
+            captureDraftTimestamp();
+        } else if (!draftResetTimeout) {
+            draftResetTimeout = setTimeout(() => { activeDraftTimestamp = null; draftResetTimeout = null; updateDraftDisplay(); }, 500);
+        }
+    };
 
-    const noteInput = document.getElementById('note-input');
-    if (noteInput) {
-        noteInput.onkeypress = (e) => e.key === 'Enter' && sendNote();
-        noteInput.oninput = (e) => {
-            if (e.target.value.length > 0) {
-                if (draftResetTimeout) { clearTimeout(draftResetTimeout); draftResetTimeout = null; }
-                captureDraftTimestamp();
-            } else if (!draftResetTimeout) {
-                draftResetTimeout = setTimeout(() => { activeDraftTimestamp = null; draftResetTimeout = null; updateDraftDisplay(); }, 500);
-            }
-        };
-    }
-
-    const menuToggle = document.getElementById('menu-toggle');
-    if (menuToggle) {
-        menuToggle.onclick = () => {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('bottom-sheet-backdrop');
-            if (sidebar) sidebar.classList.add('open');
-            if (backdrop) backdrop.classList.add('open');
-        };
-    }
+    document.getElementById('menu-toggle').onclick = () => {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('bottom-sheet-backdrop').classList.add('open');
+    };
     
-    const closeSidebarBtn = document.getElementById('close-sidebar');
-    if (closeSidebarBtn) closeSidebarBtn.onclick = closeSidebarFn;
+    const closeSidebarFn = () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('bottom-sheet-backdrop').classList.remove('open');
+    };
 
-    const manageSessionsBtn = document.getElementById('manage-sessions-btn');
-    if (manageSessionsBtn) {
-        manageSessionsBtn.onclick = () => {
-            const sidebar = document.getElementById('sidebar');
-            const isManaging = sidebar.classList.toggle('managing');
-            manageSessionsBtn.classList.toggle('active', isManaging);
-            manageSessionsBtn.textContent = isManaging ? 'Done Managing' : 'Manage Sessions';
-        };
-    }
-
-    const overflowMenuToggle = document.getElementById('overflow-menu-toggle');
-    if (overflowMenuToggle) {
-        overflowMenuToggle.onclick = () => {
-            const menu = document.getElementById('overflow-menu');
-            toggleOverflow(!menu.classList.contains('open'));
-        };
-    }
+    document.getElementById('close-sidebar').onclick = closeSidebarFn;
+    document.getElementById('overflow-menu-toggle').onclick = () => {
+        const menu = document.getElementById('overflow-menu');
+        toggleOverflow(!menu.classList.contains('open'));
+    };
     
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
@@ -502,22 +386,12 @@ async function init() {
         }
     };
 
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    if (themeToggleBtn) themeToggleBtn.onclick = () => themeToggleFn(!document.body.classList.contains('dark-mode'));
-
-    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-    if (mobileThemeToggle) {
-        mobileThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
-    }
+    document.getElementById('theme-toggle').onclick = () => themeToggleFn(!document.body.classList.contains('dark-mode'));
+    document.getElementById('mobile-theme-toggle').onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
     
     const exportFn = () => currentSessionId && (window.location.href = `/api/sessions/${currentSessionId}/export`);
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) exportBtn.onclick = exportFn;
-
-    const mobileExportBtn = document.getElementById('mobile-export-btn');
-    if (mobileExportBtn) {
-        mobileExportBtn.onclick = () => { exportFn(); toggleOverflow(false); };
-    }
+    document.getElementById('export-btn').onclick = exportFn;
+    document.getElementById('mobile-export-btn').onclick = () => { exportFn(); toggleOverflow(false); };
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 }
