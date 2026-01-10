@@ -54,10 +54,12 @@ function updateRecordingState() {
     
     // Update placeholders
     const input = document.getElementById('note-input');
-    if (window.innerWidth <= 768) {
-        input.placeholder = "Type a note";
-    } else {
-        input.placeholder = "Type a note and press Enter...";
+    if (input) {
+        if (window.innerWidth <= 768) {
+            input.placeholder = "Type a note";
+        } else {
+            input.placeholder = "Type a note and press Enter...";
+        }
     }
 }
 
@@ -195,10 +197,7 @@ async function selectSession(id) {
     const exportBtn = document.getElementById('export-btn');
     if (exportBtn) exportBtn.style.display = 'block';
     
-    const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('bottom-sheet-backdrop');
-    if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
+    closeSidebarFn();
     
     fetchNotes(id);
     updateClock(); 
