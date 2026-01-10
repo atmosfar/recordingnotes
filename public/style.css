@@ -146,9 +146,25 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     font-weight: bold;
 }
 
-.session-name { flex: 1; cursor: pointer; padding: 0.25rem 0; }
+.session-name { 
+    flex: 1; 
+    cursor: pointer; 
+    padding: 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 0.5rem;
+}
 
-.session-actions { display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s; }
+.session-actions { 
+    display: flex; 
+    gap: 0.5rem; 
+    opacity: 0; 
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    min-width: 50px;
+    justify-content: flex-end;
+}
 .session-item:hover .session-actions { opacity: 1; }
 #sidebar.managing .session-actions { opacity: 1; }
 
