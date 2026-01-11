@@ -12,7 +12,8 @@
     "db:reset": "rm -f dev.db && node init-db.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "localtunnel": "^2.0.2",
