@@ -75,6 +75,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
           name: sessionTitle || 'Untitled SquadCast Session', 
           external_id: sessionID 
         });
+        broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
         return res.status(201).json({ id, status: 'created_via_workaround' });
       }
       return res.status(200).json({ id: existing.id, status: 'already_exists' });
@@ -87,6 +88,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
           started_at: new Date().toISOString(),
           status: 'active'
         });
+        broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'active' });
         return res.status(200).json({ status: 'started' });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -99,6 +101,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
           stopped_at: new Date().toISOString(),
           status: 'completed'
         });
+        broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'completed' });
         return res.status(200).json({ status: 'stopped' });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -127,6 +130,7 @@ app.post('/api/webhooks/companion', (req, res) => {
         return res.status(400).json({ error: 'Session name is required for create action' });
       }
       const newId = sessions.createSession(db, { name });
+      broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
       return res.status(201).json({ id: newId });
     }
 
@@ -140,6 +144,7 @@ app.post('/api/webhooks/companion', (req, res) => {
           started_at: new Date().toISOString(),
           status: 'active'
         });
+        broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'active' });
         return res.status(200).json({ status: 'started', id });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -155,6 +160,7 @@ app.post('/api/webhooks/companion', (req, res) => {
           stopped_at: new Date().toISOString(),
           status: 'completed'
         });
+        broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'completed' });
         return res.status(200).json({ status: 'stopped', id });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -382,8 +388,49 @@ if (process.env.NODE_ENV !== 'test') {
             if (room) room.delete(ws);
             ws.currentSessionId = null;
           }
+        } else if (data.type === 'CREATE_SESSION') {
+          initDb();
+          const db = getDb();
+          const { name } = data;
+          const id = sessions.createSession(db, { name });
+          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+        } else if (data.type === 'UPDATE_SESSION') {
+          initDb();
+          const db = getDb();
+          const { sessionId, name } = data;
+          sessions.updateSession(db, sessionId, { name });
+          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+        } else if (data.type === 'DELETE_SESSION') {
+          initDb();
+          const db = getDb();
+          const { sessionId } = data;
+          sessions.deleteSession(db, sessionId);
+          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+        } else if (data.type === 'CREATE_NOTE') {
+          initDb();
+          const db = getDb();
+          const { payload } = data;
+          if (ws.currentSessionId) {
+            notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+          }
+        } else if (data.type === 'UPDATE_NOTE') {
+          initDb();
+          const db = getDb();
+          const { noteId, content } = data;
+          notes.updateNote(db, noteId, content);
+          if (ws.currentSessionId) {
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+          }
+        } else if (data.type === 'DELETE_NOTE') {
+          initDb();
+          const db = getDb();
+          const { noteId } = data;
+          notes.deleteNote(db, noteId);
+          if (ws.currentSessionId) {
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+          }
         }
-        // Future: Handle other action types here
         
       } catch (error) {
         console.error('WebSocket message error:', error);
