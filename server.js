@@ -406,6 +406,7 @@ if (process.env.NODE_ENV !== 'test') {
           const db = getDb();
           const { sessionId } = data;
           sessions.deleteSession(db, sessionId);
+          broadcastToAll({ type: 'SESSION_DELETED', sessionId });
           broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
         } else if (data.type === 'CREATE_NOTE') {
           initDb();
@@ -429,7 +430,7 @@ if (process.env.NODE_ENV !== 'test') {
           const { noteId } = data;
           notes.deleteNote(db, noteId);
           if (ws.currentSessionId) {
-            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_DELETED', noteId });
           }
         }
         

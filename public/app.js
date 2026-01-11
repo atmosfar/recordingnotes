@@ -225,33 +225,20 @@ async function renameSession(id, oldName) {
     const newName = prompt('Enter new session name:', oldName);
     if (!newName || newName === oldName) return;
 
-    const res = await fetch(`/api/sessions/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-    });
-
-    if (res.ok) {
-        fetchSessions();
-    }
+    socket.send('UPDATE_SESSION', { sessionId: id, name: newName });
 }
 
 async function deleteSession(id) {
     if (!confirm('Are you sure you want to delete this session and all its notes? This cannot be undone.')) return;
 
-    const res = await fetch(`/api/sessions/${id}`, {
-        method: 'DELETE'
-    });
+    socket.send('DELETE_SESSION', { sessionId: id });
 
-    if (res.ok) {
-        if (currentSessionId?.toString() === id.toString()) {
-            currentSessionId = null;
-            currentSession = null;
-            window.location.hash = '';
-            document.getElementById('note-stream').innerHTML = '<div class="empty-state">Select a session to start taking notes.</div>';
-            document.getElementById('input-area').style.display = 'none';
-        }
-        fetchSessions();
+    if (currentSessionId?.toString() === id.toString()) {
+        currentSessionId = null;
+        currentSession = null;
+        window.location.hash = '';
+        document.getElementById('note-stream').innerHTML = '<div class="empty-state">Select a session to start taking notes.</div>';
+        document.getElementById('input-area').style.display = 'none';
     }
 }
 
@@ -260,6 +247,9 @@ async function selectSession(id) {
     window.location.hash = `#/session/${id}`;
     renderSessionList(window.lastSessions || []);
     
+    // Join the WebSocket room for this session
+    socket.send('JOIN_SESSION', { sessionId: id });
+
     const stream = document.getElementById('note-stream');
     if (stream) stream.innerHTML = '';
     
@@ -391,35 +381,18 @@ async function saveEdit(noteEl) {
     const newContent = textarea.value.trim();
     if (!newContent) return;
 
-    const res = await fetch(`/api/sessions/${currentSessionId}/notes/${noteId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newContent })
-    });
-
-    if (res.ok) {
-        noteEl.dataset.originalContent = newContent;
-        toggleEditMode(noteEl, false);
-        fetchNotes(currentSessionId);
-    }
+    socket.send('UPDATE_NOTE', { noteId, content: newContent });
+    
+    noteEl.dataset.originalContent = newContent;
+    toggleEditMode(noteEl, false);
 }
 
 async function deleteNote(noteEl) {
     const noteId = noteEl.dataset.noteId;
     if (!confirm('Are you sure you want to delete this note?')) return;
 
-    const res = await fetch(`/api/sessions/${currentSessionId}/notes/${noteId}`, {
-        method: 'DELETE'
-    });
-
-    if (res.ok) {
-        noteEl.remove();
-        // Check if stream is empty after removal
-        const stream = document.getElementById('note-stream');
-        if (stream && stream.querySelectorAll('.note').length === 0) {
-            stream.innerHTML = '<div class="empty-state">No notes yet.</div>';
-        }
-    }
+    socket.send('DELETE_NOTE', { noteId });
+    noteEl.remove();
 }
 
 async function sendNote() {
@@ -430,19 +403,14 @@ async function sendNote() {
 
     const timestamp = activeDraftTimestamp !== null ? activeDraftTimestamp : (currentSession?.started_at ? (Date.now() - new Date(currentSession.started_at).getTime()) / 1000 : getSecondsSinceMidnight());
 
-    const res = await fetch(`/api/sessions/${currentSessionId}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, timestamp, color: selectedColor })
+    socket.send('CREATE_NOTE', {
+        payload: { content, timestamp, color: selectedColor }
     });
     
-    if (res.ok) {
-        input.value = '';
-        activeDraftTimestamp = null;
-        if (draftResetTimeout) { clearTimeout(draftResetTimeout); draftResetTimeout = null; }
-        updateDraftDisplay();
-        fetchNotes(currentSessionId);
-    }
+    input.value = '';
+    activeDraftTimestamp = null;
+    if (draftResetTimeout) { clearTimeout(draftResetTimeout); draftResetTimeout = null; }
+    updateDraftDisplay();
 }
 
 function updateColorSelection(color) {
@@ -511,9 +479,15 @@ async function init() {
     
     const handleNewSession = () => {
         const name = prompt('Enter session name:');
-        if (name) fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
-            .then(res => res.json()).then(data => data.id && fetchSessions().then(() => selectSession(data.id)));
+        if (name) {
+            socket.send('CREATE_SESSION', { name });
+        }
     };
+
+    socket.on('SESSION_CREATED', (data) => {
+        // Auto-select if we created it in this tab
+        selectSession(data.id);
+    });
 
     const newSessionBtn = document.getElementById('new-session-btn');
     if (newSessionBtn) newSessionBtn.onclick = handleNewSession;
@@ -601,13 +575,66 @@ async function init() {
     }
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
+
+    // WebSocket Event Listeners
+    socket.on('SESSION_LIST_UPDATE', () => {
+        console.log('Session list updated via WebSocket');
+        fetchSessions();
+    });
+
+    socket.on('SESSION_DELETED', (data) => {
+        console.log('Session deleted via WebSocket:', data.sessionId);
+        if (currentSessionId?.toString() === data.sessionId.toString()) {
+            currentSessionId = null;
+            currentSession = null;
+            window.location.hash = '';
+            const stream = document.getElementById('note-stream');
+            if (stream) stream.innerHTML = '<div class="empty-state">This session has been deleted.</div>';
+            const inputArea = document.getElementById('input-area');
+            if (inputArea) inputArea.style.display = 'none';
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) exportBtn.style.display = 'none';
+        }
+        fetchSessions();
+    });
+
+    socket.on('NOTE_UPDATE', (data) => {
+        if (data.sessionId.toString() === currentSessionId?.toString()) {
+            console.log('Notes updated via WebSocket');
+            fetchNotes(currentSessionId);
+        }
+    });
+
+    socket.on('NOTE_DELETED', (data) => {
+        console.log('Note deleted via WebSocket:', data.noteId);
+        const noteEl = document.querySelector(`.note[data-note-id="${data.noteId}"]`);
+        if (noteEl) {
+            noteEl.remove();
+            const stream = document.getElementById('note-stream');
+            if (stream && stream.querySelectorAll('.note').length === 0) {
+                stream.innerHTML = '<div class="empty-state">No notes yet.</div>';
+            }
+        }
+    });
+
+    socket.on('SESSION_STATUS_UPDATE', (data) => {
+        if (data.sessionId.toString() === currentSessionId?.toString()) {
+            console.log('Session status updated via WebSocket');
+            currentSession.status = data.status;
+            if (data.status === 'active') {
+                currentSession.started_at = currentSession.started_at || new Date().toISOString();
+                currentSession.stopped_at = null;
+            } else if (data.status === 'completed') {
+                currentSession.stopped_at = new Date().toISOString();
+            }
+            updateClock();
+        }
+    });
 }
 
 window.addEventListener('hashchange', () => {
     const m = window.location.hash.match(/#\/session\/(\d+)/);
     if (m && m[1] !== currentSessionId?.toString()) selectSession(m[1]);
 });
-
-setInterval(() => currentSessionId && fetch(`/api/sessions/${currentSessionId}`).then(r => r.json()).then(s => { currentSession = s; fetchNotes(currentSessionId); }), 1000);
 
 init();
