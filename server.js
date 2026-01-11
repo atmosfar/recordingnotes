@@ -393,6 +393,7 @@ if (process.env.NODE_ENV !== 'test') {
           const db = getDb();
           const { name } = data;
           const id = sessions.createSession(db, { name });
+          ws.send(JSON.stringify({ type: 'SESSION_CREATED', id, name }));
           broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
         } else if (data.type === 'UPDATE_SESSION') {
           initDb();
