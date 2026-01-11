@@ -1,10 +1,10 @@
 # Plan: WebSocket Migration
 
-## Phase 1: Server-Side Foundation
+## Phase 1: Server-Side Foundation [checkpoint: f31ef85]
 - [x] Task: Install `ws` dependency. [f70a45b]
 - [x] Task: Initialize WebSocket server in `server.js` and implement room management (Map of sessionRooms). [1ac2dde]
 - [x] Task: Create a unified `broadcastToRoom` and `broadcastToAll` helper function. [1ac2dde]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Foundation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Action Migration (Backend)
 - [ ] Task: Implement WebSocket message handlers for Session actions (Create, Update, Delete).
