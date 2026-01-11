@@ -2,8 +2,8 @@
 
 ## Phase 1: Server-Side Foundation
 - [x] Task: Install `ws` dependency. [f70a45b]
-- [ ] Task: Initialize WebSocket server in `server.js` and implement room management (Map of sessionRooms).
-- [ ] Task: Create a unified `broadcastToRoom` and `broadcastToAll` helper function.
+- [x] Task: Initialize WebSocket server in `server.js` and implement room management (Map of sessionRooms). [1ac2dde]
+- [x] Task: Create a unified `broadcastToRoom` and `broadcastToAll` helper function. [1ac2dde]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Action Migration (Backend)
