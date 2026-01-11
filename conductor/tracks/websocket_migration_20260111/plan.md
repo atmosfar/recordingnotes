@@ -7,9 +7,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Server-Side Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Action Migration (Backend)
-- [ ] Task: Implement WebSocket message handlers for Session actions (Create, Update, Delete).
-- [ ] Task: Implement WebSocket message handlers for Note actions (Create, Update, Delete).
-- [ ] Task: Update existing Webhook handlers (SquadCast/Companion) to trigger WebSocket broadcasts.
+- [x] Task: Implement WebSocket message handlers for Session actions (Create, Update, Delete). [fca5ed7]
+- [x] Task: Implement WebSocket message handlers for Note actions (Create, Update, Delete). [fca5ed7]
+- [x] Task: Update existing Webhook handlers (SquadCast/Companion) to trigger WebSocket broadcasts. [fca5ed7]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Action Migration (Backend)' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Refactoring
