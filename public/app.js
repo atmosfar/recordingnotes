@@ -4,6 +4,79 @@ let selectedColor = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
 
+class SocketManager {
+    constructor() {
+        this.ws = null;
+        this.reconnectInterval = 1000;
+        this.maxReconnectInterval = 30000;
+        this.listeners = new Map();
+        this.connect();
+    }
+
+    connect() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        this.ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+        this.ws.onopen = () => {
+            console.log('WebSocket connected');
+            this.reconnectInterval = 1000;
+            // Re-join session if we were in one
+            if (currentSessionId) {
+                this.send('JOIN_SESSION', { sessionId: currentSessionId });
+            }
+        };
+
+        this.ws.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                this.emit(message.type, message);
+            } catch (e) {
+                console.error('Error parsing WebSocket message:', e);
+            }
+        };
+
+        this.ws.onclose = () => {
+            console.log('WebSocket disconnected. Reconnecting...');
+            setTimeout(() => this.connect(), this.reconnectInterval);
+            this.reconnectInterval = Math.min(this.reconnectInterval * 2, this.maxReconnectInterval);
+        };
+
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.ws.close();
+        };
+    }
+
+    send(type, payload = {}) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type, ...payload }));
+        } else {
+            console.warn('WebSocket not connected. Message dropped:', type);
+        }
+    }
+
+    on(type, callback) {
+        if (!this.listeners.has(type)) {
+            this.listeners.set(type, new Set());
+        }
+        this.listeners.get(type).add(callback);
+    }
+
+    off(type, callback) {
+        if (this.listeners.has(type)) {
+            this.listeners.get(type).delete(callback);
+        }
+    }
+
+    emit(type, data) {
+        if (this.listeners.has(type)) {
+            this.listeners.get(type).forEach(cb => cb(data));
+        }
+    }
+}
+
+const socket = new SocketManager();
+
 /**
  * Formats duration in seconds to HH:MM:SS.s or HH:MM:SS.mmm
  */
