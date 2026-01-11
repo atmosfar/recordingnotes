@@ -10,12 +10,12 @@
 - [x] Task: Implement WebSocket message handlers for Session actions (Create, Update, Delete). [fca5ed7]
 - [x] Task: Implement WebSocket message handlers for Note actions (Create, Update, Delete). [fca5ed7]
 - [x] Task: Update existing Webhook handlers (SquadCast/Companion) to trigger WebSocket broadcasts. [fca5ed7]
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Action Migration (Backend)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Action Migration (Backend)' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Refactoring
-- [ ] Task: Create a `SocketManager` class in `public/app.js` to handle connection, reconnection, and event routing.
-- [ ] Task: Replace all `fetch` calls for actions with `SocketManager.send()` calls.
-- [ ] Task: Remove all `setInterval` polling logic and replace with WebSocket event listeners.
+- [x] Task: Create a `SocketManager` class in `public/app.js` to handle connection, reconnection, and event routing. [4f1323f]
+- [x] Task: Replace all `fetch` calls for actions with `SocketManager.send()` calls. [4f1323f]
+- [x] Task: Remove all `setInterval` polling logic and replace with WebSocket event listeners. [4f1323f]
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Frontend Refactoring' (Protocol in workflow.md)
 
 ## Phase 4: Verification & Cleanup
