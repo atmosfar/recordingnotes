@@ -1,4 +1,5 @@
 import express from 'express';
+import { WebSocketServer } from 'ws';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
@@ -8,6 +9,31 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static('public'));
+
+// WebSocket Server Initialization
+let wss;
+const sessionRooms = new Map(); // sessionId -> Set<ws>
+
+function broadcastToAll(message) {
+  if (!wss) return;
+  const data = JSON.stringify(message);
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) { // WebSocket.OPEN
+      client.send(data);
+    }
+  });
+}
+
+function broadcastToRoom(sessionId, message) {
+  const room = sessionRooms.get(sessionId.toString());
+  if (!room) return;
+  const data = JSON.stringify(message);
+  room.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(data);
+    }
+  });
+}
 
 // Health check or API status
 app.get('/api/status', (req, res) => {
@@ -324,10 +350,57 @@ app.get('/api/sessions/:id/export', (req, res) => {
 });
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+  });
+
+  wss = new WebSocketServer({ server });
+
+  wss.on('connection', (ws) => {
+    ws.currentSessionId = null;
+
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message);
+        
+        if (data.type === 'JOIN_SESSION') {
+          const { sessionId } = data;
+          if (ws.currentSessionId) {
+            // Leave previous room
+            const oldRoom = sessionRooms.get(ws.currentSessionId.toString());
+            if (oldRoom) oldRoom.delete(ws);
+          }
+          
+          ws.currentSessionId = sessionId;
+          if (!sessionRooms.has(sessionId.toString())) {
+            sessionRooms.set(sessionId.toString(), new Set());
+          }
+          sessionRooms.get(sessionId.toString()).add(ws);
+        } else if (data.type === 'LEAVE_SESSION') {
+          if (ws.currentSessionId) {
+            const room = sessionRooms.get(ws.currentSessionId.toString());
+            if (room) room.delete(ws);
+            ws.currentSessionId = null;
+          }
+        }
+        // Future: Handle other action types here
+        
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (ws.currentSessionId) {
+        const room = sessionRooms.get(ws.currentSessionId.toString());
+        if (room) {
+          room.delete(ws);
+          if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
+        }
+      }
+    });
   });
 }
 
-export { app };
+export { app, wss, broadcastToAll, broadcastToRoom };
 export default app;
