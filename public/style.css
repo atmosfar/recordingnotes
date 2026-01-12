@@ -45,6 +45,10 @@ body.current-session-status::after {
     z-index: 1000;
 }
 
+body.session-not-found {
+    --status-bar-color: var(--error-yellow);
+}
+
 #sidebar {
     width: 300px; background-color: var(--card-bg);
     border-right: 1px solid var(--border-color);
