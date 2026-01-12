@@ -11,6 +11,7 @@ A simple, server-hosted system for taking live timestamped notes during podcast 
 - **Collaborative Stream:** A single scrolling list of notes that updates for all connected users.
 - **CSV Export:** Basic download of session notes in a CSV format compatible with most editors.
 - **Simple Access:** Password-protected dashboard (single shared password or simple user list).
+- **Data Management:** Edit session names, delete sessions, and remove individual notes directly from the UI.
 
 ## Target Audience
 - **Producers/Editors:** Anyone needing to mark points of interest during a live recording.

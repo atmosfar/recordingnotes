@@ -1,0 +1,8 @@
+{
+  "track_id": "websocket_migration_20260111",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-11T10:00:00Z",
+  "updated_at": "2026-01-11T10:00:00Z",
+  "description": "the web ui should update the session list in the sidebar in realtime when a new session has been added, without needing to refresh the page. This involves migrating the entire system to WebSockets for real-time updates and actions."
+}

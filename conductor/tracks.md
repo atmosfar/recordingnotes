@@ -12,5 +12,20 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: add functionality to edit session names, delete sessions and delete notes
-*Link: [./conductor/tracks/session_note_management_20260109/](./conductor/tracks/session_note_management_20260109/)*
+## [X] Track: WebSocket Migration
+*Link: [./conductor/tracks/websocket_migration_20260111/](./conductor/tracks/websocket_migration_20260111/)*
+
+---
+
+## [X] Track: Bug Fix - Non-existent Session Handling
+*Link: [./conductor/tracks/session_not_found_fix_20260111/](./conductor/tracks/session_not_found_fix_20260111/)*
+
+---
+
+## [X] Track: UI Tweaks - Desktop Header & Stream Polishing
+*Link: [./conductor/archive/ui_tweaks_20260111/](./conductor/archive/ui_tweaks_20260111/)*
+
+---
+
+## [ ] Track: User Authentication
+*Description: Implement authentication across APIs and session dashboard.*
