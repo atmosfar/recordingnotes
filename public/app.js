@@ -281,6 +281,8 @@ async function selectSession(id) {
             document.getElementById('input-area').style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
             if (exportBtn) exportBtn.style.display = 'none';
+            const mobileExportBtn = document.getElementById('mobile-export-btn');
+            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
             const mobileTitle = document.getElementById('mobile-session-title');
             if (mobileTitle) mobileTitle.textContent = "No Session";
             const infoEl = document.getElementById('session-info');
@@ -294,6 +296,8 @@ async function selectSession(id) {
     document.getElementById('input-area').style.display = 'block';
     const exportBtn = document.getElementById('export-btn');
     if (exportBtn) exportBtn.style.display = 'block';
+    const mobileExportBtn = document.getElementById('mobile-export-btn');
+    if (mobileExportBtn) mobileExportBtn.style.display = 'flex';
     
     closeSidebarFn();
     
@@ -629,6 +633,8 @@ async function init() {
             if (inputArea) inputArea.style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
             if (exportBtn) exportBtn.style.display = 'none';
+            const mobileExportBtn = document.getElementById('mobile-export-btn');
+            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
         }
         fetchSessions();
     });
