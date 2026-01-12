@@ -7,6 +7,8 @@
     --card-bg: #fff;
     --overlay-bg: rgba(0,0,0,0.5);
     --recording-red: #ff4d4d;
+    --error-yellow: #f1c40f;
+    --status-bar-color: var(--recording-red);
 }
 
 body.dark-mode {
@@ -17,6 +19,8 @@ body.dark-mode {
     --border-color: #333;
     --card-bg: #1e1e1e;
     --overlay-bg: rgba(0,0,0,0.7);
+    --recording-red: #ff4d4d;
+    --error-yellow: #f1c40f;
 }
 
 html { scroll-behavior: smooth; }
@@ -31,13 +35,13 @@ body {
     position: relative;
 }
 
-/* Recording Indicator */
-body.recording::after {
+/* Recording Indicator / Status Bar */
+body.current-session-status::after {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background-color: var(--recording-red);
+    background-color: var(--status-bar-color);
     z-index: 1000;
 }
 
