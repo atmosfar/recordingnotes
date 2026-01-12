@@ -36,7 +36,7 @@ body {
 }
 
 /* Recording Indicator / Status Bar */
-body.current-session-status::after {
+body.recording::after {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;

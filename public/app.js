@@ -123,7 +123,7 @@ function updateDraftDisplay() {
 // UI State Management
 function updateRecordingState() {
     const isRecording = currentSession && currentSession.started_at && !currentSession.stopped_at;
-    document.body.classList.toggle('current-session-status', isRecording);
+    document.body.classList.toggle('recording', isRecording);
     
     // Update placeholders
     const input = document.getElementById('note-input');
