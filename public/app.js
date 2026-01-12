@@ -293,6 +293,9 @@ async function selectSession(id) {
     document.body.classList.remove('session-not-found');
     currentSession = await res.json();
     
+    const headerTitle = document.getElementById('header-session-title');
+    if (headerTitle) headerTitle.textContent = currentSession.name;
+    
     document.getElementById('input-area').style.display = 'block';
     const exportBtn = document.getElementById('export-btn');
     if (exportBtn) exportBtn.style.display = 'block';
@@ -635,6 +638,8 @@ async function init() {
             if (exportBtn) exportBtn.style.display = 'none';
             const mobileExportBtn = document.getElementById('mobile-export-btn');
             if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+            const headerTitle = document.getElementById('header-session-title');
+            if (headerTitle) headerTitle.textContent = "RecNotes";
         }
         fetchSessions();
     });
