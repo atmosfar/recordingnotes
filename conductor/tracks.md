@@ -24,8 +24,3 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [X] Track: UI Tweaks - Desktop Header & Stream Polishing
 *Link: [./conductor/archive/ui_tweaks_20260111/](./conductor/archive/ui_tweaks_20260111/)*
-
----
-
-## [ ] Track: User Authentication
-*Description: Implement authentication across APIs and session dashboard.*
