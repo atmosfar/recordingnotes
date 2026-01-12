@@ -77,7 +77,7 @@ header {
 .header-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; height: 100%; }
 .branding { font-size: 1.2rem; margin: 0; font-weight: 700; color: var(--primary-color); }
 
-#mobile-session-title {
+#header-session-title {
     font-size: 1rem;
     font-weight: 600;
     margin: 0;
@@ -347,7 +347,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
     
-    #mobile-session-title { display: block; flex: 1; text-align: center; }
+    #header-session-title { display: block; flex: 1; text-align: center; }
     #overflow-menu-toggle { display: block; }
     
     #sidebar {

@@ -147,7 +147,7 @@ function updateClock() {
     if (!clockEl) return;
 
     const infoEl = document.getElementById('session-info');
-    const mobileTitle = document.getElementById('mobile-session-title');
+    const headerTitle = document.getElementById('header-session-title');
 
     if (currentSession) {
         if (currentSession.started_at) {
@@ -173,13 +173,13 @@ function updateClock() {
             if (infoEl) infoEl.textContent = currentSession.name;
             if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
         }
-        if (mobileTitle) mobileTitle.textContent = currentSession.name;
+        if (headerTitle) headerTitle.textContent = currentSession.name;
     } else {
         // No session selected
         const now = new Date();
         const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
         clockEl.textContent = formatDuration(ssm, 1);
-        if (mobileTitle) mobileTitle.textContent = "RecNotes";
+        if (headerTitle) headerTitle.textContent = "RecNotes";
         if (infoEl) infoEl.textContent = "No Session";
         if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
     }
@@ -283,8 +283,8 @@ async function selectSession(id) {
             if (exportBtn) exportBtn.style.display = 'none';
             const mobileExportBtn = document.getElementById('mobile-export-btn');
             if (mobileExportBtn) mobileExportBtn.style.display = 'none';
-            const mobileTitle = document.getElementById('mobile-session-title');
-            if (mobileTitle) mobileTitle.textContent = "No Session";
+            const headerTitle = document.getElementById('header-session-title');
+            if (headerTitle) headerTitle.textContent = "No Session";
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             return;
