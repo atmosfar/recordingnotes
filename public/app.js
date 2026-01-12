@@ -127,7 +127,7 @@ function updateRecordingState() {
         return;
     }
     const isRecording = currentSession && currentSession.started_at && !currentSession.stopped_at;
-    document.body.classList.toggle('recording', isRecording);
+    document.body.classList.toggle('recording', !!isRecording);
     
     // Update placeholders
     const input = document.getElementById('note-input');
@@ -139,6 +139,8 @@ function updateRecordingState() {
         }
     }
 }
+
+let clockInterval = null;
 
 function updateClock() {
     const clockEl = document.getElementById('live-clock');
@@ -155,12 +157,21 @@ function updateClock() {
             
             const label = currentSession.stopped_at ? 'FINISHED' : '🔴 RECORDING';
             if (infoEl) infoEl.textContent = `${label}: ${currentSession.name}`;
+
+            // Start clock interval if recording and not already running
+            if (!currentSession.stopped_at && !clockInterval) {
+                clockInterval = setInterval(updateClock, 100);
+            } else if (currentSession.stopped_at && clockInterval) {
+                clearInterval(clockInterval);
+                clockInterval = null;
+            }
         } else {
             // Manual mode / No start time: use local Time-of-Day for clock
             const now = new Date();
             const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
             clockEl.textContent = formatDuration(ssm, 1);
             if (infoEl) infoEl.textContent = currentSession.name;
+            if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
         }
         if (mobileTitle) mobileTitle.textContent = currentSession.name;
     } else {
@@ -170,11 +181,13 @@ function updateClock() {
         clockEl.textContent = formatDuration(ssm, 1);
         if (mobileTitle) mobileTitle.textContent = "RecNotes";
         if (infoEl) infoEl.textContent = "No Session";
+        if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
     }
     updateRecordingState();
 }
 
-setInterval(updateClock, 100);
+// Initial clock call
+updateClock();
 
 // Data Fetching
 async function fetchSessions() {
