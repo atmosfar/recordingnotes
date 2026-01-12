@@ -122,6 +122,10 @@ function updateDraftDisplay() {
 
 // UI State Management
 function updateRecordingState() {
+    if (document.body.classList.contains('session-not-found')) {
+        document.body.classList.add('recording');
+        return;
+    }
     const isRecording = currentSession && currentSession.started_at && !currentSession.stopped_at;
     document.body.classList.toggle('recording', isRecording);
     
@@ -254,6 +258,24 @@ async function selectSession(id) {
     if (stream) stream.innerHTML = '';
     
     const res = await fetch(`/api/sessions/${id}`);
+    if (!res.ok) {
+        if (res.status === 404) {
+            currentSessionId = null;
+            currentSession = null;
+            document.body.classList.add('session-not-found');
+            document.body.classList.add('recording'); // Use recording class for the status bar bar
+            document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
+            document.getElementById('input-area').style.display = 'none';
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) exportBtn.style.display = 'none';
+            const mobileTitle = document.getElementById('mobile-session-title');
+            if (mobileTitle) mobileTitle.textContent = "No Session";
+            const infoEl = document.getElementById('session-info');
+            if (infoEl) infoEl.textContent = "No Session";
+            return;
+        }
+    }
+    document.body.classList.remove('session-not-found');
     currentSession = await res.json();
     
     document.getElementById('input-area').style.display = 'block';

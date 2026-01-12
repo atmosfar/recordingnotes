@@ -78,4 +78,11 @@ describe('Session API Endpoints', () => {
     assert.strictEqual(response.status, 200);
     assert.strictEqual(data.name, 'Specific Session');
   });
+
+  test('GET /api/sessions/:id should return 404 for non-existent session', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions/99999`);
+    assert.strictEqual(response.status, 404);
+    const data = await response.json();
+    assert.strictEqual(data.error, 'Session not found');
+  });
 });
