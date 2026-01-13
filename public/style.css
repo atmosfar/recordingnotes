@@ -361,7 +361,12 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
     
-    #header-session-title { display: block; }
+    #header-session-title { 
+        display: block; 
+        position: static; 
+        transform: none; 
+        max-width: 100%; 
+    }
     #overflow-menu-toggle { display: block; }
     
     #sidebar {
@@ -401,6 +406,8 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     
     .note { grid-template-columns: 80px 1fr auto; gap: 0.5rem; padding: 0.5rem; }
     .note .timestamp { font-size: 0.75rem; padding-right: 0.25rem; }
+    .note-actions { display: none; opacity: 1; }
+    .note.reveal-actions .note-actions, .note.editing .note-actions { display: flex; }
     
     #mobile-color-toggle {
         display: flex; align-items: center; justify-content: center;
