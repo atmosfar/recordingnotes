@@ -385,7 +385,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         color: #fff;
     }
 
-    .session-actions { opacity: 1; }
+    #sidebar.managing .session-actions { opacity: 1; }
     .session-actions .sess-edit-btn { color: var(--primary-color); }
     .session-actions .sess-delete-btn { color: #ff4d4d; }
     
