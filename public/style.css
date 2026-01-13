@@ -391,6 +391,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     .session-actions .sess-delete-btn { color: #ff4d4d; }
 
     /* Ensure session name takes full width when icons are hidden */
+    .session-item { min-height: 50px; box-sizing: border-box; }
     .session-item .session-name { max-width: 100%; transition: max-width 0.2s; }
     
     .note { grid-template-columns: 80px 1fr auto; gap: 0.5rem; padding: 0.5rem; }
