@@ -374,12 +374,20 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         box-sizing: border-box;
         border: 1px solid var(--border-color);
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
     }
     
     .sidebar-top-actions #manage-sessions-btn.active {
         background-color: var(--secondary-color);
         color: #fff;
     }
+
+    .session-actions { opacity: 1; }
+    .session-actions .sess-edit-btn { color: var(--primary-color); }
+    .session-actions .sess-delete-btn { color: #ff4d4d; }
     
     .note { grid-template-columns: 80px 1fr auto; gap: 0.5rem; padding: 0.5rem; }
     .note .timestamp { font-size: 0.75rem; padding-right: 0.25rem; }
