@@ -367,9 +367,11 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         transform: none; 
         max-width: 100%; 
         padding-right: 0.5rem;
-        line-height: normal;
+        line-height: 1.2;
     }
-    #overflow-menu-toggle { display: block; }
+    #overflow-menu-toggle { display: block; padding: 0; }
+    #menu-toggle { display: block; padding: 0; }
+    #live-clock { line-height: 1; }
     
     #sidebar {
         position: fixed; left: 0; top: 0; bottom: 0; z-index: 2000;
