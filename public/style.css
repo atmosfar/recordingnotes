@@ -372,12 +372,13 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     .sidebar-top-actions .action-btn { 
         min-height: 44px; 
         box-sizing: border-box;
-        border: 1px solid transparent; /* Base border to avoid jumps */
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
     .sidebar-top-actions #manage-sessions-btn.active {
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Match non-active shadow */
-        border: 1px solid var(--border-color); /* Match non-active border */
+        background-color: var(--secondary-color);
+        color: #fff;
     }
     
     .note { grid-template-columns: 80px 1fr auto; gap: 0.5rem; padding: 0.5rem; }
