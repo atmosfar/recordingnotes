@@ -366,6 +366,8 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         position: static; 
         transform: none; 
         max-width: 100%; 
+        padding-right: 0.5rem;
+        line-height: normal;
     }
     #overflow-menu-toggle { display: block; }
     
