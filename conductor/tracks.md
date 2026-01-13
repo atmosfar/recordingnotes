@@ -23,4 +23,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## [X] Track: UI Tweaks - Desktop Header & Stream Polishing
-*Link: [./conductor/archive/ui_tweaks_20260111/](./conductor/archive/ui_tweaks_20260111/)*
+*Link: [./conductor/archive/ui_tweaks_20260111/](./conductor/archive/ui_tweaks_20260111/)*---
+
+## [X] Track: Mobile UI Refinement
+*Link: [./conductor/archive/mobile_ui_refinement_20260113/](./conductor/archive/mobile_ui_refinement_20260113/)*
