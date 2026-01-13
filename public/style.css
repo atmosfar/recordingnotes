@@ -255,6 +255,11 @@ button#new-session-btn:active { transform: scale(0.98); }
 .note-actions .cancel-btn { color: #ff4d4d; }
 .note-actions .delete-btn:hover { color: #ff4d4d; }
 
+.session-actions button svg, .note-actions button svg {
+    display: block;
+    pointer-events: none;
+}
+
 .note textarea {
     width: 100%; border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem;
     font-family: inherit; font-size: inherit; background-color: var(--bg-color);

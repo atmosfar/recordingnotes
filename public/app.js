@@ -179,7 +179,8 @@ function updateClock() {
         const now = new Date();
         const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
         clockEl.textContent = formatDuration(ssm, 1);
-        if (headerTitle) headerTitle.textContent = "RecNotes";
+        const headerTitle = document.getElementById('header-session-title');
+        if (headerTitle) headerTitle.textContent = "";
         if (infoEl) infoEl.textContent = "No Session";
         if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
     }
@@ -220,7 +221,12 @@ function renderSessionList(sessions) {
         actions.className = 'session-actions';
         actions.innerHTML = `
             <button class="sess-edit-btn" title="Rename">✎</button>
-            <button class="sess-delete-btn" title="Delete">🗑</button>
+            <button class="sess-delete-btn" title="Delete">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 3 19 3 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
         `;
         
         actions.querySelector('.sess-edit-btn').onclick = (e) => {
@@ -256,6 +262,12 @@ async function deleteSession(id) {
         window.location.hash = '';
         document.getElementById('note-stream').innerHTML = '<div class="empty-state">Select a session to start taking notes.</div>';
         document.getElementById('input-area').style.display = 'none';
+        const exportBtn = document.getElementById('export-btn');
+        if (exportBtn) exportBtn.style.display = 'none';
+        const mobileExportBtn = document.getElementById('mobile-export-btn');
+        if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+        const headerTitle = document.getElementById('header-session-title');
+        if (headerTitle) headerTitle.textContent = "";
     }
 }
 
@@ -284,7 +296,7 @@ async function selectSession(id) {
             const mobileExportBtn = document.getElementById('mobile-export-btn');
             if (mobileExportBtn) mobileExportBtn.style.display = 'none';
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "No Session";
+            if (headerTitle) headerTitle.textContent = "";
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             return;
@@ -354,7 +366,12 @@ function renderNotes(notes) {
                 <span class="content">${note.content}</span>
                 <div class="note-actions">
                     <button class="edit-btn" title="Edit Note">✎</button>
-                    <button class="delete-btn" title="Delete Note">🗑</button>
+                    <button class="delete-btn" title="Delete Note">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 3 19 3 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
                     <button class="save-btn" title="Save" style="display:none;">✓</button>
                     <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
                 </div>
@@ -480,6 +497,9 @@ const closeSidebarFn = () => {
 };
 
 async function init() {
+    const sunPath = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
+    const moonPath = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+
     const match = window.location.hash.match(/#\/session\/(\d+)/);
     if (match) currentSessionId = match[1];
 
@@ -591,12 +611,11 @@ async function init() {
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        const icon = document.getElementById('theme-icon');
-        if (icon) {
-            icon.innerHTML = isDark 
-                ? '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>'
-                : '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
-        }
+        const path = isDark ? moonPath : sunPath;
+        const desktopIcon = document.getElementById('theme-icon');
+        const mobileIcon = document.getElementById('mobile-theme-icon');
+        if (desktopIcon) desktopIcon.innerHTML = path;
+        if (mobileIcon) mobileIcon.innerHTML = path;
     };
 
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -622,6 +641,26 @@ async function init() {
     socket.on('SESSION_LIST_UPDATE', () => {
         console.log('Session list updated via WebSocket');
         fetchSessions();
+        if (currentSessionId) {
+            fetch(`/api/sessions/${currentSessionId}`)
+                .then(r => {
+                    if (!r.ok) throw new Error('Session not found');
+                    return r.json();
+                })
+                .then(s => {
+                    currentSession = s;
+                    const headerTitle = document.getElementById('header-session-title');
+                    if (headerTitle) {
+                        console.log('Updating header title to:', s.name);
+                        headerTitle.textContent = s.name;
+                    }
+                })
+                .catch(() => {
+                    currentSession = null;
+                    const headerTitle = document.getElementById('header-session-title');
+                    if (headerTitle) headerTitle.textContent = "";
+                });
+        }
     });
 
     socket.on('SESSION_DELETED', (data) => {
@@ -639,7 +678,7 @@ async function init() {
             const mobileExportBtn = document.getElementById('mobile-export-btn');
             if (mobileExportBtn) mobileExportBtn.style.display = 'none';
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "RecNotes";
+            if (headerTitle) headerTitle.textContent = "";
         }
         fetchSessions();
     });
