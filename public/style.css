@@ -385,13 +385,13 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         color: #fff;
     }
 
-    #sidebar.managing .session-actions { opacity: 1; }
+    .session-actions { display: none; opacity: 1; }
+    #sidebar.managing .session-actions { display: flex; }
     .session-actions .sess-edit-btn { color: var(--primary-color); }
     .session-actions .sess-delete-btn { color: #ff4d4d; }
 
     /* Ensure session name takes full width when icons are hidden */
     .session-item .session-name { max-width: 100%; transition: max-width 0.2s; }
-    #sidebar.managing .session-item .session-name { max-width: calc(100% - 60px); }
     
     .note { grid-template-columns: 80px 1fr auto; gap: 0.5rem; padding: 0.5rem; }
     .note .timestamp { font-size: 0.75rem; padding-right: 0.25rem; }
