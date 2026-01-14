@@ -27,12 +27,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-
-
 ## [X] Track: Full WebSocket Data Push
-
 *Link: [./conductor/archive/full_websocket_data_push_20260114/](./conductor/archive/full_websocket_data_push_20260114/)*
 
+---
 
-
-
+## [X] Track: Fix Note Item Height Fluctuation (Desktop)
+*Link: [./conductor/archive/note_height_fix_20260114/](./conductor/archive/note_height_fix_20260114/)*

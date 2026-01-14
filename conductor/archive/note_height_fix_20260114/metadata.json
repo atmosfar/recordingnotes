@@ -1,0 +1,8 @@
+{
+  "track_id": "note_height_fix_20260114",
+  "type": "bug",
+  "status": "completed",
+  "created_at": "2026-01-14T12:30:00Z",
+  "updated_at": "2026-01-14T13:00:00Z",
+  "description": "Fix height fluctuation in note items on desktop when action icons appear on hover."
+}
