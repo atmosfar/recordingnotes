@@ -209,7 +209,7 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     padding: 0.6rem 0.75rem;
     border-radius: 4px;
     font-size: 0.95rem;
-    align-items: flex-start;
+    align-items: center;
     background-color: var(--card-bg);
     position: relative;
     min-height: 2.8rem;
@@ -224,7 +224,7 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     opacity: 1; 
     transition: opacity 0.2s; 
     margin-left: 0.5rem;
-    height: 1.5rem;
+    min-height: 1.5rem;
     align-items: center;
 }
 .note:hover .note-actions { display: flex; }
