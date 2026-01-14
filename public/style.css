@@ -209,16 +209,24 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     padding: 0.6rem 0.75rem;
     border-radius: 4px;
     font-size: 0.95rem;
-    align-items: baseline;
+    align-items: flex-start;
     background-color: var(--card-bg);
     position: relative;
-    min-height: 2.5rem;
+    min-height: 2.8rem;
     box-sizing: border-box;
 }
 .note .timestamp { color: var(--secondary-color); font-family: monospace; font-size: 0.85rem; padding-right: 0.5rem; border-right: 1px solid var(--border-color); }
 .note .content { word-break: break-word; padding-left: 0.5rem; }
 
-.note-actions { display: none; gap: 0.25rem; opacity: 1; transition: opacity 0.2s; margin-left: 0.5rem; }
+.note-actions { 
+    display: none; 
+    gap: 0.25rem; 
+    opacity: 1; 
+    transition: opacity 0.2s; 
+    margin-left: 0.5rem;
+    height: 1.5rem;
+    align-items: center;
+}
 .note:hover .note-actions { display: flex; }
 .note.editing .note-actions { display: flex; }
 .note.reveal-actions .note-actions { display: flex; }
