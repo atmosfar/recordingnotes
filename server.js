@@ -35,6 +35,20 @@ function broadcastToRoom(sessionId, message) {
   });
 }
 
+function broadcastSessionList() {
+  initDb();
+  const db = getDb();
+  const list = sessions.listSessions(db);
+  broadcastToAll({ type: 'SESSION_LIST_UPDATE', sessions: list });
+}
+
+function broadcastNoteUpdate(sessionId) {
+  initDb();
+  const db = getDb();
+  const list = notes.listNotesBySession(db, sessionId);
+  broadcastToRoom(sessionId, { type: 'NOTE_UPDATE', sessionId, notes: list });
+}
+
 // Health check or API status
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', database: process.env.DB_PATH || 'dev.db' });
@@ -50,6 +64,7 @@ app.post('/api/sessions', (req, res) => {
       return res.status(400).json({ error: 'Session name is required' });
     }
     const id = sessions.createSession(db, { name, timestamp_mode, external_id });
+    broadcastSessionList();
     res.status(201).json({ id });
   } catch (error) {
     console.error('POST /api/sessions error:', error);
@@ -75,7 +90,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
           name: sessionTitle || 'Untitled SquadCast Session', 
           external_id: sessionID 
         });
-        broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+        broadcastSessionList();
         return res.status(201).json({ id, status: 'created_via_workaround' });
       }
       return res.status(200).json({ id: existing.id, status: 'already_exists' });
@@ -130,7 +145,7 @@ app.post('/api/webhooks/companion', (req, res) => {
         return res.status(400).json({ error: 'Session name is required for create action' });
       }
       const newId = sessions.createSession(db, { name });
-      broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+      broadcastSessionList();
       return res.status(201).json({ id: newId });
     }
 
@@ -213,6 +228,7 @@ app.patch('/api/sessions/:id', (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
+    broadcastSessionList();
     res.json({ status: 'updated' });
   } catch (error) {
     console.error('PATCH /api/sessions/:id error:', error);
@@ -228,6 +244,7 @@ app.delete('/api/sessions/:id', (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
+    broadcastSessionList();
     res.json({ status: 'deleted' });
   } catch (error) {
     console.error('DELETE /api/sessions/:id error:', error);
@@ -252,6 +269,7 @@ app.post('/api/sessions/:id/notes', (req, res) => {
       user_id, 
       session_id 
     });
+    broadcastNoteUpdate(session_id);
     res.status(201).json({ id });
   } catch (error) {
     console.error('POST /api/sessions/:id/notes error:', error);
@@ -287,6 +305,7 @@ app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
       return res.status(404).json({ error: 'Note not found' });
     }
     
+    broadcastNoteUpdate(req.params.session_id);
     res.json({ status: 'updated' });
   } catch (error) {
     console.error('PATCH /api/sessions/:session_id/notes/:note_id error:', error);
@@ -302,6 +321,7 @@ app.delete('/api/sessions/:session_id/notes/:note_id', (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
+    broadcastNoteUpdate(req.params.session_id);
     res.json({ status: 'deleted' });
   } catch (error) {
     console.error('DELETE /api/sessions/:session_id/notes/:note_id error:', error);
@@ -394,27 +414,27 @@ if (process.env.NODE_ENV !== 'test') {
           const { name } = data;
           const id = sessions.createSession(db, { name });
           ws.send(JSON.stringify({ type: 'SESSION_CREATED', id, name }));
-          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+          broadcastSessionList();
         } else if (data.type === 'UPDATE_SESSION') {
           initDb();
           const db = getDb();
           const { sessionId, name } = data;
           sessions.updateSession(db, sessionId, { name });
-          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+          broadcastSessionList();
         } else if (data.type === 'DELETE_SESSION') {
           initDb();
           const db = getDb();
           const { sessionId } = data;
           sessions.deleteSession(db, sessionId);
           broadcastToAll({ type: 'SESSION_DELETED', sessionId });
-          broadcastToAll({ type: 'SESSION_LIST_UPDATE' });
+          broadcastSessionList();
         } else if (data.type === 'CREATE_NOTE') {
           initDb();
           const db = getDb();
           const { payload } = data;
           if (ws.currentSessionId) {
             notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
-            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+            broadcastNoteUpdate(ws.currentSessionId);
           }
         } else if (data.type === 'UPDATE_NOTE') {
           initDb();
@@ -422,7 +442,7 @@ if (process.env.NODE_ENV !== 'test') {
           const { noteId, content } = data;
           notes.updateNote(db, noteId, content);
           if (ws.currentSessionId) {
-            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_UPDATE', sessionId: ws.currentSessionId });
+            broadcastNoteUpdate(ws.currentSessionId);
           }
         } else if (data.type === 'DELETE_NOTE') {
           initDb();

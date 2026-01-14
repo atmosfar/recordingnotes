@@ -638,28 +638,29 @@ async function init() {
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     // WebSocket Event Listeners
-    socket.on('SESSION_LIST_UPDATE', () => {
+    socket.on('SESSION_LIST_UPDATE', (data) => {
         console.log('Session list updated via WebSocket');
-        fetchSessions();
-        if (currentSessionId) {
-            fetch(`/api/sessions/${currentSessionId}`)
-                .then(r => {
-                    if (!r.ok) throw new Error('Session not found');
-                    return r.json();
-                })
-                .then(s => {
-                    currentSession = s;
+        if (data.sessions) {
+            window.lastSessions = data.sessions;
+            renderSessionList(data.sessions);
+            
+            // Sync current session metadata if active
+            if (currentSessionId) {
+                const updated = data.sessions.find(s => s.id.toString() === currentSessionId.toString());
+                if (updated) {
+                    currentSession = updated;
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle) {
-                        console.log('Updating header title to:', s.name);
-                        headerTitle.textContent = s.name;
+                        console.log('Updating header title to:', updated.name);
+                        headerTitle.textContent = updated.name;
                     }
-                })
-                .catch(() => {
+                } else {
+                    // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle) headerTitle.textContent = "";
-                });
+                }
+            }
         }
     });
 
@@ -680,13 +681,14 @@ async function init() {
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
         }
-        fetchSessions();
     });
 
     socket.on('NOTE_UPDATE', (data) => {
         if (data.sessionId.toString() === currentSessionId?.toString()) {
             console.log('Notes updated via WebSocket');
-            fetchNotes(currentSessionId);
+            if (data.notes) {
+                renderNotes(data.notes);
+            }
         }
     });
 
