@@ -27,5 +27,12 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [X] Track: Mobile UI Refinement
-*Link: [./conductor/archive/mobile_ui_refinement_20260113/](./conductor/archive/mobile_ui_refinement_20260113/)*
+
+
+## [X] Track: Full WebSocket Data Push
+
+*Link: [./conductor/archive/full_websocket_data_push_20260114/](./conductor/archive/full_websocket_data_push_20260114/)*
+
+
+
+
