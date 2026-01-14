@@ -20,6 +20,10 @@ class SocketManager {
         this.ws.onopen = () => {
             console.log('WebSocket connected');
             this.reconnectInterval = 1000;
+            
+            // Initial data fetch
+            this.send('GET_SESSIONS');
+
             // Re-join session if we were in one
             if (currentSessionId) {
                 this.send('JOIN_SESSION', { sessionId: currentSessionId });
@@ -190,14 +194,6 @@ function updateClock() {
 // Initial clock call
 updateClock();
 
-// Data Fetching
-async function fetchSessions() {
-    const res = await fetch('/api/sessions');
-    const sessions = await res.json();
-    window.lastSessions = sessions;
-    renderSessionList(sessions);
-}
-
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
     if (!list) return;
@@ -276,55 +272,13 @@ async function selectSession(id) {
     window.location.hash = `#/session/${id}`;
     renderSessionList(window.lastSessions || []);
     
-    // Join the WebSocket room for this session
-    socket.send('JOIN_SESSION', { sessionId: id });
-
     const stream = document.getElementById('note-stream');
     if (stream) stream.innerHTML = '';
-    
-    const res = await fetch(`/api/sessions/${id}`);
-    if (!res.ok) {
-        if (res.status === 404) {
-            currentSessionId = null;
-            currentSession = null;
-            document.body.classList.add('session-not-found');
-            document.body.classList.add('recording'); // Use recording class for the status bar bar
-            document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
-            document.getElementById('input-area').style.display = 'none';
-            const exportBtn = document.getElementById('export-btn');
-            if (exportBtn) exportBtn.style.display = 'none';
-            const mobileExportBtn = document.getElementById('mobile-export-btn');
-            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
-            const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "";
-            const infoEl = document.getElementById('session-info');
-            if (infoEl) infoEl.textContent = "No Session";
-            return;
-        }
-    }
-    document.body.classList.remove('session-not-found');
-    currentSession = await res.json();
-    
-    const headerTitle = document.getElementById('header-session-title');
-    if (headerTitle) headerTitle.textContent = currentSession.name;
-    
-    document.getElementById('input-area').style.display = 'block';
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) exportBtn.style.display = 'block';
-    const mobileExportBtn = document.getElementById('mobile-export-btn');
-    if (mobileExportBtn) mobileExportBtn.style.display = 'flex';
+
+    // Join the WebSocket room for this session (this now triggers SESSION_DATA push)
+    socket.send('JOIN_SESSION', { sessionId: id });
     
     closeSidebarFn();
-    
-    fetchNotes(id);
-    updateClock(); 
-}
-
-async function fetchNotes(sessionId) {
-    if (!sessionId) return;
-    const res = await fetch(`/api/sessions/${sessionId}/notes`);
-    const notes = await res.json();
-    renderNotes(notes);
 }
 
 function renderNotes(notes) {
@@ -503,7 +457,6 @@ async function init() {
     const match = window.location.hash.match(/#\/session\/(\d+)/);
     if (match) currentSessionId = match[1];
 
-    await fetchSessions();
     if (match) selectSession(match[1]);
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
@@ -636,6 +589,46 @@ async function init() {
     }
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
+
+    socket.on('SESSION_DATA', (data) => {
+        console.log('Received session data via WebSocket');
+        const { session, notes } = data;
+        
+        document.body.classList.remove('session-not-found');
+        currentSession = session;
+        
+        const headerTitle = document.getElementById('header-session-title');
+        if (headerTitle) headerTitle.textContent = currentSession.name;
+        
+        document.getElementById('input-area').style.display = 'block';
+        const exportBtn = document.getElementById('export-btn');
+        if (exportBtn) exportBtn.style.display = 'block';
+        const mobileExportBtn = document.getElementById('mobile-export-btn');
+        if (mobileExportBtn) mobileExportBtn.style.display = 'flex';
+        
+        renderNotes(notes);
+        updateClock();
+    });
+
+    socket.on('ERROR', (data) => {
+        if (data.code === 404) {
+            console.error('Session not found error from server');
+            currentSessionId = null;
+            currentSession = null;
+            document.body.classList.add('session-not-found');
+            document.body.classList.add('recording');
+            document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
+            document.getElementById('input-area').style.display = 'none';
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) exportBtn.style.display = 'none';
+            const mobileExportBtn = document.getElementById('mobile-export-btn');
+            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+            const headerTitle = document.getElementById('header-session-title');
+            if (headerTitle) headerTitle.textContent = "";
+            const infoEl = document.getElementById('session-info');
+            if (infoEl) infoEl.textContent = "No Session";
+        }
+    });
 
     // WebSocket Event Listeners
     socket.on('SESSION_LIST_UPDATE', (data) => {

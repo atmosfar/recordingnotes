@@ -402,6 +402,26 @@ if (process.env.NODE_ENV !== 'test') {
             sessionRooms.set(sessionId.toString(), new Set());
           }
           sessionRooms.get(sessionId.toString()).add(ws);
+
+          // PUSH: Send current session and notes to the joining client
+          initDb();
+          const db = getDb();
+          const session = sessions.getSession(db, sessionId);
+          if (session) {
+            const list = notes.listNotesBySession(db, sessionId);
+            ws.send(JSON.stringify({ 
+              type: 'SESSION_DATA', 
+              session, 
+              notes: list 
+            }));
+          } else {
+            ws.send(JSON.stringify({ type: 'ERROR', message: 'Session not found', code: 404 }));
+          }
+        } else if (data.type === 'GET_SESSIONS') {
+          initDb();
+          const db = getDb();
+          const list = sessions.listSessions(db);
+          ws.send(JSON.stringify({ type: 'SESSION_LIST_UPDATE', sessions: list }));
         } else if (data.type === 'LEAVE_SESSION') {
           if (ws.currentSessionId) {
             const room = sessionRooms.get(ws.currentSessionId.toString());
