@@ -205,18 +205,32 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
 .note {
     display: grid;
     grid-template-columns: 95px 1fr auto;
+    grid-template-rows: auto;
     gap: 1rem;
     padding: 0.6rem 0.75rem;
     border-radius: 4px;
     font-size: 0.95rem;
-    align-items: center;
+    align-items: stretch;
     background-color: var(--card-bg);
     position: relative;
     min-height: 2.8rem;
     box-sizing: border-box;
 }
-.note .timestamp { color: var(--secondary-color); font-family: monospace; font-size: 0.85rem; padding-right: 0.5rem; border-right: 1px solid var(--border-color); }
-.note .content { word-break: break-word; padding-left: 0.5rem; }
+.note .timestamp { 
+    display: flex;
+    align-items: center;
+    color: var(--secondary-color); 
+    font-family: monospace; 
+    font-size: 0.85rem; 
+    padding-right: 0.5rem; 
+    border-right: 1px solid var(--border-color); 
+}
+.note .content { 
+    display: flex;
+    align-items: center;
+    word-break: break-word; 
+    padding-left: 0.5rem; 
+}
 
 .note-actions { 
     display: none; 
