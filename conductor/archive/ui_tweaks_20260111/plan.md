@@ -10,8 +10,8 @@
 - [x] Task: Refine `.empty-state` in `style.css` for perfect horizontal centering. [b90f3be]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Logic & Message Alignment' (Protocol in workflow.md) [d70dd3e]
 
-## Phase 3: Icon Refinements & Mobile Button Fixes
-- [~] Task: Apply requested icon tweaks to `index.html` (SVGs/Buttons) and fix mobile theme toggle sync.
-- [ ] Task: Fix height variation in mobile UI buttons when Edit/Done is pressed in sidebar.
-- [ ] Task: Update icon-related styles in `style.css` (size, padding, hover effects).
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Icon Refinements & Mobile Button Fixes' (Protocol in workflow.md)
+## Phase 3: Icon Refinements & Mobile Button Fixes [checkpoint: 36b70a6]
+- [x] Task: Apply requested icon tweaks to `index.html` (SVGs/Buttons) and fix mobile theme toggle sync. [36b70a6]
+- [x] Task: Fix height variation in mobile UI buttons when Edit/Done is pressed in sidebar. [a346b3b]
+- [x] Task: Update icon-related styles in `style.css` (size, padding, hover effects). [36b70a6]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Icon Refinements & Mobile Button Fixes' (Protocol in workflow.md) [36b70a6]
