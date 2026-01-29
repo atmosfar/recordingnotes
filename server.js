@@ -354,21 +354,36 @@ app.get('/api/sessions/:id/export', (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
     const list = notes.listNotesBySession(db, req.params.id);
+    const format = req.query.format || 'reaper';
     
-    let csv = '#,Name,Start,End,Length,Color\n';
-    list.forEach((note, index) => {
-      const name = `"${note.content.replace(/"/g, '""')}"`;
-      const marker = `M${index + 1}`;
-      const color = note.color ? note.color.replace('#', '').toUpperCase() : '';
-      const timestamp = formatDuration(note.timestamp);
-      // Format: #,Name,Start,End,Length,Color
-      csv += `${marker},${name},${timestamp},,,${color}\n`;
-    });
+    let content = '';
+    if (format === 'audition') {
+      content = 'Name\tStart\tDuration\tTime Format\tType\tDescription\n';
+      list.forEach((note) => {
+        const name = note.content.replace(/"/g, '""');
+        const start = formatDuration(note.timestamp);
+        const duration = '0:00.000';
+        // Format: Name <tab> Start <tab> Duration <tab> decimal <tab> Cue <tab> Description
+        content += `${name}\t${start}\t${duration}\tdecimal\tCue\t\n`;
+      });
+    } else {
+      // Default to REAPER
+      content = '#,Name,Start,End,Length,Color\n';
+      list.forEach((note, index) => {
+        const name = `"${note.content.replace(/"/g, '""')}"`;
+        const marker = `M${index + 1}`;
+        const color = note.color ? note.color.replace('#', '').toUpperCase() : '';
+        const timestamp = formatDuration(note.timestamp);
+        // Format: #,Name,Start,End,Length,Color
+        content += `${marker},${name},${timestamp},,,${color}\n`;
+      });
+    }
 
     const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
+    const filename = `${sanitizedName}_${format}.csv`;
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedName}.csv"`);
-    res.send(csv);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(content);
   } catch (error) {
     console.error('GET /api/sessions/:id/export error:', error);
     res.status(500).json({ error: error.message });

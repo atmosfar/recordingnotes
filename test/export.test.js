@@ -76,4 +76,16 @@ describe('CSV Export Endpoint', () => {
     // 123.456s = 00:02:03.456
     assert.ok(body.includes('M2,"Precise Note",00:02:03.456,,,2ECC71'));
   });
+
+  test('GET /api/sessions/:id/export?format=audition should return Audition compatible CSV', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=audition`);
+    const body = await response.text();
+    
+    assert.strictEqual(response.status, 200);
+    // Check for tab delimiters and correct header
+    assert.ok(body.includes('Name\tStart\tDuration\tTime Format\tType\tDescription'));
+    // Check for a data row (tab separated)
+    // Note 1 was 'Test Note' at 60.0s (00:01:00.000)
+    assert.ok(body.includes('Test Note\t00:01:00.000\t0:00.000\tdecimal\tCue'));
+  });
 });

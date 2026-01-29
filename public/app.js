@@ -510,6 +510,12 @@ async function init() {
         if (colorPopup && colorPopup.classList.contains('open') && !colorPopup.contains(e.target) && !colorToggle.contains(e.target)) {
             toggleColorPicker(false);
         }
+
+        const exportMenu = document.getElementById('export-menu');
+        const exportBtn = document.getElementById('export-btn');
+        if (exportMenu && exportMenu.classList.contains('open') && !exportMenu.contains(e.target) && !exportBtn.contains(e.target)) {
+            toggleExportMenu(false);
+        }
     });
     
     const handleNewSession = () => {
@@ -599,13 +605,38 @@ async function init() {
         mobileThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
     }
     
-    const exportFn = () => currentSessionId && (window.location.href = `/api/sessions/${currentSessionId}/export`);
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) exportBtn.onclick = exportFn;
+    const exportFn = (format = 'reaper') => currentSessionId && (window.location.href = `/api/sessions/${currentSessionId}/export?format=${format}`);
+    
+    const toggleExportMenu = (open) => {
+        const menu = document.getElementById('export-menu');
+        if (menu) menu.classList.toggle('open', open);
+    };
 
-    const mobileExportBtn = document.getElementById('mobile-export-btn');
-    if (mobileExportBtn) {
-        mobileExportBtn.onclick = () => { exportFn(); toggleOverflow(false); };
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            const menu = document.getElementById('export-menu');
+            toggleExportMenu(!menu.classList.contains('open'));
+        };
+    }
+
+    document.querySelectorAll('#export-menu .menu-item').forEach(item => {
+        item.onclick = (e) => {
+            e.stopPropagation();
+            exportFn(item.dataset.format);
+            toggleExportMenu(false);
+        };
+    });
+
+    const mobileExportReaper = document.getElementById('mobile-export-reaper');
+    if (mobileExportReaper) {
+        mobileExportReaper.onclick = () => { exportFn('reaper'); toggleOverflow(false); };
+    }
+
+    const mobileExportAudition = document.getElementById('mobile-export-audition');
+    if (mobileExportAudition) {
+        mobileExportAudition.onclick = () => { exportFn('audition'); toggleOverflow(false); };
     }
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
@@ -623,8 +654,11 @@ async function init() {
         document.getElementById('input-area').style.display = 'block';
         const exportBtn = document.getElementById('export-btn');
         if (exportBtn) exportBtn.style.display = 'block';
-        const mobileExportBtn = document.getElementById('mobile-export-btn');
-        if (mobileExportBtn) mobileExportBtn.style.display = 'flex';
+        
+        const mobileExportReaper = document.getElementById('mobile-export-reaper');
+        if (mobileExportReaper) mobileExportReaper.style.display = 'flex';
+        const mobileExportAudition = document.getElementById('mobile-export-audition');
+        if (mobileExportAudition) mobileExportAudition.style.display = 'flex';
         
         renderNotes(notes);
         updateClock();
@@ -641,8 +675,13 @@ async function init() {
             document.getElementById('input-area').style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
             if (exportBtn) exportBtn.style.display = 'none';
-            const mobileExportBtn = document.getElementById('mobile-export-btn');
-            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+            toggleExportMenu(false);
+
+            const mobileExportReaper = document.getElementById('mobile-export-reaper');
+            if (mobileExportReaper) mobileExportReaper.style.display = 'none';
+            const mobileExportAudition = document.getElementById('mobile-export-audition');
+            if (mobileExportAudition) mobileExportAudition.style.display = 'none';
+
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
             const infoEl = document.getElementById('session-info');
@@ -689,8 +728,13 @@ async function init() {
             if (inputArea) inputArea.style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
             if (exportBtn) exportBtn.style.display = 'none';
-            const mobileExportBtn = document.getElementById('mobile-export-btn');
-            if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+            toggleExportMenu(false);
+
+            const mobileExportReaper = document.getElementById('mobile-export-reaper');
+            if (mobileExportReaper) mobileExportReaper.style.display = 'none';
+            const mobileExportAudition = document.getElementById('mobile-export-audition');
+            if (mobileExportAudition) mobileExportAudition.style.display = 'none';
+
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
         }
