@@ -46,6 +46,7 @@
                     <div id="export-menu" class="dropdown-menu">
                         <div class="menu-item" data-format="reaper">REAPER CSV</div>
                         <div class="menu-item" data-format="audition">Adobe Audition CSV</div>
+                        <div class="menu-item" data-format="edl">CMX3600 EDL (Resolve/Premiere)</div>
                     </div>
                 </div>
                 <div id="overflow-menu-toggle" class="mobile-only">⋮</div>
@@ -75,6 +76,14 @@
                         </svg>
                     </span>
                     <span class="label">Export Audition CSV</span>
+                </div>
+                <div class="menu-item" id="mobile-export-edl">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                    </span>
+                    <span class="label">Export CMX3600 EDL</span>
                 </div>
             </div>
         </header>
@@ -109,6 +118,20 @@
     </div>
 
     <div id="bottom-sheet-backdrop"></div>
+    
+    <div id="fps-modal" class="palette-popup" style="bottom: 50%; right: 50%; transform: translate(50%, 50%); width: 280px;">
+        <h3 style="margin-top: 0; font-size: 1rem;">Select EDL Framerate</h3>
+        <div class="fps-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="fps-opt action-btn" data-fps="23.976" style="font-size: 0.8rem; padding: 0.5rem;">23.976</button>
+            <button class="fps-opt action-btn" data-fps="24" style="font-size: 0.8rem; padding: 0.5rem;">24</button>
+            <button class="fps-opt action-btn" data-fps="25" style="font-size: 0.8rem; padding: 0.5rem;">25</button>
+            <button class="fps-opt action-btn" data-fps="29.97DF" style="font-size: 0.8rem; padding: 0.5rem;">29.97 DF</button>
+            <button class="fps-opt action-btn" data-fps="29.97NDF" style="font-size: 0.8rem; padding: 0.5rem;">29.97 NDF</button>
+            <button class="fps-opt action-btn" data-fps="30" style="font-size: 0.8rem; padding: 0.5rem;">30</button>
+        </div>
+        <button id="cancel-fps" class="icon-btn" style="width: 100%; border-radius: 8px; background: #eee; color: #333; font-size: 0.9rem;">Cancel</button>
+    </div>
+
     <div id="color-picker-popup" class="palette-popup">
         <div class="sheet-palette">
             <div class="sheet-color-opt color-none" data-color="" title="No color"></div>

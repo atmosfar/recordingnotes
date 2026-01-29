@@ -88,4 +88,16 @@ describe('CSV Export Endpoint', () => {
     // Note 1 was 'Test Note' at 60.0s (00:01:00.000)
     assert.ok(body.includes('Test Note\t00:01:00.000\t0:00.000\tdecimal\tCue'));
   });
+
+  test('GET /api/sessions/:id/export?format=edl&fps=24 should return EDL compatible text', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=edl&fps=24`);
+    const body = await response.text();
+    
+    assert.strictEqual(response.status, 200);
+    assert.ok(body.includes('TITLE: Export Test'));
+    assert.ok(body.includes('FCM: NON-DROP FRAME'));
+    // Note 1 was 'Test Note' at 60.0s -> 00:01:00:00 (24fps)
+    assert.ok(body.includes('001  001      V     C        00:01:00:00 00:01:00:01 00:01:00:00 00:01:00:01'));
+    assert.ok(body.includes('|C:ResolveColorBlue |M:Test Note |D:1'));
+  });
 });

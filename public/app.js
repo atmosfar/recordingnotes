@@ -605,11 +605,26 @@ async function init() {
         mobileThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
     }
     
-    const exportFn = (format = 'reaper') => currentSessionId && (window.location.href = `/api/sessions/${currentSessionId}/export?format=${format}`);
+    const exportFn = (format = 'reaper', fps = '') => {
+        if (!currentSessionId) return;
+        let url = `/api/sessions/${currentSessionId}/export?format=${format}`;
+        if (fps) url += `&fps=${fps}`;
+        window.location.href = url;
+    };
     
     const toggleExportMenu = (open) => {
         const menu = document.getElementById('export-menu');
         if (menu) menu.classList.toggle('open', open);
+    };
+
+    const toggleFpsModal = (open) => {
+        const modal = document.getElementById('fps-modal');
+        const backdrop = document.getElementById('bottom-sheet-backdrop');
+        if (modal) modal.classList.toggle('open', open);
+        if (backdrop) {
+            backdrop.style.display = open ? 'block' : 'none';
+            backdrop.style.opacity = open ? '1' : '0';
+        }
     };
 
     const exportBtn = document.getElementById('export-btn');
@@ -624,10 +639,25 @@ async function init() {
     document.querySelectorAll('#export-menu .menu-item').forEach(item => {
         item.onclick = (e) => {
             e.stopPropagation();
-            exportFn(item.dataset.format);
+            const format = item.dataset.format;
+            if (format === 'edl') {
+                toggleFpsModal(true);
+            } else {
+                exportFn(format);
+            }
             toggleExportMenu(false);
         };
     });
+
+    document.querySelectorAll('.fps-opt').forEach(btn => {
+        btn.onclick = () => {
+            exportFn('edl', btn.dataset.fps);
+            toggleFpsModal(false);
+        };
+    });
+
+    const cancelFps = document.getElementById('cancel-fps');
+    if (cancelFps) cancelFps.onclick = () => toggleFpsModal(false);
 
     const mobileExportReaper = document.getElementById('mobile-export-reaper');
     if (mobileExportReaper) {
@@ -637,6 +667,14 @@ async function init() {
     const mobileExportAudition = document.getElementById('mobile-export-audition');
     if (mobileExportAudition) {
         mobileExportAudition.onclick = () => { exportFn('audition'); toggleOverflow(false); };
+    }
+
+    const mobileExportEdl = document.getElementById('mobile-export-edl');
+    if (mobileExportEdl) {
+        mobileExportEdl.onclick = () => { 
+            toggleOverflow(false);
+            toggleFpsModal(true);
+        };
     }
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
@@ -659,6 +697,8 @@ async function init() {
         if (mobileExportReaper) mobileExportReaper.style.display = 'flex';
         const mobileExportAudition = document.getElementById('mobile-export-audition');
         if (mobileExportAudition) mobileExportAudition.style.display = 'flex';
+        const mobileExportEdl = document.getElementById('mobile-export-edl');
+        if (mobileExportEdl) mobileExportEdl.style.display = 'flex';
         
         renderNotes(notes);
         updateClock();
@@ -681,6 +721,8 @@ async function init() {
             if (mobileExportReaper) mobileExportReaper.style.display = 'none';
             const mobileExportAudition = document.getElementById('mobile-export-audition');
             if (mobileExportAudition) mobileExportAudition.style.display = 'none';
+            const mobileExportEdl = document.getElementById('mobile-export-edl');
+            if (mobileExportEdl) mobileExportEdl.style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
@@ -734,6 +776,8 @@ async function init() {
             if (mobileExportReaper) mobileExportReaper.style.display = 'none';
             const mobileExportAudition = document.getElementById('mobile-export-audition');
             if (mobileExportAudition) mobileExportAudition.style.display = 'none';
+            const mobileExportEdl = document.getElementById('mobile-export-edl');
+            if (mobileExportEdl) mobileExportEdl.style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";

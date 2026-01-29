@@ -329,6 +329,70 @@ app.delete('/api/sessions/:session_id/notes/:note_id', (req, res) => {
   }
 });
 
+const FRAMERATES = {
+  '23.976': 24000/1001,
+  '24': 24,
+  '25': 25,
+  '29.97DF': 30000/1001,
+  '29.97NDF': 30000/1001,
+  '30': 30
+};
+
+/**
+ * Converts seconds to SMPTE timecode (HH:MM:SS:FF or HH:MM:SS;FF)
+ * @param {number} totalSeconds 
+ * @param {number} frameRate 
+ * @param {boolean} isDfMode 
+ * @returns {string}
+ */
+function timeToHmsf(totalSeconds, frameRate, isDfMode) {
+  const nominalFps = Math.floor(frameRate + 0.5);
+  let hh, mm, ss, ff;
+
+  if (isDfMode) {
+    // SMPTE 12M Drop Frame Formula using 30 fps nominal
+    let totalFrames = Math.floor(totalSeconds * nominalFps);
+    // 2 frames are dropped per minute which isn't a multiple of 10
+    // Ten minutes is 10 * 60 * 30 fps - (18*2) = 17982 frames
+    const dropFrames = (2 * Math.floor((totalFrames % 17982) / 1798.2)) + (18 * Math.floor(totalFrames / 17982));
+    totalFrames += dropFrames;
+    
+    ff = totalFrames % 30;
+    ss = Math.floor(totalFrames / 30) % 60;
+    mm = Math.floor(totalFrames / 1800) % 60;
+    hh = Math.floor(totalFrames / 108000) % 24;
+  } else {
+    const totalFrames = Math.floor(totalSeconds * frameRate + 0.0001);
+    ff = totalFrames % nominalFps;
+    ss = Math.floor(totalFrames / nominalFps) % 60;
+    mm = Math.floor(totalFrames / (nominalFps * 60)) % 60;
+    hh = Math.floor(totalFrames / (nominalFps * 3600)) % 24;
+  }
+
+  const separator = isDfMode ? ';' : ':';
+  return [
+    hh.toString().padStart(2, '0'),
+    mm.toString().padStart(2, '0'),
+    ss.toString().padStart(2, '0')
+  ].join(':') + separator + ff.toString().padStart(2, '0');
+}
+
+/**
+ * Maps hex colors to Resolve-compatible color strings
+ * @param {string} hex 
+ * @returns {string}
+ */
+function mapColorToResolve(hex) {
+  const colorMap = {
+    '#FF4D4D': 'Red',
+    '#2ECC71': 'Green',
+    '#3498DB': 'Blue',
+    '#F1C40F': 'Yellow'
+  };
+  const upperHex = (hex || '').toUpperCase();
+  return colorMap[upperHex] || 'Blue';
+}
+
 /**
  * Formats duration in seconds to HH:MM:SS.mmm
  * @param {number} seconds 
@@ -357,7 +421,34 @@ app.get('/api/sessions/:id/export', (req, res) => {
     const format = req.query.format || 'reaper';
     
     let content = '';
-    if (format === 'audition') {
+    let contentType = 'text/csv';
+    let extension = 'csv';
+
+    if (format === 'edl') {
+      const fpsKey = req.query.fps || '23.976';
+      const frameRate = FRAMERATES[fpsKey] || FRAMERATES['23.976'];
+      const isDfMode = fpsKey.includes('DF');
+      
+      content = `TITLE: ${session.name.substring(0, 255)}\n`;
+      content += `FCM: ${isDfMode ? 'DROP FRAME' : 'NON-DROP FRAME'}\n\n`;
+      
+      list.forEach((note, index) => {
+        const entryNum = (index + 1).toString().padStart(3, '0');
+        const color = mapColorToResolve(note.color);
+        const startTimecode = timeToHmsf(note.timestamp, frameRate, isDfMode);
+        
+        // Calculate end timecode (start + 1 frame)
+        const endTimecode = timeToHmsf(note.timestamp + (1 / frameRate), frameRate, isDfMode);
+        
+        // Format: EntryNum  SourceID  V  C  StartTC EndTC StartTC EndTC
+        // SourceID is usually 001 for markers
+        content += `${entryNum}  001      V     C        ${startTimecode} ${endTimecode} ${startTimecode} ${endTimecode}  \n`;
+        content += ` |C:ResolveColor${color} |M:${note.content.replace(/[|]/g, '')} |D:1\n\n`;
+      });
+      
+      contentType = 'text/plain';
+      extension = 'edl';
+    } else if (format === 'audition') {
       content = 'Name\tStart\tDuration\tTime Format\tType\tDescription\n';
       list.forEach((note) => {
         const name = note.content.replace(/"/g, '""');
@@ -380,8 +471,8 @@ app.get('/api/sessions/:id/export', (req, res) => {
     }
 
     const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
-    const filename = `${sanitizedName}_${format}.csv`;
-    res.setHeader('Content-Type', 'text/csv');
+    const filename = `${sanitizedName}_${format}.${extension}`;
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(content);
   } catch (error) {
@@ -506,5 +597,5 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { app, wss, broadcastToAll, broadcastToRoom };
+export { app, wss, broadcastToAll, broadcastToRoom, timeToHmsf, mapColorToResolve };
 export default app;
