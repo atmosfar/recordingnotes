@@ -39,3 +39,14 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [X] Track: Fix Note Content Overflow (Desktop)
 *Link: [./conductor/archive/note_overflow_fix_20260114/](./conductor/archive/note_overflow_fix_20260114/)*
+
+---
+
+## [X] Track: Chronological Note Sorting
+*Link: [./conductor/archive/chronological_sorting_20260114/](./conductor/archive/chronological_sorting_20260114/)*
+
+---
+
+## [X] Track: Multi-format Marker Export
+
+*Link: [./conductor/archive/multi_format_export_20260114/](./conductor/archive/multi_format_export_20260114/)*
