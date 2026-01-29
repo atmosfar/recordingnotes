@@ -48,5 +48,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## [X] Track: Multi-format Marker Export
-
 *Link: [./conductor/archive/multi_format_export_20260114/](./conductor/archive/multi_format_export_20260114/)*
+
+---
+
+## [X] Track: CMX3600 EDL Marker Export
+
+*Link: [./conductor/archive/edl_export_support_20260114/](./conductor/archive/edl_export_support_20260114/)*
