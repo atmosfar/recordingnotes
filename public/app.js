@@ -98,6 +98,25 @@ function formatDuration(seconds, precision = 0) {
     return `${hh}:${mm}:${ss}`;
 }
 
+/**
+ * Compares two timestamps (seconds since midnight) with wrap-around detection.
+ * Returns -1 if t1 < t2, 1 if t1 > t2, 0 if equal.
+ * Heuristic: If the difference is > 12 hours (43200s), we assume a wrap-around occurred.
+ */
+function compareTimestamps(t1, t2) {
+    const halfDay = 43200; 
+    const diff = t1 - t2;
+
+    if (Math.abs(diff) > halfDay) {
+        // Wrap-around detected: the smaller value is actually "later"
+        return diff > 0 ? -1 : 1;
+    }
+
+    if (diff < 0) return -1;
+    if (diff > 0) return 1;
+    return 0;
+}
+
 function getSecondsSinceMidnight() {
     const now = new Date();
     return (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds() + (now.getUTCMilliseconds() / 1000);
@@ -144,8 +163,6 @@ function updateRecordingState() {
     }
 }
 
-let clockInterval = null;
-
 function updateClock() {
     const clockEl = document.getElementById('live-clock');
     if (!clockEl) return;
@@ -161,21 +178,12 @@ function updateClock() {
             
             const label = currentSession.stopped_at ? 'FINISHED' : '🔴 RECORDING';
             if (infoEl) infoEl.textContent = `${label}: ${currentSession.name}`;
-
-            // Start clock interval if recording and not already running
-            if (!currentSession.stopped_at && !clockInterval) {
-                clockInterval = setInterval(updateClock, 100);
-            } else if (currentSession.stopped_at && clockInterval) {
-                clearInterval(clockInterval);
-                clockInterval = null;
-            }
         } else {
             // Manual mode / No start time: use local Time-of-Day for clock
             const now = new Date();
             const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
             clockEl.textContent = formatDuration(ssm, 1);
             if (infoEl) infoEl.textContent = currentSession.name;
-            if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
         }
         if (headerTitle) headerTitle.textContent = currentSession.name;
     } else {
@@ -186,13 +194,12 @@ function updateClock() {
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle) headerTitle.textContent = "";
         if (infoEl) infoEl.textContent = "No Session";
-        if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
     }
     updateRecordingState();
 }
 
 // Initial clock call
-updateClock();
+setInterval(updateClock, 100);
 
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
@@ -310,6 +317,7 @@ function renderNotes(notes) {
             const div = document.createElement('div');
             div.className = 'note';
             div.dataset.noteId = note.id;
+            div.dataset.timestamp = note.timestamp; // Store for sorting
             if (note.color) {
                 div.style.borderLeft = `4px solid ${note.color}`;
                 div.style.backgroundColor = note.color + '15';
@@ -342,7 +350,19 @@ function renderNotes(notes) {
                 }
             };
 
-            stream.appendChild(div);
+            // Find correct insertion point
+            const currentNotes = Array.from(stream.querySelectorAll('.note'));
+            const nextNote = currentNotes.find(existingNote => {
+                const existingTs = parseFloat(existingNote.dataset.timestamp);
+                return compareTimestamps(note.timestamp, existingTs) === -1;
+            });
+
+            if (nextNote) {
+                stream.insertBefore(div, nextNote);
+            } else {
+                stream.appendChild(div);
+            }
+            
             stream.scrollTop = stream.scrollHeight;
         }
     });
@@ -564,7 +584,7 @@ async function init() {
     const themeToggleFn = (isDark) => {
         document.body.classList.toggle('dark-mode', isDark);
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        const path = isDark ? moonPath : sunPath;
+        const path = isDark ? sunPath : moonPath;
         const desktopIcon = document.getElementById('theme-icon');
         const mobileIcon = document.getElementById('mobile-theme-icon');
         if (desktopIcon) desktopIcon.innerHTML = path;
