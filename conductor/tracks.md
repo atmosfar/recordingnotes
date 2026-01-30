@@ -62,5 +62,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: EDL Export UX Tidy Up
-*Link: [./conductor/tracks/edl_export_ux_tidy_20260114/](./conductor/tracks/edl_export_ux_tidy_20260114/)*
+## [X] Track: EDL Export UX Tidy Up
+*Link: [./conductor/archive/edl_export_ux_tidy_20260114/](./conductor/archive/edl_export_ux_tidy_20260114/)*
