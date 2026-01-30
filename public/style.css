@@ -326,6 +326,46 @@ button#send-note-btn:active, button#export-btn:active { transform: scale(0.98); 
 }
 .palette-popup.open { display: flex; }
 
+#fps-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 280px;
+}
+
+.fps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.fps-opt {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.fps-opt:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+body.dark-mode .fps-opt:hover {
+    background-color: rgba(255,255,255,0.05);
+}
+
+.fps-opt.selected {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
 .sheet-palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; justify-content: center; }
 .sheet-color-opt { 
     width: 32px; height: 32px; border-radius: 50%; cursor: pointer; 

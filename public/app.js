@@ -494,6 +494,7 @@ async function init() {
     if (backdrop) {
         backdrop.onclick = () => { 
             closeSidebarFn();
+            toggleFpsModal(false);
         };
     }
 
@@ -635,6 +636,15 @@ async function init() {
             backdrop.style.display = open ? 'block' : 'none';
             backdrop.style.opacity = open ? '1' : '0';
         }
+
+        if (open) {
+            const lastFps = localStorage.getItem('last_edl_fps');
+            if (lastFps) {
+                document.querySelectorAll('.fps-opt').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.fps === lastFps);
+                });
+            }
+        }
     };
 
     const exportBtn = document.getElementById('export-btn');
@@ -661,7 +671,9 @@ async function init() {
 
     document.querySelectorAll('.fps-opt').forEach(btn => {
         btn.onclick = () => {
-            exportFn('edl', btn.dataset.fps);
+            const fps = btn.dataset.fps;
+            localStorage.setItem('last_edl_fps', fps);
+            exportFn('edl', fps);
             toggleFpsModal(false);
         };
     });

@@ -1,0 +1,8 @@
+{
+  "track_id": "edl_export_ux_tidy_20260114",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-14T18:00:00Z",
+  "updated_at": "2026-01-14T18:00:00Z",
+  "description": "Tidy up the UX for the EDL export step: remember last FPS, improve modal dismissal, and refine UI."
+}
