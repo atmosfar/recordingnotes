@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 import { WebSocketServer } from 'ws';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
@@ -8,6 +9,66 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev_only',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+/**
+ * Middleware to check user authentication
+ */
+function checkAuth(req, res, next) {
+  // Allow access to login page and its related API
+  if (req.path === '/login' || req.path === '/api/login') {
+    return next();
+  }
+
+  if (req.session && req.session.authenticated) {
+    return next();
+  }
+
+  // If it's an API call, return 401
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Otherwise redirect to login
+  res.redirect('/login');
+}
+
+// Auth Routes
+app.get('/login', (req, res) => {
+  // We'll serve login.html from the public folder, but it needs to be accessible
+  // So we don't apply checkAuth to the static middleware if we want to serve it simply,
+  // or we handle it explicitly.
+  res.sendFile(process.cwd() + '/public/login.html');
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const validUser = process.env.AUTH_USERNAME || 'admin';
+  const validPass = process.env.AUTH_PASSWORD || 'password123';
+
+  if (username === validUser && password === validPass) {
+    req.session.authenticated = true;
+    res.json({ status: 'ok' });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+// Protect all following routes
+app.use(checkAuth);
+
 app.use(express.static('public'));
 
 // WebSocket Server Initialization
