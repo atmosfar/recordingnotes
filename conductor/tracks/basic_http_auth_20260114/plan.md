@@ -2,7 +2,7 @@
 
 ## Phase 1: Basic Session Auth & Middleware
 - [x] Task: Update `.env.example` with `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_WEBHOOK_TOKEN`. [60b36b9]
-- [ ] Task: Install `express-session` dependency.
+- [x] Task: Install `express-session` dependency. [04eef26]
 - [ ] Task: Write failing unit tests in `test/auth.test.js` for user login, session persistence, and unauthorized access redirection.
 - [ ] Task: Implement `userAuthMiddleware` and session management in `server.js`.
 - [ ] Task: Create `/login` routes and a minimal `public/login.html` page.
