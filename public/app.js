@@ -604,6 +604,16 @@ async function init() {
     if (mobileThemeToggle) {
         mobileThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
     }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.onclick = () => { window.location.href = '/logout'; };
+    }
+
+    const mobileLogout = document.getElementById('mobile-logout');
+    if (mobileLogout) {
+        mobileLogout.onclick = () => { toggleOverflow(false); window.location.href = '/logout'; };
+    }
     
     const exportFn = (format = 'reaper', fps = '') => {
         if (!currentSessionId) return;

@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Session configuration
-app.use(session({
+const sessionParser = session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev_only',
   resave: false,
   saveUninitialized: false,
@@ -19,7 +19,9 @@ app.use(session({
     secure: false, // Set to true if using HTTPS
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
-}));
+});
+
+app.use(sessionParser);
 
 /**
  * Middleware to check user authentication
@@ -27,6 +29,11 @@ app.use(session({
 function checkAuth(req, res, next) {
   // Allow access to login page and its related API
   if (req.path === '/login' || req.path === '/api/login') {
+    return next();
+  }
+
+  // Exempt webhooks from session auth (they use token auth)
+  if (req.path.startsWith('/api/webhooks/')) {
     return next();
   }
 
@@ -84,7 +91,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Protect all following routes
-// app.use(checkAuth);
+app.use(checkAuth);
 
 app.use(express.static('public'));
 
@@ -564,7 +571,21 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`Server running at http://localhost:${port}`);
   });
 
-  wss = new WebSocketServer({ server });
+  wss = new WebSocketServer({ noServer: true });
+
+  server.on('upgrade', (request, socket, head) => {
+    sessionParser(request, {}, () => {
+      if (!request.session.authenticated) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    });
+  });
 
   wss.on('connection', (ws) => {
     ws.currentSessionId = null;

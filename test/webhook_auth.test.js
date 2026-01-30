@@ -1,16 +1,22 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import app from '../server.js';
 import { resetDbInstance } from '../db.js';
 
 describe('Webhook Token Authentication - Iterative', () => {
   let server;
   let baseUrl;
+  let app;
+  const webhookToken = 'secret_webhook_token';
 
-  before(() => {
-    process.env.AUTH_WEBHOOK_TOKEN = 'secret_webhook_token';
+  before(async () => {
+    process.env.AUTH_WEBHOOK_TOKEN = webhookToken;
     process.env.DB_PATH = 'test-webhook-auth.db';
     resetDbInstance();
+    
+    // Dynamic import to ensure process.env is set BEFORE app initializes middleware
+    const module = await import('../server.js');
+    app = module.default;
+
     return new Promise((resolve) => {
       server = app.listen(0, () => {
         const { port } = server.address();
@@ -38,7 +44,7 @@ describe('Webhook Token Authentication - Iterative', () => {
 
     test('should succeed for SquadCast webhook with query token', async () => {
       const uniqueId = `sq-${Date.now()}`;
-      const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=secret_webhook_token`, {
+      const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'recording_session.created', sessionID: uniqueId, sessionTitle: 'Test' })
@@ -59,7 +65,7 @@ describe('Webhook Token Authentication - Iterative', () => {
 
     test('should succeed for Companion webhook with correct token', async () => {
       const uniqueName = `Companion ${Date.now()}`;
-      const response = await fetch(`${baseUrl}/api/webhooks/companion?token=secret_webhook_token`, {
+      const response = await fetch(`${baseUrl}/api/webhooks/companion?token=${webhookToken}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create', name: uniqueName })

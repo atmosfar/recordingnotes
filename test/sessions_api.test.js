@@ -9,17 +9,31 @@ const testDbPath = 'test-sessions-api.db';
 describe('Session API Endpoints', () => {
   let server;
   let baseUrl;
+  let authCookie;
 
-  before(() => {
+  before(async () => {
+    process.env.AUTH_USERNAME = 'testuser';
+    process.env.AUTH_PASSWORD = 'testpassword';
+    process.env.SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
+
     if (existsSync(testDbPath)) {
         try { unlinkSync(testDbPath); } catch (e) {}
     }
     process.env.DB_PATH = testDbPath;
     resetDbInstance();
     return new Promise((resolve) => {
-      server = app.listen(0, () => {
+      server = app.listen(0, async () => {
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
+        
+        // Login to get cookie
+        const loginRes = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'testuser', password: 'testpassword' })
+        });
+        authCookie = loginRes.headers.get('set-cookie').split(';')[0];
+        
         resolve();
       });
     });
@@ -45,7 +59,10 @@ describe('Session API Endpoints', () => {
   test('POST /api/sessions should create a session', async () => {
     const response = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'API Test Session', timestamp_mode: 'timer' })
     });
     const data = await response.json();
@@ -55,7 +72,9 @@ describe('Session API Endpoints', () => {
   });
 
   test('GET /api/sessions should list sessions', async () => {
-    const response = await fetch(`${baseUrl}/api/sessions`);
+    const response = await fetch(`${baseUrl}/api/sessions`, {
+      headers: { 'Cookie': authCookie }
+    });
     const data = await response.json();
     
     assert.strictEqual(response.status, 200);
@@ -67,12 +86,17 @@ describe('Session API Endpoints', () => {
     // Create one first
     const createRes = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'Specific Session' })
     });
     const created = await createRes.json();
 
-    const response = await fetch(`${baseUrl}/api/sessions/${created.id}`);
+    const response = await fetch(`${baseUrl}/api/sessions/${created.id}`, {
+      headers: { 'Cookie': authCookie }
+    });
     const data = await response.json();
     
     assert.strictEqual(response.status, 200);
@@ -80,7 +104,9 @@ describe('Session API Endpoints', () => {
   });
 
   test('GET /api/sessions/:id should return 404 for non-existent session', async () => {
-    const response = await fetch(`${baseUrl}/api/sessions/99999`);
+    const response = await fetch(`${baseUrl}/api/sessions/99999`, {
+      headers: { 'Cookie': authCookie }
+    });
     assert.strictEqual(response.status, 404);
     const data = await response.json();
     assert.strictEqual(data.error, 'Session not found');

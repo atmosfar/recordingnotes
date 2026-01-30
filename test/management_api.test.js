@@ -6,14 +6,28 @@ import { initDb, getDb } from '../db.js';
 describe('Management API Endpoints', () => {
   let server;
   let baseUrl;
+  let authCookie;
 
-  before(() => {
+  before(async () => {
+    process.env.AUTH_USERNAME = 'testuser';
+    process.env.AUTH_PASSWORD = 'testpassword';
+    process.env.SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
     process.env.DB_PATH = 'test-mgmt-api.db';
     initDb();
+    
     return new Promise((resolve) => {
-      server = app.listen(0, () => {
+      server = app.listen(0, async () => {
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
+        
+        // Login to get cookie
+        const loginRes = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'testuser', password: 'testpassword' })
+        });
+        authCookie = loginRes.headers.get('set-cookie').split(';')[0];
+        
         resolve();
       });
     });
@@ -29,21 +43,29 @@ describe('Management API Endpoints', () => {
     // Create a session
     const createRes = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'Old Name' })
     });
     const { id } = await createRes.json();
 
     const patchRes = await fetch(`${baseUrl}/api/sessions/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'New Name' })
     });
     assert.strictEqual(patchRes.status, 200);
     const patchData = await patchRes.json();
     assert.strictEqual(patchData.status, 'updated');
 
-    const getRes = await fetch(`${baseUrl}/api/sessions/${id}`);
+    const getRes = await fetch(`${baseUrl}/api/sessions/${id}`, {
+      headers: { 'Cookie': authCookie }
+    });
     const session = await getRes.json();
     assert.strictEqual(session.name, 'New Name');
   });
@@ -51,41 +73,56 @@ describe('Management API Endpoints', () => {
   test('DELETE /api/sessions/:id should delete session', async () => {
     const createRes = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'To Be Deleted' })
     });
     const { id } = await createRes.json();
 
     const delRes = await fetch(`${baseUrl}/api/sessions/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { 'Cookie': authCookie }
     });
     assert.strictEqual(delRes.status, 200);
 
-    const getRes = await fetch(`${baseUrl}/api/sessions/${id}`);
+    const getRes = await fetch(`${baseUrl}/api/sessions/${id}`, {
+      headers: { 'Cookie': authCookie }
+    });
     assert.strictEqual(getRes.status, 404);
   });
 
   test('DELETE /api/sessions/:session_id/notes/:note_id should delete note', async () => {
     const createSessRes = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ name: 'Note Del Test' })
     });
     const { id: sessionId } = await createSessRes.json();
 
     const createNoteRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({ content: 'Note to del', timestamp: 10 })
     });
     const { id: noteId } = await createNoteRes.json();
 
     const delRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes/${noteId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { 'Cookie': authCookie }
     });
     assert.strictEqual(delRes.status, 200);
 
-    const getNotesRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`);
+    const getNotesRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
+      headers: { 'Cookie': authCookie }
+    });
     const notes = await getNotesRes.json();
     assert.ok(!notes.find(n => n.id === noteId));
   });

@@ -1,7 +1,6 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
-import app from '../server.js';
 import { getDb, resetDbInstance, initDb } from '../db.js';
 
 const testDbPath = 'test-webhooks.db';
@@ -10,8 +9,9 @@ const webhookToken = 'test_webhook_token';
 describe('SquadCast Webhook Endpoints', () => {
   let server;
   let baseUrl;
+  let app;
 
-  before(() => {
+  before(async () => {
     process.env.AUTH_WEBHOOK_TOKEN = webhookToken;
     if (existsSync(testDbPath)) {
         try { unlinkSync(testDbPath); } catch (e) {}
@@ -19,6 +19,10 @@ describe('SquadCast Webhook Endpoints', () => {
     process.env.DB_PATH = testDbPath;
     resetDbInstance();
     
+    // Dynamic import to ensure process.env is set BEFORE app initializes middleware
+    const module = await import('../server.js');
+    app = module.default;
+
     // Create base session for started/stopped tests
     initDb();
     const db = getDb();

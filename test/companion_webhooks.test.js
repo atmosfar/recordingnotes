@@ -1,6 +1,5 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import app from '../server.js';
 import { getDb, initDb } from '../db.js';
 
 const webhookToken = 'test_companion_token';
@@ -8,9 +7,15 @@ const webhookToken = 'test_companion_token';
 describe('Companion Webhooks', () => {
   let server;
   let baseUrl;
+  let app;
 
-  before(() => {
+  before(async () => {
     process.env.AUTH_WEBHOOK_TOKEN = webhookToken;
+    
+    // Dynamic import to ensure process.env is set BEFORE app initializes middleware
+    const module = await import('../server.js');
+    app = module.default;
+
     return new Promise((resolve) => {
       server = app.listen(0, () => {
         const { port } = server.address();

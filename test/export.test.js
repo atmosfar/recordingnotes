@@ -10,8 +10,13 @@ describe('CSV Export Endpoint', () => {
   let server;
   let baseUrl;
   let sessionId;
+  let authCookie;
 
   before(async () => {
+    process.env.AUTH_USERNAME = 'testuser';
+    process.env.AUTH_PASSWORD = 'testpassword';
+    process.env.SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
+
     if (existsSync(testDbPath)) {
         try { unlinkSync(testDbPath); } catch (e) {}
     }
@@ -22,10 +27,21 @@ describe('CSV Export Endpoint', () => {
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
         
+        // Login to get cookie
+        const loginRes = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'testuser', password: 'testpassword' })
+        });
+        authCookie = loginRes.headers.get('set-cookie').split(';')[0];
+
         // Create session
         const createRes = await fetch(`${baseUrl}/api/sessions`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cookie': authCookie
+          },
           body: JSON.stringify({ name: 'Export Test' })
         });
         const created = await createRes.json();
@@ -34,7 +50,10 @@ describe('CSV Export Endpoint', () => {
         // Add a note
         await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cookie': authCookie
+          },
           body: JSON.stringify({ content: 'Test Note', timestamp: 60.0 })
         });
         
@@ -64,11 +83,16 @@ describe('CSV Export Endpoint', () => {
     // Add a note with specific float seconds
     await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cookie': authCookie
+        },
         body: JSON.stringify({ content: 'Precise Note', timestamp: 123.456, color: '#2ecc71' })
     });
 
-    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export`);
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export`, {
+      headers: { 'Cookie': authCookie }
+    });
     const body = await response.text();
     
     assert.strictEqual(response.status, 200);
@@ -78,7 +102,9 @@ describe('CSV Export Endpoint', () => {
   });
 
   test('GET /api/sessions/:id/export?format=audition should return Audition compatible CSV', async () => {
-    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=audition`);
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=audition`, {
+      headers: { 'Cookie': authCookie }
+    });
     const body = await response.text();
     
     assert.strictEqual(response.status, 200);
@@ -90,7 +116,9 @@ describe('CSV Export Endpoint', () => {
   });
 
   test('GET /api/sessions/:id/export?format=edl&fps=24 should return EDL compatible text', async () => {
-    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=edl&fps=24`);
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=edl&fps=24`, {
+      headers: { 'Cookie': authCookie }
+    });
     const body = await response.text();
     
     assert.strictEqual(response.status, 200);

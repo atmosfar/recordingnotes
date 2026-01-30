@@ -10,8 +10,13 @@ describe('Note API Endpoints', () => {
   let server;
   let baseUrl;
   let sessionId;
+  let authCookie;
 
   before(async () => {
+    process.env.AUTH_USERNAME = 'testuser';
+    process.env.AUTH_PASSWORD = 'testpassword';
+    process.env.SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
+
     if (existsSync(testDbPath)) {
         try { unlinkSync(testDbPath); } catch (e) {}
     }
@@ -22,10 +27,21 @@ describe('Note API Endpoints', () => {
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
         
+        // Login to get cookie
+        const loginRes = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'testuser', password: 'testpassword' })
+        });
+        authCookie = loginRes.headers.get('set-cookie').split(';')[0];
+
         // Create session
         const createRes = await fetch(`${baseUrl}/api/sessions`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cookie': authCookie
+          },
           body: JSON.stringify({ name: 'Note API Test Session' })
         });
         const created = await createRes.json();
@@ -56,7 +72,10 @@ describe('Note API Endpoints', () => {
   test('POST /api/sessions/:id/notes should create a note', async () => {
     const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({
         content: 'API Test Note',
         timestamp: '00:05:00',
@@ -70,7 +89,9 @@ describe('Note API Endpoints', () => {
   });
 
   test('GET /api/sessions/:id/notes should list notes', async () => {
-    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`);
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
+      headers: { 'Cookie': authCookie }
+    });
     const data = await response.json();
     
     assert.strictEqual(response.status, 200);
@@ -83,7 +104,10 @@ describe('Note API Endpoints', () => {
     // Create a note first
     const createRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({
         content: 'Note to be edited',
         timestamp: 456.789,
@@ -95,7 +119,10 @@ describe('Note API Endpoints', () => {
     // Update it
     const updateRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes/${noteId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
       body: JSON.stringify({
         content: 'Successfully edited note'
       })
@@ -106,7 +133,9 @@ describe('Note API Endpoints', () => {
     assert.strictEqual(updateData.status, 'updated');
 
     // Verify change
-    const getRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`);
+    const getRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
+      headers: { 'Cookie': authCookie }
+    });
     const notes = await getRes.json();
     const updatedNote = notes.find(n => n.id === noteId);
     assert.strictEqual(updatedNote.content, 'Successfully edited note');

@@ -14,9 +14,9 @@
 - [x] Task: Apply `webhookAuthMiddleware` to all `/api/webhooks/*` routes. [cd959ab]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Webhook Token Auth' (Protocol in workflow.md) [cd959ab]
 
-## Phase 3: Integration & UI Polish
-- [ ] Task: Add a "Logout" button/link to the main dashboard.
-- [ ] Task: Verify that WebSocket connections are correctly handled (or blocked) for unauthenticated users.
-- [ ] Task: Run final test suite and verify >80% coverage for new auth logic.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Integration & UI Polish' (Protocol in workflow.md)
+## Phase 3: Integration & UI Polish [checkpoint: ad09a5a]
+- [x] Task: Add a "Logout" button/link to the main dashboard. [3d5b02d]
+- [x] Task: Verify that WebSocket connections are correctly handled (or blocked) for unauthenticated users. [ad09a5a]
+- [x] Task: Run final test suite and verify >80% coverage for new auth logic. [ad09a5a]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Integration & UI Polish' (Protocol in workflow.md) [ad09a5a]
 
