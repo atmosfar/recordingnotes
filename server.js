@@ -1,12 +1,26 @@
+import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import { WebSocketServer } from 'ws';
+import crypto from 'crypto';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Derive Webhook Token from credentials if not explicitly set
+if (!process.env.AUTH_WEBHOOK_TOKEN) {
+  const username = process.env.AUTH_USERNAME;
+  const password = process.env.AUTH_PASSWORD;
+  if (username && password) {
+    process.env.AUTH_WEBHOOK_TOKEN = crypto
+      .createHash('sha256')
+      .update(`${username}:${password}`)
+      .digest('hex');
+  }
+}
 
 app.use(express.json());
 
@@ -47,14 +61,14 @@ function checkAuth(req, res, next) {
   }
 
   // Otherwise redirect to login
-  res.redirect('/login');
+  res.redirect(`/login?returnTo=${encodeURIComponent(req.originalUrl)}`);
 }
 
 /**
  * Middleware to check webhook token
  */
 function checkWebhookAuth(req, res, next) {
-  const token = req.query.token || req.headers['x-auth-token'];
+  const token = req.params.token || req.query.token || req.headers['x-auth-token'];
   const validToken = process.env.AUTH_WEBHOOK_TOKEN;
 
   if (validToken && token === validToken) {
@@ -74,10 +88,10 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.AUTH_USERNAME || 'admin';
-  const validPass = process.env.AUTH_PASSWORD || 'password123';
+  const validUser = process.env.AUTH_USERNAME;
+  const validPass = process.env.AUTH_PASSWORD;
 
-  if (username === validUser && password === validPass) {
+  if (validUser && validPass && username === validUser && password === validPass) {
     req.session.authenticated = true;
     res.json({ status: 'ok' });
   } else {
@@ -158,7 +172,7 @@ app.post('/api/sessions', (req, res) => {
 });
 
 // SquadCast Webhooks
-app.post('/api/webhooks/squadcast', checkWebhookAuth, (req, res) => {
+app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
   console.log('--- Received SquadCast Webhook ---');
   console.log('Event Name:', req.body.name);
   console.log('Payload:', JSON.stringify(req.body, null, 2));
@@ -569,6 +583,7 @@ app.get('/api/sessions/:id/export', (req, res) => {
 if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+    console.log(`Webhook Token: ${process.env.AUTH_WEBHOOK_TOKEN}`);
   });
 
   wss = new WebSocketServer({ noServer: true });

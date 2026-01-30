@@ -33,8 +33,8 @@ describe('Webhook Token Authentication - Iterative', () => {
   });
 
   describe('SquadCast', () => {
-    test('should return 401 for SquadCast webhook without token', async () => {
-      const response = await fetch(`${baseUrl}/api/webhooks/squadcast`, {
+    test('should return 401 for SquadCast webhook without token or invalid path', async () => {
+      const response = await fetch(`${baseUrl}/api/webhooks/squadcast/wrong_token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'test' })
@@ -42,9 +42,9 @@ describe('Webhook Token Authentication - Iterative', () => {
       assert.strictEqual(response.status, 401);
     });
 
-    test('should succeed for SquadCast webhook with query token', async () => {
+    test('should succeed for SquadCast webhook with path token', async () => {
       const uniqueId = `sq-${Date.now()}`;
-      const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
+      const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${webhookToken}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'recording_session.created', sessionID: uniqueId, sessionTitle: 'Test' })

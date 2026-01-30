@@ -56,7 +56,7 @@ describe('SquadCast Webhook Endpoints', () => {
       "showName": "My Amazing Show"
     };
 
-    const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${webhookToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -80,7 +80,7 @@ describe('SquadCast Webhook Endpoints', () => {
       "orgID": "org_abc"
     };
 
-    const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${webhookToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -103,7 +103,7 @@ describe('SquadCast Webhook Endpoints', () => {
       "orgID": "org_abc"
     };
 
-    const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${webhookToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -125,7 +125,7 @@ describe('SquadCast Webhook Endpoints', () => {
       "orgID": "org_abc"
     };
 
-    const response = await fetch(`${baseUrl}/api/webhooks/squadcast?token=${webhookToken}`, {
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${webhookToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
