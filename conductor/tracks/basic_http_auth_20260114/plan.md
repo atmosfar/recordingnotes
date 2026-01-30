@@ -1,12 +1,12 @@
 # Plan: Minimal HTTP Session Authentication
 
-## Phase 1: Basic Session Auth & Middleware
+## Phase 1: Basic Session Auth & Middleware [checkpoint: cd959ab]
 - [x] Task: Update `.env.example` with `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_WEBHOOK_TOKEN`. [60b36b9]
 - [x] Task: Install `express-session` dependency. [04eef26]
 - [x] Task: Write failing unit tests in `test/auth.test.js` for user login, session persistence, and unauthorized access redirection. [a437690]
 - [x] Task: Implement `userAuthMiddleware` and session management in `server.js`. [a437690]
 - [x] Task: Create `/login` routes and a minimal `public/login.html` page. [a437690]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Basic Session Auth & Middleware' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Basic Session Auth & Middleware' (Protocol in workflow.md) [cd959ab]
 
 ## Phase 2: Webhook Token Auth
 - [ ] Task: Write failing unit tests in `test/webhook_auth.test.js` for token-based access to SquadCast and Companion routes.
