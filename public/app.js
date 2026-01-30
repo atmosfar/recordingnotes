@@ -266,9 +266,9 @@ async function deleteSession(id) {
         document.getElementById('note-stream').innerHTML = '<div class="empty-state">Select a session to start taking notes.</div>';
         document.getElementById('input-area').style.display = 'none';
         const exportBtn = document.getElementById('export-btn');
-        if (exportBtn) exportBtn.style.display = 'none';
+        if (exportBtn) exportBtn.disabled = true;
         const mobileExportBtn = document.getElementById('mobile-export-btn');
-        if (mobileExportBtn) mobileExportBtn.style.display = 'none';
+        if (mobileExportBtn) mobileExportBtn.disabled = true;
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle) headerTitle.textContent = "";
     }
@@ -713,7 +713,10 @@ async function init() {
         
         document.getElementById('input-area').style.display = 'block';
         const exportBtn = document.getElementById('export-btn');
-        if (exportBtn) exportBtn.style.display = 'block';
+        if (exportBtn) {
+            exportBtn.style.display = 'block';
+            exportBtn.disabled = false;
+        }
         
         const mobileExportReaper = document.getElementById('mobile-export-reaper');
         if (mobileExportReaper) mobileExportReaper.style.display = 'flex';
@@ -736,7 +739,9 @@ async function init() {
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
             document.getElementById('input-area').style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
-            if (exportBtn) exportBtn.style.display = 'none';
+            if (exportBtn) {
+                exportBtn.disabled = true;
+            }
             toggleExportMenu(false);
 
             const mobileExportReaper = document.getElementById('mobile-export-reaper');
@@ -791,7 +796,9 @@ async function init() {
             const inputArea = document.getElementById('input-area');
             if (inputArea) inputArea.style.display = 'none';
             const exportBtn = document.getElementById('export-btn');
-            if (exportBtn) exportBtn.style.display = 'none';
+            if (exportBtn) {
+                exportBtn.disabled = true;
+            }
             toggleExportMenu(false);
 
             const mobileExportReaper = document.getElementById('mobile-export-reaper');
