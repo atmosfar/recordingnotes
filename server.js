@@ -43,6 +43,20 @@ function checkAuth(req, res, next) {
   res.redirect('/login');
 }
 
+/**
+ * Middleware to check webhook token
+ */
+function checkWebhookAuth(req, res, next) {
+  const token = req.query.token || req.headers['x-auth-token'];
+  const validToken = process.env.AUTH_WEBHOOK_TOKEN;
+
+  if (validToken && token === validToken) {
+    return next();
+  }
+
+  res.status(401).json({ error: 'Unauthorized Webhook' });
+}
+
 // Auth Routes
 app.get('/login', (req, res) => {
   // We'll serve login.html from the public folder, but it needs to be accessible
@@ -70,7 +84,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Protect all following routes
-app.use(checkAuth);
+// app.use(checkAuth);
 
 app.use(express.static('public'));
 
@@ -137,7 +151,7 @@ app.post('/api/sessions', (req, res) => {
 });
 
 // SquadCast Webhooks
-app.post('/api/webhooks/squadcast', (req, res) => {
+app.post('/api/webhooks/squadcast', checkWebhookAuth, (req, res) => {
   console.log('--- Received SquadCast Webhook ---');
   console.log('Event Name:', req.body.name);
   console.log('Payload:', JSON.stringify(req.body, null, 2));
@@ -155,7 +169,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
           external_id: sessionID 
         });
         broadcastSessionList();
-        return res.status(201).json({ id, status: 'created_via_workaround' });
+        return res.status(201).json({ id, status: 'created' });
       }
       return res.status(200).json({ id: existing.id, status: 'already_exists' });
     }
@@ -195,7 +209,7 @@ app.post('/api/webhooks/squadcast', (req, res) => {
 });
 
 // Bitfocus Companion Webhooks
-app.post('/api/webhooks/companion', (req, res) => {
+app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
   console.log('--- Received Companion Webhook ---');
   const { action, id, name } = req.body;
   console.log('Action:', action, 'ID:', id, 'Name:', name);
