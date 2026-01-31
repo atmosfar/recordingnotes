@@ -62,8 +62,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Session Activity Indicators & Prioritization
-*Link: [./conductor/tracks/session_activity_indicators_20260114/](./conductor/tracks/session_activity_indicators_20260114/)*
+## [X] Track: Session Activity Indicators & Prioritization
+*Link: [./conductor/archive/session_activity_indicators_20260114/](./conductor/archive/session_activity_indicators_20260114/)*
 
 ---
 
