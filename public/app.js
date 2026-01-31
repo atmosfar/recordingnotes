@@ -204,8 +204,28 @@ setInterval(updateClock, 100);
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
     if (!list) return;
+
+    // Prioritized Sorting:
+    // 1. Recording (started_at && !stopped_at)
+    // 2. Active users (> 0)
+    // 3. Creation date (DESC)
+    const sortedSessions = [...sessions].sort((a, b) => {
+        const aRecording = a.started_at && !a.stopped_at;
+        const bRecording = b.started_at && !b.stopped_at;
+        if (aRecording && !bRecording) return -1;
+        if (!aRecording && bRecording) return 1;
+
+        const aUsers = a.active_users || 0;
+        const bUsers = b.active_users || 0;
+        if (aUsers > 0 && bUsers === 0) return -1;
+        if (aUsers === 0 && bUsers > 0) return 1;
+
+        // Fallback to creation date DESC
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
     list.innerHTML = '';
-    sessions.forEach(session => {
+    sortedSessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'session-item';
         if (session.id.toString() === currentSessionId?.toString()) {
@@ -219,6 +239,25 @@ function renderSessionList(sessions) {
         nameSpan.textContent = session.name;
         nameSpan.onclick = () => selectSession(session.id);
         item.appendChild(nameSpan);
+
+        const indicators = document.createElement('div');
+        indicators.className = 'session-indicators';
+        
+        if (session.started_at && !session.stopped_at) {
+            indicators.innerHTML += `<span class="recording-dot" title="Recording Active"></span>`;
+        }
+
+        if (session.active_users > 0) {
+            indicators.innerHTML += `
+                <span class="user-count" title="${session.active_users} users connected">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    ${session.active_users}
+                </span>
+            `;
+        }
+        item.appendChild(indicators);
 
         const actions = document.createElement('div');
         actions.className = 'session-actions';

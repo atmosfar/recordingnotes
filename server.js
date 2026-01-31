@@ -137,7 +137,13 @@ function broadcastToRoom(sessionId, message) {
 function broadcastSessionList() {
   initDb();
   const db = getDb();
-  const list = sessions.listSessions(db);
+  const list = sessions.listSessions(db).map(session => {
+    const room = sessionRooms.get(session.id.toString());
+    return {
+      ...session,
+      active_users: room ? room.size : 0
+    };
+  });
   broadcastToAll({ type: 'SESSION_LIST_UPDATE', sessions: list });
 }
 
@@ -622,6 +628,7 @@ if (process.env.NODE_ENV !== 'test') {
             sessionRooms.set(sessionId.toString(), new Set());
           }
           sessionRooms.get(sessionId.toString()).add(ws);
+          broadcastSessionList();
 
           // PUSH: Send current session and notes to the joining client
           initDb();
@@ -640,13 +647,21 @@ if (process.env.NODE_ENV !== 'test') {
         } else if (data.type === 'GET_SESSIONS') {
           initDb();
           const db = getDb();
-          const list = sessions.listSessions(db);
+          const list = sessions.listSessions(db).map(session => {
+            const room = sessionRooms.get(session.id.toString());
+            return {
+              ...session,
+              active_users: room ? room.size : 0
+            };
+          });
           ws.send(JSON.stringify({ type: 'SESSION_LIST_UPDATE', sessions: list }));
         } else if (data.type === 'LEAVE_SESSION') {
           if (ws.currentSessionId) {
             const room = sessionRooms.get(ws.currentSessionId.toString());
             if (room) room.delete(ws);
+            const oldId = ws.currentSessionId;
             ws.currentSessionId = null;
+            broadcastSessionList();
           }
         } else if (data.type === 'CREATE_SESSION') {
           initDb();
@@ -706,6 +721,7 @@ if (process.env.NODE_ENV !== 'test') {
           room.delete(ws);
           if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
         }
+        broadcastSessionList();
       }
     });
   });

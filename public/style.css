@@ -161,13 +161,50 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     font-weight: bold;
 }
 
-.session-name { 
-    flex: 1; 
-    cursor: pointer; 
+.session-item .session-name {
+    flex: 1;
+    cursor: pointer;
     padding: 0.25rem 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.session-indicators {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+}
+
+.recording-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--recording-red);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.user-count {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    background-color: rgba(0,0,0,0.05);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+body.dark-mode .user-count {
+    background-color: rgba(255,255,255,0.1);
 }
 
 .session-actions { 
@@ -179,8 +216,7 @@ body.dark-mode .session-item:hover { background-color: rgba(255,255,255,0.05); }
     min-width: 50px;
     justify-content: flex-end;
     margin-left: 0.5rem;
-}
-.session-item:hover .session-actions { display: flex; }
+}.session-item:hover .session-actions { display: flex; }
 #sidebar.managing .session-actions { display: flex; }
 
 .session-actions button {
