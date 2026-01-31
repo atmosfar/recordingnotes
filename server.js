@@ -206,9 +206,11 @@ app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
       if (session) {
         sessions.updateSession(db, session.id, { 
           started_at: new Date().toISOString(),
+          stopped_at: null,
           status: 'active'
         });
         broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'active' });
+        broadcastSessionList();
         return res.status(200).json({ status: 'started' });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -222,6 +224,7 @@ app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
           status: 'completed'
         });
         broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'completed' });
+        broadcastSessionList();
         return res.status(200).json({ status: 'stopped' });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -262,9 +265,11 @@ app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
       if (session) {
         sessions.updateSession(db, id, { 
           started_at: new Date().toISOString(),
+          stopped_at: null,
           status: 'active'
         });
         broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'active' });
+        broadcastSessionList();
         return res.status(200).json({ status: 'started', id });
       }
       return res.status(404).json({ error: 'Session not found' });
@@ -281,6 +286,7 @@ app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
           status: 'completed'
         });
         broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'completed' });
+        broadcastSessionList();
         return res.status(200).json({ status: 'stopped', id });
       }
       return res.status(404).json({ error: 'Session not found' });
