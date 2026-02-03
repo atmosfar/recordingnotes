@@ -72,5 +72,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Restricted Session Links (Guest Mode)
-*Link: [./conductor/tracks/restricted_session_links_20260202/](./conductor/tracks/restricted_session_links_20260202/)*
+## [X] Track: Restricted Session Links (Guest Mode)
+*Link: [./conductor/archive/restricted_session_links_20260202/](./conductor/archive/restricted_session_links_20260202/)*
