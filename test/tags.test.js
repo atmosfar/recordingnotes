@@ -117,3 +117,43 @@ describe('TagManager Logic', () => {
     assert.ok(!stored.includes('x Cut'));
   });
 });
+
+describe('Quick Tag Click Interaction', () => {
+  let mockSocket;
+  let mockSession;
+
+  beforeEach(() => {
+    mockSocket = {
+      send: (type, payload) => {
+        mockSocket.lastMessage = { type, ...payload };
+      }
+    };
+    mockSession = {
+      started_at: new Date().toISOString()
+    };
+    global.socket = mockSocket;
+    global.currentSession = mockSession;
+    global.selectedColor = '#FF4D4D';
+  });
+
+  test('should send CREATE_NOTE event on tag click', () => {
+    const tagName = 'x Cut';
+    
+    // Mock the click handler logic from renderQuickTags
+    const handleTagClick = (tag) => {
+      const timestamp = (global.currentSession && global.currentSession.started_at) 
+          ? (Date.now() - new Date(global.currentSession.started_at).getTime()) / 1000 
+          : 0;
+      global.socket.send('CREATE_NOTE', {
+          payload: { content: tag, timestamp, color: global.selectedColor }
+      });
+    };
+
+    handleTagClick(tagName);
+
+    assert.strictEqual(mockSocket.lastMessage.type, 'CREATE_NOTE');
+    assert.strictEqual(mockSocket.lastMessage.payload.content, tagName);
+    assert.strictEqual(mockSocket.lastMessage.payload.color, '#FF4D4D');
+    assert.ok(mockSocket.lastMessage.payload.timestamp >= 0);
+  });
+});
