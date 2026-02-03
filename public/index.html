@@ -101,6 +101,15 @@
                     <div id="draft-timestamp-display"></div>
                 </div>
                 <div id="input-area" style="display:none;">
+                    <div id="quick-tags-bar">
+                        <div id="quick-tags-list"></div>
+                        <button id="edit-tags-btn" class="icon-btn" title="Edit Quick Tags">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div id="input-row">
                         <input type="text" id="note-input" placeholder="Type a note and press Enter...">
                         <div id="palette">
@@ -145,6 +154,16 @@
             <div class="sheet-color-opt color-blue" data-color="#3498db" title="Blue"></div>
             <div class="sheet-color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
         </div>
+    </div>
+
+    <div id="tags-modal" class="palette-popup">
+        <h3 style="margin-top: 0; font-size: 1rem;">Manage Quick Tags</h3>
+        <div id="modal-tags-list"></div>
+        <div class="modal-input-row">
+            <input type="text" id="new-tag-input" placeholder="New tag text...">
+            <button id="add-tag-btn" class="action-btn">Add</button>
+        </div>
+        <button id="close-tags-modal" class="icon-btn" style="width: 100%; border-radius: 8px; background: #eee; color: #333; font-size: 0.9rem; margin-top: 1rem;">Close</button>
     </div>
 
     <script src="app.js"></script>
