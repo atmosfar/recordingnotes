@@ -15,18 +15,26 @@ class SocketManager {
 
     connect() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.ws = new WebSocket(`${protocol}//${window.location.host}`);
+        let url = `${protocol}//${window.location.host}`;
+        if (window.isGuestMode && window.guestToken) {
+            url += `?token=${window.guestToken}`;
+        }
+        this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
             console.log('WebSocket connected');
             this.reconnectInterval = 1000;
             
-            // Initial data fetch
-            this.send('GET_SESSIONS');
+            if (window.isGuestMode && window.guestToken) {
+                this.send('JOIN_SESSION', { guestToken: window.guestToken });
+            } else {
+                // Initial data fetch
+                this.send('GET_SESSIONS');
 
-            // Re-join session if we were in one
-            if (currentSessionId) {
-                this.send('JOIN_SESSION', { sessionId: currentSessionId });
+                // Re-join session if we were in one
+                if (currentSessionId) {
+                    this.send('JOIN_SESSION', { sessionId: currentSessionId });
+                }
             }
         };
 
@@ -513,10 +521,21 @@ async function init() {
     const sunPath = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
     const moonPath = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
 
-    const match = window.location.hash.match(/#\/session\/(\d+)/);
-    if (match) currentSessionId = match[1];
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryToken = urlParams.get('token');
+    const guestMatch = window.location.hash.match(/#\/guest\/([a-zA-Z0-9-]+)/);
+    const sessionMatch = window.location.hash.match(/#\/session\/(\d+)/);
 
-    if (match) selectSession(match[1]);
+    const effectiveGuestToken = guestMatch ? guestMatch[1] : queryToken;
+
+    if (effectiveGuestToken) {
+        window.isGuestMode = true;
+        window.guestToken = effectiveGuestToken;
+        document.body.classList.add('guest-mode');
+    } else if (sessionMatch) {
+        currentSessionId = sessionMatch[1];
+        selectSession(sessionMatch[1]);
+    }
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
     document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleColorPicker(false); });
@@ -654,6 +673,23 @@ async function init() {
     if (mobileLogout) {
         mobileLogout.onclick = () => { toggleOverflow(false); window.location.href = '/logout'; };
     }
+
+    const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
+    if (shareGuestLinkBtn) {
+        shareGuestLinkBtn.onclick = async () => {
+            if (!currentSessionId) return;
+            try {
+                const res = await fetch(`/api/sessions/${currentSessionId}/guest-token`, { method: 'POST' });
+                const { token } = await res.json();
+                const guestUrl = `${window.location.origin}/?token=${token}#\/guest\/${token}`;
+                await navigator.clipboard.writeText(guestUrl);
+                alert('Guest link copied to clipboard!');
+            } catch (e) {
+                console.error('Error sharing guest link:', e);
+                alert('Failed to generate guest link.');
+            }
+        };
+    }
     
     const exportFn = (format = 'reaper', fps = '') => {
         if (!currentSessionId) return;
@@ -746,6 +782,7 @@ async function init() {
         
         document.body.classList.remove('session-not-found');
         currentSession = session;
+        currentSessionId = session.id;
         
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle) headerTitle.textContent = currentSession.name;
@@ -763,6 +800,11 @@ async function init() {
         if (mobileExportAudition) mobileExportAudition.style.display = 'flex';
         const mobileExportEdl = document.getElementById('mobile-export-edl');
         if (mobileExportEdl) mobileExportEdl.style.display = 'flex';
+        
+        const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
+        if (shareGuestLinkBtn) {
+            shareGuestLinkBtn.style.display = window.isGuestMode ? 'none' : 'block';
+        }
         
         renderNotes(notes);
         updateClock();
@@ -862,6 +904,7 @@ async function init() {
     });
 
     socket.on('NOTE_DELETED', (data) => {
+        if (data.sessionId?.toString() !== currentSessionId?.toString()) return;
         console.log('Note deleted via WebSocket:', data.noteId);
         const noteEl = document.querySelector(`.note[data-note-id="${data.noteId}"]`);
         if (noteEl) {

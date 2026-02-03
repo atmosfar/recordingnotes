@@ -14,6 +14,11 @@ export function getSessionByExternalId(db, external_id) {
   return stmt.get(external_id);
 }
 
+export function getSessionByGuestToken(db, token) {
+  const stmt = db.prepare('SELECT * FROM sessions WHERE guest_token = ?');
+  return stmt.get(token);
+}
+
 export function listSessions(db) {
   const stmt = db.prepare('SELECT * FROM sessions ORDER BY created_at DESC');
   return stmt.all();

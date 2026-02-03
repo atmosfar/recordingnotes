@@ -448,6 +448,17 @@ body.dark-mode .fps-opt:hover {
     cursor: pointer; transition: background 0.2s;
     color: var(--text-color);
 }
+
+/* Guest Mode Restrictions */
+body.guest-mode #sidebar { display: none !important; }
+body.guest-mode #menu-toggle { display: none !important; }
+body.guest-mode #export-btn { display: none !important; }
+body.guest-mode #logout-btn { display: none !important; }
+body.guest-mode #mobile-logout { display: none !important; }
+body.guest-mode #app-body { width: 100%; margin-left: 0; }
+body.guest-mode .session-actions { display: none !important; }
+body.guest-mode .mobile-only { display: none !important; }
+body.guest-mode .desktop-only:not(#theme-toggle) { display: none !important; }
 .menu-item:hover { background: rgba(0,0,0,0.05); }
 body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
 .menu-item .icon { display: flex; align-items: center; color: var(--secondary-color); }

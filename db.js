@@ -35,6 +35,7 @@ export function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       external_id TEXT,
+      guest_token TEXT UNIQUE,
       timestamp_mode TEXT DEFAULT 'clock',
       status TEXT DEFAULT 'active',
       started_at DATETIME,
@@ -65,6 +66,16 @@ export function initDb() {
   if (!columnNames.includes('stopped_at')) {
     db.exec("ALTER TABLE sessions ADD COLUMN stopped_at DATETIME");
     console.log('Added stopped_at column to sessions table');
+  }
+  if (!columnNames.includes('guest_token')) {
+    db.exec("ALTER TABLE sessions ADD COLUMN guest_token TEXT");
+    // Ensure uniqueness for existing data (though it's null now)
+    try {
+      db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_guest_token ON sessions(guest_token)");
+    } catch (e) {
+      console.warn('Could not create unique index on guest_token:', e.message);
+    }
+    console.log('Added guest_token column to sessions table');
   }
 
   initializedPaths.add(dbPath);

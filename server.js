@@ -51,7 +51,18 @@ function checkAuth(req, res, next) {
     return next();
   }
 
-  if (req.session && req.session.authenticated) {
+  // If a token is provided in query, try to verify and "login" as guest
+  if (req.query.token) {
+    initDb();
+    const db = getDb();
+    const session = sessions.getSessionByGuestToken(db, req.query.token);
+    if (session) {
+      req.session.guestToken = req.query.token;
+      return next();
+    }
+  }
+
+  if ((req.session && req.session.authenticated) || (req.session && req.session.guestToken)) {
     return next();
   }
 
@@ -363,6 +374,27 @@ app.delete('/api/sessions/:id', (req, res) => {
   }
 });
 
+app.post('/api/sessions/:id/guest-token', (req, res) => {
+  try {
+    initDb();
+    const db = getDb();
+    const session = sessions.getSession(db, req.params.id);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    let token = session.guest_token;
+    if (!token) {
+      token = crypto.randomUUID();
+      sessions.updateSession(db, req.params.id, { guest_token: token });
+    }
+    res.json({ token });
+  } catch (error) {
+    console.error('POST /api/sessions/:id/guest-token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Notes API
 app.post('/api/sessions/:id/notes', (req, res) => {
   try {
@@ -602,7 +634,12 @@ if (process.env.NODE_ENV !== 'test') {
 
   server.on('upgrade', (request, socket, head) => {
     sessionParser(request, {}, () => {
-      if (!request.session.authenticated) {
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const queryToken = url.searchParams.get('token');
+      
+      const isGuest = queryToken || (request.session && request.session.guestToken);
+
+      if (!request.session.authenticated && !isGuest) {
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
         socket.destroy();
         return;
@@ -614,7 +651,7 @@ if (process.env.NODE_ENV !== 'test') {
     });
   });
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, request) => {
     ws.currentSessionId = null;
 
     ws.on('message', (message) => {
@@ -622,35 +659,47 @@ if (process.env.NODE_ENV !== 'test') {
         const data = JSON.parse(message);
         
         if (data.type === 'JOIN_SESSION') {
-          const { sessionId } = data;
+          const { sessionId, guestToken } = data;
+          let session = null;
+          initDb();
+          const db = getDb();
+
+          const effectiveToken = guestToken || request.session.guestToken;
+
+          if (effectiveToken) {
+            session = sessions.getSessionByGuestToken(db, effectiveToken);
+          } else if (request.session.authenticated && sessionId) {
+            session = sessions.getSession(db, sessionId);
+          }
+
+          if (!session) {
+            return ws.send(JSON.stringify({ type: 'ERROR', message: 'Session not found or unauthorized', code: 404 }));
+          }
+
+          const resolvedSessionId = session.id;
+
           if (ws.currentSessionId) {
             // Leave previous room
             const oldRoom = sessionRooms.get(ws.currentSessionId.toString());
             if (oldRoom) oldRoom.delete(ws);
           }
           
-          ws.currentSessionId = sessionId;
-          if (!sessionRooms.has(sessionId.toString())) {
-            sessionRooms.set(sessionId.toString(), new Set());
+          ws.currentSessionId = resolvedSessionId;
+          if (!sessionRooms.has(resolvedSessionId.toString())) {
+            sessionRooms.set(resolvedSessionId.toString(), new Set());
           }
-          sessionRooms.get(sessionId.toString()).add(ws);
+          sessionRooms.get(resolvedSessionId.toString()).add(ws);
           broadcastSessionList();
 
           // PUSH: Send current session and notes to the joining client
-          initDb();
-          const db = getDb();
-          const session = sessions.getSession(db, sessionId);
-          if (session) {
-            const list = notes.listNotesBySession(db, sessionId);
-            ws.send(JSON.stringify({ 
-              type: 'SESSION_DATA', 
-              session, 
-              notes: list 
-            }));
-          } else {
-            ws.send(JSON.stringify({ type: 'ERROR', message: 'Session not found', code: 404 }));
-          }
+          const list = notes.listNotesBySession(db, resolvedSessionId);
+          ws.send(JSON.stringify({ 
+            type: 'SESSION_DATA', 
+            session, 
+            notes: list 
+          }));
         } else if (data.type === 'GET_SESSIONS') {
+          if (!request.session.authenticated) return;
           initDb();
           const db = getDb();
           const list = sessions.listSessions(db).map(session => {
@@ -670,6 +719,7 @@ if (process.env.NODE_ENV !== 'test') {
             broadcastSessionList();
           }
         } else if (data.type === 'CREATE_SESSION') {
+          if (!request.session.authenticated) return;
           initDb();
           const db = getDb();
           const { name } = data;
@@ -677,12 +727,14 @@ if (process.env.NODE_ENV !== 'test') {
           ws.send(JSON.stringify({ type: 'SESSION_CREATED', id, name }));
           broadcastSessionList();
         } else if (data.type === 'UPDATE_SESSION') {
+          if (!request.session.authenticated) return;
           initDb();
           const db = getDb();
           const { sessionId, name } = data;
           sessions.updateSession(db, sessionId, { name });
           broadcastSessionList();
         } else if (data.type === 'DELETE_SESSION') {
+          if (!request.session.authenticated) return;
           initDb();
           const db = getDb();
           const { sessionId } = data;
@@ -690,6 +742,7 @@ if (process.env.NODE_ENV !== 'test') {
           broadcastToAll({ type: 'SESSION_DELETED', sessionId });
           broadcastSessionList();
         } else if (data.type === 'CREATE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
           initDb();
           const db = getDb();
           const { payload } = data;
@@ -698,20 +751,22 @@ if (process.env.NODE_ENV !== 'test') {
             broadcastNoteUpdate(ws.currentSessionId);
           }
         } else if (data.type === 'UPDATE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
           initDb();
           const db = getDb();
           const { noteId, content } = data;
-          notes.updateNote(db, noteId, content);
           if (ws.currentSessionId) {
+            notes.updateNote(db, noteId, content);
             broadcastNoteUpdate(ws.currentSessionId);
           }
         } else if (data.type === 'DELETE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
           initDb();
           const db = getDb();
           const { noteId } = data;
-          notes.deleteNote(db, noteId);
           if (ws.currentSessionId) {
-            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_DELETED', noteId });
+            notes.deleteNote(db, noteId);
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_DELETED', noteId, sessionId: ws.currentSessionId });
           }
         }
         

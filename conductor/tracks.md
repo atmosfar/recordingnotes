@@ -69,3 +69,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [X] Track: EDL Export UX Tidy Up
 *Link: [./conductor/archive/edl_export_ux_tidy_20260114/](./conductor/archive/edl_export_ux_tidy_20260114/)*
+
+---
+
+## [ ] Track: Restricted Session Links (Guest Mode)
+*Link: [./conductor/tracks/restricted_session_links_20260202/](./conductor/tracks/restricted_session_links_20260202/)*

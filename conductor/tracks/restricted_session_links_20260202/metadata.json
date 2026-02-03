@@ -1,0 +1,8 @@
+{
+  "track_id": "restricted_session_links_20260202",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-02-02T19:00:00Z",
+  "updated_at": "2026-02-02T19:00:00Z",
+  "description": "Generate unique guest links for specific sessions that hide the sidebar and session list, allowing restricted contribution."
+}
