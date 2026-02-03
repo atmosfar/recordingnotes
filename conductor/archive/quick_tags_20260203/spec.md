@@ -12,11 +12,11 @@ Add a "Quick Tags" bar to the session interface that allows users to instantly p
   - `? Question`
 - **User Customization:** Users can add, remove, and rename tags.
 - **Persistence:** Tag configurations must be stored in the browser's `localStorage` so they are preserved across sessions and page reloads.
-- **Management UI:** An "Edit" button (pencil/gear icon) at the end of the tag row will open a modal to manage the tags.
+- **Management UI:** A "Manage Quick Tags" option in the header's overflow menu (⋮) will open a modal to manage the tags.
 
 ## User Interface
 - **Tag Bar:** A horizontal, touch-scrollable row located directly above the main text input area.
-- **Buttons:** Large, accessible buttons for each tag, styled to match the existing UI.
+- **Buttons:** Large, accessible buttons for each tag, styled to match the existing UI (8px border-radius, 1rem horizontal padding).
 - **Management Modal:** A simple modal or overlay containing:
   - A list of current tags with "Delete" buttons.
   - An input field and "Add" button to create new tags.

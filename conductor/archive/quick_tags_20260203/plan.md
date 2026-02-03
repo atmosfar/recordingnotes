@@ -22,3 +22,8 @@
 - [x] Task: Verify horizontal scrolling behavior on mobile screen sizes. [17ad9b5]
 - [x] Task: Verify that custom tags persist correctly after page reloads. [6d743ba]
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Final Polishing' (Protocol in workflow.md)
+
+## Phase 5: UI Refinements [checkpoint: 69fc7e8]
+- [x] Task: Refine Quick Tag button padding and border-radius. [bdb65ef]
+- [x] Task: Move the Quick Tags management button to the overflow menu. [69fc7e8]
+- [x] Task: Conductor - User Manual Verification 'Phase 5: UI Refinements' (Protocol in workflow.md)

@@ -78,25 +78,14 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## [X] Track: UI/UX Refinements
-
 *Link: [./conductor/archive/ui_ux_refinements_20260202/](./conductor/archive/ui_ux_refinements_20260202/)*
 
-
-
 ---
-
-
 
 ## [ ] Track: Manual Recording Controls
-
 *Link: [./conductor/tracks/manual_recording_controls_20260202/](./conductor/tracks/manual_recording_controls_20260202/)*
-
-
 
 ---
 
-
-
 ## [X] Track: Quick Tags & Snippets
-
 *Link: [./conductor/archive/quick_tags_20260203/](./conductor/archive/quick_tags_20260203/)*
