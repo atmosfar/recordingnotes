@@ -4,6 +4,55 @@ let selectedColor = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
 
+class TagManager {
+    constructor() {
+        this.defaultTags = ['x Cut', '! Important', '< Retake', '? Question'];
+        this.tags = this.loadTags();
+    }
+
+    loadTags() {
+        const stored = localStorage.getItem('quick_tags');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return this.defaultTags;
+            }
+        }
+        return this.defaultTags;
+    }
+
+    saveTags() {
+        localStorage.setItem('quick_tags', JSON.stringify(this.tags));
+    }
+
+    addTag(text) {
+        const trimmed = text.trim();
+        if (trimmed && !this.tags.includes(trimmed)) {
+            this.tags.push(trimmed);
+            this.saveTags();
+            return true;
+        }
+        return false;
+    }
+
+    removeTag(text) {
+        const index = this.tags.indexOf(text);
+        if (index !== -1) {
+            this.tags.splice(index, 1);
+            this.saveTags();
+            return true;
+        }
+        return false;
+    }
+
+    getTags() {
+        return this.tags;
+    }
+}
+
+const tagManager = new TagManager();
+
 class SocketManager {
     constructor() {
         this.ws = null;
@@ -149,6 +198,26 @@ function updateDraftDisplay() {
     } else {
         displayEl.style.display = 'none';
     }
+}
+
+function renderQuickTags() {
+    const list = document.getElementById('quick-tags-list');
+    if (!list) return;
+    list.innerHTML = '';
+    tagManager.getTags().forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'tag-btn';
+        btn.textContent = tag;
+        btn.onclick = () => {
+            const timestamp = (currentSession && currentSession.started_at) 
+                ? (Date.now() - new Date(currentSession.started_at).getTime()) / 1000 
+                : getSecondsSinceMidnight();
+            socket.send('CREATE_NOTE', {
+                payload: { content: tag, timestamp, color: selectedColor }
+            });
+        };
+        list.appendChild(btn);
+    });
 }
 
 // UI State Management
@@ -322,6 +391,8 @@ async function selectSession(id) {
     
     const stream = document.getElementById('note-stream');
     if (stream) stream.innerHTML = '';
+
+    renderQuickTags();
 
     // Join the WebSocket room for this session (this now triggers SESSION_DATA push)
     socket.send('JOIN_SESSION', { sessionId: id });
@@ -796,6 +867,7 @@ async function init() {
             menuLogout.style.display = window.isGuestMode ? 'none' : 'flex';
         }
         
+        renderQuickTags();
         renderNotes(notes);
         updateClock();
     });
