@@ -7,6 +7,7 @@
 
 ## Frontend
 - **Language:** Plain Vanilla JavaScript (ES6+).
+- **Persistence:** `localStorage` for client-side state (e.g., UI preferences, Quick Tags).
 - **Templating:** Server-side rendered (SSR) HTML using simple template literals or a lightweight library, or plain static HTML with client-side DOM manipulation.
 - **Styling:** Standard CSS3 with CSS Variables for theme management. No pre-processors or utility frameworks.
 
