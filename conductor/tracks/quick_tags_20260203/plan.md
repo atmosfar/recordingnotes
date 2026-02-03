@@ -4,7 +4,7 @@
 - [x] Task: Add the Quick Tag bar container and Management Modal to `public/index.html`. [245ab7c]
 - [x] Task: Add styles for the scrollable tag bar and management modal in `public/style.css`. [537c496]
 - [x] Task: Implement basic "Hide for Guests" logic in CSS/HTML. [5d2b658]
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: UI Structure & Styling' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: UI Structure & Styling' (Protocol in workflow.md)
 
 ## Phase 2: Tag Management Logic
 - [ ] Task: Write tests for `TagManager` logic (LocalStorage initialization, add, remove).
