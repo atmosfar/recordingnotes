@@ -7,7 +7,7 @@ This file tracks upcoming features, bug fixes, and chores that haven't been prom
 ### Core UX & Interaction
 - [ ] **Manual Start/Stop State:** Add a dashboard toggle to manually set `started_at` and `stopped_at`. This allows non-webhook users to trigger the pulsing recording indicator and elapsed timer logic.
 - [ ] **Improved Session Creation UX:** Replace the `prompt()` dialog with a proper modal or inline form. Include validation and allow selecting the timestamp mode (Timer vs. Clock) during creation.
-- [ ] **Quick Tags & Snippets:** Customizable buttons to instantly post common notes (e.g., #retake, #noise, #good).
+- [x] **Quick Tags & Snippets:** Customizable buttons to instantly post common notes (e.g., #retake, #noise, #good).
 - [ ] **User Attribution:** Support for "Display Names" and showing initials/names next to notes in the stream.
 
 ### Accessibility & Connectivity
