@@ -12,11 +12,11 @@
 - [x] Task: Implement modal interaction logic (opening, rendering tag list, adding/deleting tags). [7318dbe]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Tag Management Logic' (Protocol in workflow.md)
 
-## Phase 3: Integration & Interaction
+## Phase 3: Integration & Interaction [checkpoint: 04ad316]
 - [x] Task: Write integration tests for Quick Tag clicks (mocking `socket.send`). [e3995dd]
 - [x] Task: Implement click handlers for tag buttons to trigger `CREATE_NOTE` events. [b29da9c]
-- [~] Task: Integrate tag rendering into the session selection flow (ensure tags appear when a session is active).
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Integration & Interaction' (Protocol in workflow.md)
+- [x] Task: Integrate tag rendering into the session selection flow (ensure tags appear when a session is active). [04ad316]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Integration & Interaction' (Protocol in workflow.md)
 
 ## Phase 4: Final Polishing
 - [ ] Task: Verify horizontal scrolling behavior on mobile screen sizes.
