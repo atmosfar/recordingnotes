@@ -18,7 +18,7 @@
 - [x] Task: Integrate tag rendering into the session selection flow (ensure tags appear when a session is active). [04ad316]
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Integration & Interaction' (Protocol in workflow.md)
 
-## Phase 4: Final Polishing
+## Phase 4: Final Polishing [checkpoint: 6d743ba]
 - [x] Task: Verify horizontal scrolling behavior on mobile screen sizes. [17ad9b5]
-- [~] Task: Verify that custom tags persist correctly after page reloads.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Polishing' (Protocol in workflow.md)
+- [x] Task: Verify that custom tags persist correctly after page reloads. [6d743ba]
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Polishing' (Protocol in workflow.md)
