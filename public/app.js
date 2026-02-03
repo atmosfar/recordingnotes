@@ -683,11 +683,12 @@ async function init() {
         };
     }
 
-    const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
-    if (shareGuestLinkBtn) {
-        shareGuestLinkBtn.onclick = async () => {
+    const menuShareLink = document.getElementById('menu-share-link');
+    if (menuShareLink) {
+        menuShareLink.onclick = async () => {
             if (!currentSessionId) return;
             try {
+                toggleOverflow(false);
                 const res = await fetch(`/api/sessions/${currentSessionId}/guest-token`, { method: 'POST' });
                 const { token } = await res.json();
                 const guestUrl = `${window.location.origin}/?token=${token}#\/guest\/${token}`;
@@ -785,9 +786,14 @@ async function init() {
         document.getElementById('menu-export-audition').style.display = 'flex';
         document.getElementById('menu-export-edl').style.display = 'flex';
         
-        const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
-        if (shareGuestLinkBtn) {
-            shareGuestLinkBtn.style.display = window.isGuestMode ? 'none' : 'block';
+        const menuShareLink = document.getElementById('menu-share-link');
+        if (menuShareLink) {
+            menuShareLink.style.display = window.isGuestMode ? 'none' : 'flex';
+        }
+
+        const menuLogout = document.getElementById('menu-logout');
+        if (menuLogout) {
+            menuLogout.style.display = window.isGuestMode ? 'none' : 'flex';
         }
         
         renderNotes(notes);
@@ -802,12 +808,10 @@ async function init() {
             document.body.classList.add('session-not-found');
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
-            document.getElementById('input-area').style.display = 'none';
-            toggleExportMenu(false);
-
             document.getElementById('menu-export-reaper').style.display = 'none';
             document.getElementById('menu-export-audition').style.display = 'none';
             document.getElementById('menu-export-edl').style.display = 'none';
+            document.getElementById('menu-share-link').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
@@ -858,6 +862,7 @@ async function init() {
             document.getElementById('menu-export-reaper').style.display = 'none';
             document.getElementById('menu-export-audition').style.display = 'none';
             document.getElementById('menu-export-edl').style.display = 'none';
+            document.getElementById('menu-share-link').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
