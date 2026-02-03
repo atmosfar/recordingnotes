@@ -594,16 +594,6 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     transform: scale(0.95);
 }
 
-#edit-tags-btn {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 4px;
-}
-
 /* Management Modal Styles */
 #tags-modal {
     bottom: 50%;

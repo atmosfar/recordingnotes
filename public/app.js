@@ -642,8 +642,8 @@ async function init() {
         }
 
         const tagsModal = document.getElementById('tags-modal');
-        const editTagsBtn = document.getElementById('edit-tags-btn');
-        if (tagsModal && tagsModal.classList.contains('open') && !tagsModal.contains(e.target) && !editTagsBtn.contains(e.target)) {
+        const menuEditTags = document.getElementById('menu-edit-tags');
+        if (tagsModal && tagsModal.classList.contains('open') && !tagsModal.contains(e.target) && !menuEditTags.contains(e.target)) {
             toggleTagsModal(false);
         }
     });
@@ -875,8 +875,13 @@ async function init() {
         });
     };
 
-    const editTagsBtn = document.getElementById('edit-tags-btn');
-    if (editTagsBtn) editTagsBtn.onclick = () => toggleTagsModal(true);
+    const menuEditTags = document.getElementById('menu-edit-tags');
+    if (menuEditTags) {
+        menuEditTags.onclick = () => {
+            toggleTagsModal(true);
+            toggleOverflow(false);
+        };
+    }
 
     const closeTagsModalBtn = document.getElementById('close-tags-modal');
     if (closeTagsModalBtn) closeTagsModalBtn.onclick = () => toggleTagsModal(false);
@@ -919,6 +924,11 @@ async function init() {
         const menuShareLink = document.getElementById('menu-share-link');
         if (menuShareLink) {
             menuShareLink.style.display = window.isGuestMode ? 'none' : 'flex';
+        }
+
+        const menuEditTags = document.getElementById('menu-edit-tags');
+        if (menuEditTags) {
+            menuEditTags.style.display = window.isGuestMode ? 'none' : 'flex';
         }
 
         const menuLogout = document.getElementById('menu-logout');
