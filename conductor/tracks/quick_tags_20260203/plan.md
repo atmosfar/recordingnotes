@@ -19,6 +19,6 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Integration & Interaction' (Protocol in workflow.md)
 
 ## Phase 4: Final Polishing
-- [ ] Task: Verify horizontal scrolling behavior on mobile screen sizes.
-- [ ] Task: Verify that custom tags persist correctly after page reloads.
+- [x] Task: Verify horizontal scrolling behavior on mobile screen sizes. [17ad9b5]
+- [~] Task: Verify that custom tags persist correctly after page reloads.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Polishing' (Protocol in workflow.md)
