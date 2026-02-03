@@ -6,11 +6,11 @@
 - [x] Task: Implement basic "Hide for Guests" logic in CSS/HTML. [5d2b658]
 - [x] Task: Conductor - User Manual Verification 'Phase 1: UI Structure & Styling' (Protocol in workflow.md)
 
-## Phase 2: Tag Management Logic
+## Phase 2: Tag Management Logic [checkpoint: 7318dbe]
 - [x] Task: Write tests for `TagManager` logic (LocalStorage initialization, add, remove). [c2e4713]
 - [x] Task: Implement `TagManager` in `public/app.js` to handle `localStorage` persistence. [3afeefa]
-- [~] Task: Implement modal interaction logic (opening, rendering tag list, adding/deleting tags).
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Tag Management Logic' (Protocol in workflow.md)
+- [x] Task: Implement modal interaction logic (opening, rendering tag list, adding/deleting tags). [7318dbe]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Tag Management Logic' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Interaction
 - [ ] Task: Write integration tests for Quick Tag clicks (mocking `socket.send`).
