@@ -215,18 +215,12 @@ function renderSessionList(sessions) {
 
     // Prioritized Sorting:
     // 1. Recording (started_at && !stopped_at)
-    // 2. Active users (> 0)
-    // 3. Creation date (DESC)
+    // 2. Creation date (DESC)
     const sortedSessions = [...sessions].sort((a, b) => {
         const aRecording = a.started_at && !a.stopped_at;
         const bRecording = b.started_at && !b.stopped_at;
         if (aRecording && !bRecording) return -1;
         if (!aRecording && bRecording) return 1;
-
-        const aUsers = a.active_users || 0;
-        const bUsers = b.active_users || 0;
-        if (aUsers > 0 && bUsers === 0) return -1;
-        if (aUsers === 0 && bUsers > 0) return 1;
 
         // Fallback to creation date DESC
         return new Date(b.created_at) - new Date(a.created_at);
@@ -656,22 +650,37 @@ async function init() {
         if (mobileIcon) mobileIcon.innerHTML = path;
     };
 
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    if (themeToggleBtn) themeToggleBtn.onclick = () => themeToggleFn(!document.body.classList.contains('dark-mode'));
-
-    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-    if (mobileThemeToggle) {
-        mobileThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
+    const menuThemeToggle = document.getElementById('menu-theme-toggle');
+    if (menuThemeToggle) {
+        menuThemeToggle.onclick = () => { themeToggleFn(!document.body.classList.contains('dark-mode')); toggleOverflow(false); };
     }
 
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.onclick = () => { window.location.href = '/logout'; };
+    const menuLogout = document.getElementById('menu-logout');
+    if (menuLogout) {
+        menuLogout.onclick = () => {
+            if (confirm('Are you sure you want to logout?')) {
+                toggleOverflow(false);
+                window.location.href = '/logout';
+            }
+        };
     }
 
-    const mobileLogout = document.getElementById('mobile-logout');
-    if (mobileLogout) {
-        mobileLogout.onclick = () => { toggleOverflow(false); window.location.href = '/logout'; };
+    const menuExportReaper = document.getElementById('menu-export-reaper');
+    if (menuExportReaper) {
+        menuExportReaper.onclick = () => { exportFn('reaper'); toggleOverflow(false); };
+    }
+
+    const menuExportAudition = document.getElementById('menu-export-audition');
+    if (menuExportAudition) {
+        menuExportAudition.onclick = () => { exportFn('audition'); toggleOverflow(false); };
+    }
+
+    const menuExportEdl = document.getElementById('menu-export-edl');
+    if (menuExportEdl) {
+        menuExportEdl.onclick = () => { 
+            toggleOverflow(false);
+            toggleFpsModal(true);
+        };
     }
 
     const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
@@ -757,24 +766,6 @@ async function init() {
     const cancelFps = document.getElementById('cancel-fps');
     if (cancelFps) cancelFps.onclick = () => toggleFpsModal(false);
 
-    const mobileExportReaper = document.getElementById('mobile-export-reaper');
-    if (mobileExportReaper) {
-        mobileExportReaper.onclick = () => { exportFn('reaper'); toggleOverflow(false); };
-    }
-
-    const mobileExportAudition = document.getElementById('mobile-export-audition');
-    if (mobileExportAudition) {
-        mobileExportAudition.onclick = () => { exportFn('audition'); toggleOverflow(false); };
-    }
-
-    const mobileExportEdl = document.getElementById('mobile-export-edl');
-    if (mobileExportEdl) {
-        mobileExportEdl.onclick = () => { 
-            toggleOverflow(false);
-            toggleFpsModal(true);
-        };
-    }
-
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     socket.on('SESSION_DATA', (data) => {
@@ -789,18 +780,10 @@ async function init() {
         if (headerTitle) headerTitle.textContent = currentSession.name;
         
         document.getElementById('input-area').style.display = 'block';
-        const exportBtn = document.getElementById('export-btn');
-        if (exportBtn) {
-            exportBtn.style.display = 'block';
-            exportBtn.disabled = false;
-        }
         
-        const mobileExportReaper = document.getElementById('mobile-export-reaper');
-        if (mobileExportReaper) mobileExportReaper.style.display = 'flex';
-        const mobileExportAudition = document.getElementById('mobile-export-audition');
-        if (mobileExportAudition) mobileExportAudition.style.display = 'flex';
-        const mobileExportEdl = document.getElementById('mobile-export-edl');
-        if (mobileExportEdl) mobileExportEdl.style.display = 'flex';
+        document.getElementById('menu-export-reaper').style.display = 'flex';
+        document.getElementById('menu-export-audition').style.display = 'flex';
+        document.getElementById('menu-export-edl').style.display = 'flex';
         
         const shareGuestLinkBtn = document.getElementById('share-guest-link-btn');
         if (shareGuestLinkBtn) {
@@ -820,18 +803,11 @@ async function init() {
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
             document.getElementById('input-area').style.display = 'none';
-            const exportBtn = document.getElementById('export-btn');
-            if (exportBtn) {
-                exportBtn.disabled = true;
-            }
             toggleExportMenu(false);
 
-            const mobileExportReaper = document.getElementById('mobile-export-reaper');
-            if (mobileExportReaper) mobileExportReaper.style.display = 'none';
-            const mobileExportAudition = document.getElementById('mobile-export-audition');
-            if (mobileExportAudition) mobileExportAudition.style.display = 'none';
-            const mobileExportEdl = document.getElementById('mobile-export-edl');
-            if (mobileExportEdl) mobileExportEdl.style.display = 'none';
+            document.getElementById('menu-export-reaper').style.display = 'none';
+            document.getElementById('menu-export-audition').style.display = 'none';
+            document.getElementById('menu-export-edl').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
@@ -877,18 +853,11 @@ async function init() {
             if (stream) stream.innerHTML = '<div class="empty-state">This session has been deleted.</div>';
             const inputArea = document.getElementById('input-area');
             if (inputArea) inputArea.style.display = 'none';
-            const exportBtn = document.getElementById('export-btn');
-            if (exportBtn) {
-                exportBtn.disabled = true;
-            }
             toggleExportMenu(false);
 
-            const mobileExportReaper = document.getElementById('mobile-export-reaper');
-            if (mobileExportReaper) mobileExportReaper.style.display = 'none';
-            const mobileExportAudition = document.getElementById('mobile-export-audition');
-            if (mobileExportAudition) mobileExportAudition.style.display = 'none';
-            const mobileExportEdl = document.getElementById('mobile-export-edl');
-            if (mobileExportEdl) mobileExportEdl.style.display = 'none';
+            document.getElementById('menu-export-reaper').style.display = 'none';
+            document.getElementById('menu-export-audition').style.display = 'none';
+            document.getElementById('menu-export-edl').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";

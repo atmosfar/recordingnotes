@@ -74,3 +74,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [X] Track: Restricted Session Links (Guest Mode)
 *Link: [./conductor/archive/restricted_session_links_20260202/](./conductor/archive/restricted_session_links_20260202/)*
+
+---
+
+## [ ] Track: UI/UX Refinements
+*Link: [./conductor/tracks/ui_ux_refinements_20260202/](./conductor/tracks/ui_ux_refinements_20260202/)*

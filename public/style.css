@@ -417,12 +417,13 @@ body.dark-mode .fps-opt:hover {
 .sheet-color-opt.selected { border-color: var(--text-color); transform: scale(1.1); }
 
 #overflow-menu {
-    position: absolute; top: 100%; right: 1rem;
+    position: absolute; top: 50px; right: 1rem;
     background: var(--card-bg); z-index: 1001;
     border-radius: 12px; border: 1px solid var(--border-color);
-    padding: 0.5rem; width: 180px;
+    padding: 0.5rem; width: 220px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     display: none; flex-direction: column; gap: 0.25rem;
+    overflow: hidden;
 }
 #overflow-menu.open { display: flex; }
 
@@ -463,7 +464,14 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
 .menu-item .icon { display: flex; align-items: center; color: var(--secondary-color); }
 .menu-item .label { font-size: 0.9rem; }
 
-#overflow-menu-toggle { font-size: 1.5rem; cursor: pointer; padding: 0.25rem; color: var(--text-color); display: none; }
+#overflow-menu-toggle { 
+    font-size: 1.5rem; 
+    cursor: pointer; 
+    padding: 0.5rem; 
+    color: var(--text-color); 
+    display: block; 
+    line-height: 1;
+}
 
 .desktop-only { display: flex; }
 .mobile-only { display: none; }
