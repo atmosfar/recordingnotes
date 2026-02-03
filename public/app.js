@@ -640,6 +640,12 @@ async function init() {
         if (exportMenu && exportMenu.classList.contains('open') && !exportMenu.contains(e.target) && !exportBtn.contains(e.target)) {
             toggleExportMenu(false);
         }
+
+        const tagsModal = document.getElementById('tags-modal');
+        const editTagsBtn = document.getElementById('edit-tags-btn');
+        if (tagsModal && tagsModal.classList.contains('open') && !tagsModal.contains(e.target) && !editTagsBtn.contains(e.target)) {
+            toggleTagsModal(false);
+        }
     });
     
     const handleNewSession = () => {
@@ -837,6 +843,59 @@ async function init() {
 
     const cancelFps = document.getElementById('cancel-fps');
     if (cancelFps) cancelFps.onclick = () => toggleFpsModal(false);
+
+    const toggleTagsModal = (open) => {
+        const modal = document.getElementById('tags-modal');
+        const backdrop = document.getElementById('bottom-sheet-backdrop');
+        if (modal) modal.classList.toggle('open', open);
+        if (backdrop) {
+            backdrop.style.display = open ? 'block' : 'none';
+            backdrop.style.opacity = open ? '1' : '0';
+        }
+        if (open) renderModalTags();
+    };
+
+    const renderModalTags = () => {
+        const list = document.getElementById('modal-tags-list');
+        if (!list) return;
+        list.innerHTML = '';
+        tagManager.getTags().forEach(tag => {
+            const item = document.createElement('div');
+            item.className = 'modal-tag-item';
+            item.innerHTML = `
+                <span>${tag}</span>
+                <button class="delete-tag-btn" title="Delete tag">×</button>
+            `;
+            item.querySelector('.delete-tag-btn').onclick = () => {
+                tagManager.removeTag(tag);
+                renderModalTags();
+                renderQuickTags();
+            };
+            list.appendChild(item);
+        });
+    };
+
+    const editTagsBtn = document.getElementById('edit-tags-btn');
+    if (editTagsBtn) editTagsBtn.onclick = () => toggleTagsModal(true);
+
+    const closeTagsModalBtn = document.getElementById('close-tags-modal');
+    if (closeTagsModalBtn) closeTagsModalBtn.onclick = () => toggleTagsModal(false);
+
+    const addTagBtn = document.getElementById('add-tag-btn');
+    const newTagInput = document.getElementById('new-tag-input');
+    if (addTagBtn && newTagInput) {
+        addTagBtn.onclick = () => {
+            const val = newTagInput.value.trim();
+            if (val && tagManager.addTag(val)) {
+                newTagInput.value = '';
+                renderModalTags();
+                renderQuickTags();
+            }
+        };
+        newTagInput.onkeypress = (e) => {
+            if (e.key === 'Enter') addTagBtn.click();
+        };
+    }
 
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
