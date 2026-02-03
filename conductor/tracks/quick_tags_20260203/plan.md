@@ -8,8 +8,8 @@
 
 ## Phase 2: Tag Management Logic
 - [x] Task: Write tests for `TagManager` logic (LocalStorage initialization, add, remove). [c2e4713]
-- [~] Task: Implement `TagManager` in `public/app.js` to handle `localStorage` persistence.
-- [ ] Task: Implement modal interaction logic (opening, rendering tag list, adding/deleting tags).
+- [x] Task: Implement `TagManager` in `public/app.js` to handle `localStorage` persistence. [3afeefa]
+- [~] Task: Implement modal interaction logic (opening, rendering tag list, adding/deleting tags).
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Tag Management Logic' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Interaction
