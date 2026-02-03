@@ -695,6 +695,7 @@ async function init() {
         if (!currentSessionId) return;
         let url = `/api/sessions/${currentSessionId}/export?format=${format}`;
         if (fps) url += `&fps=${fps}`;
+        if (window.guestToken) url += `&token=${window.guestToken}`;
         window.location.href = url;
     };
     
