@@ -3,6 +3,7 @@ let currentSession = null;
 let selectedColor = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
+let lastManualNoteContent = null;
 
 class TagManager {
     constructor() {
@@ -543,8 +544,17 @@ async function deleteNote(noteEl) {
 async function sendNote() {
     const input = document.getElementById('note-input');
     if (!input) return;
-    const content = input.value.trim();
+    let content = input.value.trim();
+    
+    // Repeat last note if input is empty
+    if (!content && lastManualNoteContent) {
+        content = lastManualNoteContent;
+    }
+
     if (!content || !currentSessionId) return;
+
+    // Save for next repeat
+    lastManualNoteContent = content;
 
     const timestamp = activeDraftTimestamp !== null ? activeDraftTimestamp : (currentSession?.started_at ? (Date.now() - new Date(currentSession.started_at).getTime()) / 1000 : getSecondsSinceMidnight());
 
