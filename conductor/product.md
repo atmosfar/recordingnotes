@@ -12,6 +12,7 @@ A simple, server-hosted system for taking live timestamped notes during podcast 
 - **CSV Export:** Basic download of session notes in a CSV format compatible with most editors.
 - Simple Access: Password-protected dashboard (single shared password or simple user list).
 - Quick Tags: Customizable buttons for instant, one-click note-taking (e.g., #retake, #noise). Stored locally per user.
+- Note Repeat: Pressing Enter or clicking Send with an empty input repeats the last manually sent note.
 - Data Management: Edit session names, delete sessions, and remove individual notes directly from the UI.
 
 ## Target Audience
