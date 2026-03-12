@@ -92,10 +92,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: Empty Input Note Repeat**
-*Link: [./conductor/tracks/note_repeat_20260312/](./conductor/tracks/note_repeat_20260312/)*
-
----
-
 - [ ] **Track: Deployment Documentation (README.md)**
 *Link: [./conductor/tracks/deployment_doc_20260223/](./conductor/tracks/deployment_doc_20260223/)*
