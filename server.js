@@ -3,6 +3,10 @@ import express from 'express';
 import session from 'express-session';
 import { WebSocketServer } from 'ws';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
@@ -104,7 +108,7 @@ app.get('/login', (req, res) => {
   if (!authRequired) {
     return res.redirect('/');
   }
-  res.sendFile(process.cwd() + '/public/login.html');
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.post('/login', (req, res) => {
@@ -128,7 +132,7 @@ app.get('/logout', (req, res) => {
 // Protect all following routes
 app.use(checkAuth);
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // WebSocket Server Initialization
 let wss;

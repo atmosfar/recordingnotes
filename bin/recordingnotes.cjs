@@ -27,7 +27,8 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'dev.db');
   if (!fs.existsSync(dbPath)) {
     try {
-      execSync('node init-db.js', { stdio: 'inherit' });
+      const initDbPath = path.join(__dirname, '..', 'init-db.js');
+      execSync(`node ${initDbPath}`, { stdio: 'inherit' });
     } catch (e) {
       console.error('Failed to initialize database. Please check your DB_PATH.');
       process.exit(1);
