@@ -4,12 +4,21 @@ import { join } from 'node:path';
 let dbInstance = null;
 let initializedPaths = new Set();
 
-export function getDb() {
+function createDbInstance() {
   if (!dbInstance) {
     const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
     dbInstance = new DatabaseSync(dbPath);
   }
   return dbInstance;
+}
+
+export function getDb() {
+  // Auto-initialize schema if not done yet for this path
+  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+  if (!initializedPaths.has(dbPath)) {
+    initDb();
+  }
+  return createDbInstance();
 }
 
 export function resetDbInstance() {
@@ -21,7 +30,7 @@ export function initDb() {
   const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
   if (initializedPaths.has(dbPath)) return;
 
-  const db = getDb();
+  const db = createDbInstance();
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -408,7 +408,7 @@ function renderNotes(notes) {
     if (notes.length > 0) {
         const emptyMsg = stream.querySelector('.empty-state');
         if (emptyMsg) emptyMsg.remove();
-    } else {
+    } else if (stream.children.length === 0) {
         stream.innerHTML = '<div class="empty-state">No notes yet.</div>';
     }
 
@@ -1058,19 +1058,8 @@ async function init() {
 }
 
 window.addEventListener('hashchange', () => {
-    const guestMatch = window.location.hash.match(/#\/guest\/([a-zA-Z0-9-]+)/);
-    const sessionMatch = window.location.hash.match(/#\/session\/(\d+)/);
-
-    // If navigating away from a guest token URL, reset guest mode flags
-    // so WebSocket reconnects send sessionId instead of guestToken.
-    if (!guestMatch && !window.location.search.includes('token=')) {
-        window.isGuestMode = false;
-        window.guestToken = null;
-    }
-
-    if (sessionMatch && sessionMatch[1] !== currentSessionId?.toString()) {
-        selectSession(sessionMatch[1]);
-    }
+    const m = window.location.hash.match(/#\/session\/(\d+)/);
+    if (m && m[1] !== currentSessionId?.toString()) selectSession(m[1]);
 });
 
 init();

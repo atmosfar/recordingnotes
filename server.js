@@ -24,6 +24,10 @@ if (!process.env.AUTH_WEBHOOK_TOKEN) {
 
 app.use(express.json());
 
+// Auth is only required if both env vars are explicitly set.
+// Otherwise the app runs in open/public mode (no login needed).
+const authRequired = !!(process.env.AUTH_USERNAME && process.env.AUTH_PASSWORD);
+
 // Session configuration
 const sessionParser = session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev_only',
@@ -41,6 +45,12 @@ app.use(sessionParser);
  * Middleware to check user authentication
  */
 function checkAuth(req, res, next) {
+  // If auth is not configured, run in open/public mode — everyone is "authenticated"
+  if (!authRequired) {
+    req.session.authenticated = true;
+    return next();
+  }
+
   // Allow access to login page and its related API
   if (req.path === '/login' || req.path === '/api/login') {
     return next();
@@ -53,7 +63,6 @@ function checkAuth(req, res, next) {
 
   // If a token is provided in query, try to verify and "login" as guest
   if (req.query.token) {
-    initDb();
     const db = getDb();
     const session = sessions.getSessionByGuestToken(db, req.query.token);
     if (session) {
@@ -91,9 +100,10 @@ function checkWebhookAuth(req, res, next) {
 
 // Auth Routes
 app.get('/login', (req, res) => {
-  // We'll serve login.html from the public folder, but it needs to be accessible
-  // So we don't apply checkAuth to the static middleware if we want to serve it simply,
-  // or we handle it explicitly.
+  // If auth is not configured, redirect to the main app
+  if (!authRequired) {
+    return res.redirect('/');
+  }
   res.sendFile(process.cwd() + '/public/login.html');
 });
 
@@ -146,7 +156,6 @@ function broadcastToRoom(sessionId, message) {
 }
 
 function broadcastSessionList() {
-  initDb();
   const db = getDb();
   const list = sessions.listSessions(db).map(session => {
     const room = sessionRooms.get(session.id.toString());
@@ -159,7 +168,6 @@ function broadcastSessionList() {
 }
 
 function broadcastNoteUpdate(sessionId) {
-  initDb();
   const db = getDb();
   const list = notes.listNotesBySession(db, sessionId);
   broadcastToRoom(sessionId, { type: 'NOTE_UPDATE', sessionId, notes: list });
@@ -173,7 +181,6 @@ app.get('/api/status', (req, res) => {
 // Sessions API
 app.post('/api/sessions', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const { name, timestamp_mode, external_id } = req.body;
     if (!name) {
@@ -195,7 +202,6 @@ app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
   console.log('Payload:', JSON.stringify(req.body, null, 2));
   
   try {
-    initDb();
     const db = getDb();
     const { name, sessionID, sessionTitle } = req.body;
     
@@ -256,7 +262,6 @@ app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
   console.log('Action:', action, 'ID:', id, 'Name:', name);
 
   try {
-    initDb();
     const db = getDb();
 
     if (action === 'create') {
@@ -313,7 +318,6 @@ app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
 
 app.get('/api/sessions', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const list = sessions.listSessions(db);
     res.json(list);
@@ -325,7 +329,6 @@ app.get('/api/sessions', (req, res) => {
 
 app.get('/api/sessions/:id', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
@@ -340,7 +343,6 @@ app.get('/api/sessions/:id', (req, res) => {
 
 app.patch('/api/sessions/:id', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const { name } = req.body;
     if (!name) {
@@ -360,7 +362,6 @@ app.patch('/api/sessions/:id', (req, res) => {
 
 app.delete('/api/sessions/:id', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const result = sessions.deleteSession(db, req.params.id);
     if (result.changes === 0) {
@@ -376,7 +377,6 @@ app.delete('/api/sessions/:id', (req, res) => {
 
 app.post('/api/sessions/:id/guest-token', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
@@ -398,7 +398,6 @@ app.post('/api/sessions/:id/guest-token', (req, res) => {
 // Notes API
 app.post('/api/sessions/:id/notes', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const { content, timestamp, color, user_id } = req.body;
     const session_id = req.params.id;
@@ -422,7 +421,6 @@ app.post('/api/sessions/:id/notes', (req, res) => {
 
 app.get('/api/sessions/:id/notes', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const list = notes.listNotesBySession(db, req.params.id);
     res.json(list);
@@ -434,7 +432,6 @@ app.get('/api/sessions/:id/notes', (req, res) => {
 
 app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const { content } = req.body;
     const { note_id } = req.params;
@@ -458,7 +455,6 @@ app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
 
 app.delete('/api/sessions/:session_id/notes/:note_id', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const result = notes.deleteNote(db, req.params.note_id);
     if (result.changes === 0) {
@@ -554,7 +550,6 @@ function formatDuration(seconds) {
 
 app.get('/api/sessions/:id/export', (req, res) => {
   try {
-    initDb();
     const db = getDb();
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
@@ -624,10 +619,22 @@ app.get('/api/sessions/:id/export', (req, res) => {
   }
 });
 
+// Initialize the database immediately on startup so it's ready for first use
+
+// Initialize the database immediately on startup so it's ready for first use
+initDb();
+
 if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log(`Webhook Token: ${process.env.AUTH_WEBHOOK_TOKEN}`);
+    console.log(`\n✓ Recording Notes running at http://localhost:${port}`);
+    if (authRequired) {
+      console.log('  Auth mode: LOGIN REQUIRED (AUTH_USERNAME / AUTH_PASSWORD set in .env)');
+    } else {
+      console.log('  Auth mode: OPEN (no login required — set AUTH_USERNAME/AUTH_PASSWORD in .env to enable auth)');
+    }
+    if (process.env.AUTH_WEBHOOK_TOKEN) {
+      console.log(`  Webhook token: ${process.env.AUTH_WEBHOOK_TOKEN}`);
+    }
   });
 
   wss = new WebSocketServer({ noServer: true });
@@ -639,10 +646,16 @@ if (process.env.NODE_ENV !== 'test') {
       
       const isGuest = queryToken || (request.session && request.session.guestToken);
 
-      if (!request.session.authenticated && !isGuest) {
+      // In open/public mode (no auth configured), skip the check
+      if (authRequired && !request.session.authenticated && !isGuest) {
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
         socket.destroy();
         return;
+      }
+
+      // Auto-authenticate in open mode
+      if (!authRequired) {
+        request.session.authenticated = true;
       }
 
       wss.handleUpgrade(request, socket, head, (ws) => {
@@ -661,15 +674,16 @@ if (process.env.NODE_ENV !== 'test') {
         if (data.type === 'JOIN_SESSION') {
           const { sessionId, guestToken } = data;
           let session = null;
-          initDb();
           const db = getDb();
 
           const effectiveToken = guestToken || request.session.guestToken;
 
-          if (effectiveToken) {
-            session = sessions.getSessionByGuestToken(db, effectiveToken);
-          } else if (request.session.authenticated && sessionId) {
+          // Authenticated user explicitly requesting a session by ID takes priority
+          // over any stale guestToken from a previous ?token=... page visit.
+          if (request.session.authenticated && sessionId) {
             session = sessions.getSession(db, sessionId);
+          } else if (effectiveToken) {
+            session = sessions.getSessionByGuestToken(db, effectiveToken);
           }
 
           if (!session) {
@@ -700,7 +714,6 @@ if (process.env.NODE_ENV !== 'test') {
           }));
         } else if (data.type === 'GET_SESSIONS') {
           if (!request.session.authenticated) return;
-          initDb();
           const db = getDb();
           const list = sessions.listSessions(db).map(session => {
             const room = sessionRooms.get(session.id.toString());
@@ -720,7 +733,6 @@ if (process.env.NODE_ENV !== 'test') {
           }
         } else if (data.type === 'CREATE_SESSION') {
           if (!request.session.authenticated) return;
-          initDb();
           const db = getDb();
           const { name } = data;
           const id = sessions.createSession(db, { name });
@@ -728,14 +740,12 @@ if (process.env.NODE_ENV !== 'test') {
           broadcastSessionList();
         } else if (data.type === 'UPDATE_SESSION') {
           if (!request.session.authenticated) return;
-          initDb();
           const db = getDb();
           const { sessionId, name } = data;
           sessions.updateSession(db, sessionId, { name });
           broadcastSessionList();
         } else if (data.type === 'DELETE_SESSION') {
           if (!request.session.authenticated) return;
-          initDb();
           const db = getDb();
           const { sessionId } = data;
           sessions.deleteSession(db, sessionId);
@@ -743,7 +753,6 @@ if (process.env.NODE_ENV !== 'test') {
           broadcastSessionList();
         } else if (data.type === 'CREATE_NOTE') {
           if (!request.session.authenticated && !request.session.guestToken) return;
-          initDb();
           const db = getDb();
           const { payload } = data;
           if (ws.currentSessionId) {
@@ -752,7 +761,6 @@ if (process.env.NODE_ENV !== 'test') {
           }
         } else if (data.type === 'UPDATE_NOTE') {
           if (!request.session.authenticated && !request.session.guestToken) return;
-          initDb();
           const db = getDb();
           const { noteId, content } = data;
           if (ws.currentSessionId) {
@@ -761,7 +769,6 @@ if (process.env.NODE_ENV !== 'test') {
           }
         } else if (data.type === 'DELETE_NOTE') {
           if (!request.session.authenticated && !request.session.guestToken) return;
-          initDb();
           const db = getDb();
           const { noteId } = data;
           if (ws.currentSessionId) {
