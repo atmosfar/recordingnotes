@@ -1,8 +1,0 @@
-{
-  "track_id": "timestamp_migration_20260106",
-  "type": "refactor",
-  "status": "new",
-  "created_at": "2026-01-06T12:00:00Z",
-  "updated_at": "2026-01-06T12:00:00Z",
-  "description": "Migrate codebase to use REAL (floating point) seconds for note timestamps, enabling higher precision in UI and exports."
-}

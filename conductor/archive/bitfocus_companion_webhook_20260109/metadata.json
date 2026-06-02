@@ -1,8 +1,0 @@
-{
-  "track_id": "bitfocus_companion_webhook_20260109",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-09T16:00:00Z",
-  "updated_at": "2026-01-09T16:00:00Z",
-  "description": "implement bitfocus companion webhook integration for session lifecycle"
-}

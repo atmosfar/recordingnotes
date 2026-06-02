@@ -1,9 +1,0 @@
-TITLE: Timeline_1
-FCM: DROP FRAME
-
-001  001      V     C        00:00:07:18 00:00:07:19 00:00:07:18 00:00:07:19  
- |C:ResolveColorBlue |M:Marker 1 |D:1
-
-002  001      V     C        00:00:31:09 00:00:31:10 00:00:31:09 00:00:31:10  
- |C:ResolveColorPink |M:Marker 2 |D:165
-

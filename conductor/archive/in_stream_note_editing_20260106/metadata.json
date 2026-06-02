@@ -1,8 +1,0 @@
-{
-  "track_id": "in_stream_note_editing_20260106",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-06T12:00:00Z",
-  "updated_at": "2026-01-06T12:00:00Z",
-  "description": "Allow users to edit existing notes in-place within the stream using an inline textarea, with support for keyboard shortcuts and server-side updates."
-}

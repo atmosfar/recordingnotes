@@ -1,8 +1,0 @@
-{
-  "track_id": "ui_ux_refinements_20260202",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-02-02T20:00:00Z",
-  "updated_at": "2026-02-02T20:00:00Z",
-  "description": "Refine UI/UX: Optimize session sorting, add logout confirmation, update share icon, and implement universal kebab menu for desktop."
-}
