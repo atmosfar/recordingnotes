@@ -115,7 +115,7 @@ curl -X POST "http://localhost:3000/api/webhooks/companion?token=YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action":"stop","id":1}'
 
-# Succesful response
+# Successful response
 {"status":"stopped","id":"1"}
 ```
 
