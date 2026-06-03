@@ -2,7 +2,7 @@
 
 'use strict';
 
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,7 +11,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
 function usage() {
   console.log(`
-Recording Notes v${pkg.version} — Minimalist podcast note-taking system
+Recording Notes v${pkg.version} — Live timestamped note-taking system
 
 Usage:
   recordingnotes start     Start the server (default)
@@ -23,7 +23,7 @@ Usage:
 const cmd = process.argv[2];
 
 if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
-  // Ensure the DB exists before starting
+  // Ensure the DB exists before starting (sync is fine for setup)
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'dev.db');
   if (!fs.existsSync(dbPath)) {
     try {
@@ -35,13 +35,38 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
     }
   }
 
-  // Start the server
-  const serverPath = path.join(__dirname, '..', 'server.js');
+  // Start the server as a spawned child process
   if (cmd === '--help' || cmd === '-h') {
     usage();
     process.exit(0);
   } else {
-    execSync(`node ${serverPath}`, { stdio: 'inherit' });
+    const serverPath = path.join(__dirname, '..', 'server.js');
+    const child = spawn('node', [serverPath], {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: process.env,
+    });
+
+    // Forward shutdown signals to the child process
+    const signals = ['SIGTERM', 'SIGINT'];
+    signals.forEach((signal) => {
+      process.on(signal, () => {
+        child.kill(signal);
+      });
+    });
+
+    child.on('exit', (code, signal) => {
+      if (signal) {
+        process.exit(0); // Graceful shutdown via signal
+      } else if (code !== 0) {
+        process.exit(code);
+      }
+    });
+
+    child.on('error', (err) => {
+      console.error('Failed to start server:', err.message);
+      process.exit(1);
+    });
   }
 } else if (cmd === 'init-db') {
   const initDbPath = path.join(__dirname, '..', 'init-db.js');
@@ -49,5 +74,4 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
 } else {
   console.error(`Unknown command: ${cmd}`);
   usage();
-  process.exit(1);
 }

@@ -632,7 +632,7 @@ if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(port, () => {
     console.log(`\n✓ Recording Notes running at http://localhost:${port}`);
     if (authRequired) {
-      console.log('  Auth mode: LOGIN REQUIRED (AUTH_USERNAME / AUTH_PASSWORD set in .env)');
+      console.log('  Auth mode: Login required (AUTH_USERNAME / AUTH_PASSWORD set in .env)');
     } else {
       console.log('  Auth mode: OPEN (no login required — set AUTH_USERNAME/AUTH_PASSWORD in .env to enable auth)');
     }
