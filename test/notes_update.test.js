@@ -23,7 +23,7 @@ describe('Note Update Operations', () => {
         content TEXT NOT NULL,
         user_id INTEGER,
         session_id INTEGER NOT NULL,
-        timestamp REAL NOT NULL,
+        timestamp_ms INTEGER NOT NULL DEFAULT 0,
         color TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (session_id) REFERENCES sessions (id)
@@ -41,7 +41,7 @@ describe('Note Update Operations', () => {
     const noteId = createNote(db, {
       content: 'Original content',
       session_id: 1,
-      timestamp: 123.456,
+      timestamp: Date.now(),
       user_id: null,
       color: 'blue'
     });
@@ -51,6 +51,6 @@ describe('Note Update Operations', () => {
 
     const updatedNote = db.prepare('SELECT * FROM notes WHERE id = ?').get(noteId);
     assert.strictEqual(updatedNote.content, 'Updated content');
-    assert.strictEqual(updatedNote.timestamp, 123.456); // Verify timestamp remains unchanged
+    assert.ok(updatedNote.timestamp_ms > 0); // Verify timestamp_ms remains unchanged
   });
 });

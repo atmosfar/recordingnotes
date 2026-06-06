@@ -1,47 +1,48 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 
-// Replicating logic for unit testing
+// Replicating new logic for unit testing: simple numeric comparison of UTC milliseconds
 function compareTimestamps(t1, t2) {
-    const halfDay = 43200; 
-    const diff = t1 - t2;
-
-    if (Math.abs(diff) > halfDay) {
-        return diff > 0 ? -1 : 1;
-    }
-
-    if (diff < 0) return -1;
-    if (diff > 0) return 1;
+    if (t1 < t2) return -1;
+    if (t1 > t2) return 1;
     return 0;
 }
 
-describe('Timestamp Comparison Logic', () => {
+describe('Timestamp Comparison Logic (UTC Milliseconds)', () => {
     test('normal sequential order (t1 < t2)', () => {
         assert.strictEqual(compareTimestamps(100, 200), -1);
-        assert.strictEqual(compareTimestamps(3600, 7200), -1);
+        assert.strictEqual(compareTimestamps(3600000, 7200000), -1);
     });
 
     test('normal sequential order (t1 > t2)', () => {
         assert.strictEqual(compareTimestamps(200, 100), 1);
-        assert.strictEqual(compareTimestamps(7200, 3600), 1);
+        assert.strictEqual(compareTimestamps(7200000, 3600000), 1);
     });
 
     test('equality', () => {
         assert.strictEqual(compareTimestamps(500, 500), 0);
     });
 
-    test('midnight wrap-around (11:59 PM vs 12:01 AM)', () => {
-        const latePM = 86340; // 23:59:00
-        const earlyAM = 60;    // 00:01:00
-        
-        // earlyAM (60) should be considered LATER than latePM (86340)
+    test('crosses midnight boundary (no wrap-around needed)', () => {
+        // With UTC ms, midnight crossing is handled naturally
+        const latePM = Date.parse('2024-01-01T23:59:00Z');
+        const earlyAM = Date.parse('2024-01-02T00:01:00Z');
+
+        // earlyAM should be LATER than latePM (no wrap-around logic needed)
         assert.strictEqual(compareTimestamps(latePM, earlyAM), -1);
         assert.strictEqual(compareTimestamps(earlyAM, latePM), 1);
     });
 
-    test('large gap without wrap-around (e.g., 10 AM vs 4 PM)', () => {
-        const tenAM = 36000;
-        const fourPM = 57600;
-        assert.strictEqual(compareTimestamps(tenAM, fourPM), -1);
+    test('crosses date boundary across weeks', () => {
+        const monday = Date.parse('2024-01-01T10:00:00Z');
+        const wednesday = Date.parse('2024-01-03T14:00:00Z');
+        assert.strictEqual(compareTimestamps(monday, wednesday), -1);
+    });
+
+    test('large UTC ms values (modern epoch)', () => {
+        const t1 = 1704067200000; // 2024-01-01T00:00:00Z
+        const t2 = 1704153600000; // 2024-01-02T00:00:00Z
+        assert.strictEqual(compareTimestamps(t1, t2), -1);
+        assert.strictEqual(compareTimestamps(t2, t1), 1);
     });
 });

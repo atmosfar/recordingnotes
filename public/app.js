@@ -157,35 +157,47 @@ function formatDuration(seconds, precision = 0) {
 }
 
 /**
- * Compares two timestamps (seconds since midnight) with wrap-around detection.
+ * Compares two timestamps (UTC milliseconds). Simple numeric comparison.
  * Returns -1 if t1 < t2, 1 if t1 > t2, 0 if equal.
- * Heuristic: If the difference is > 12 hours (43200s), we assume a wrap-around occurred.
  */
 function compareTimestamps(t1, t2) {
-    const halfDay = 43200; 
-    const diff = t1 - t2;
-
-    if (Math.abs(diff) > halfDay) {
-        // Wrap-around detected: the smaller value is actually "later"
-        return diff > 0 ? -1 : 1;
-    }
-
-    if (diff < 0) return -1;
-    if (diff > 0) return 1;
+    if (t1 < t2) return -1;
+    if (t1 > t2) return 1;
     return 0;
 }
 
-function getSecondsSinceMidnight() {
-    const now = new Date();
-    return (now.getUTCHours() * 3600) + (now.getUTCMinutes() * 60) + now.getUTCSeconds() + (now.getUTCMilliseconds() / 1000);
+/**
+ * Display a note's timestamp in the appropriate format based on session mode.
+ * Clock mode: convert UTC ms to local HH:MM:SS
+ * Timer mode: elapsed seconds from session start
+ */
+function displayTimestamp(note, session) {
+    const ts = note.timestamp_ms;
+    if (!session) return formatDuration(ts / 1000, 1);
+    
+    if (session.timestamp_mode === 'timer' && session.started_at) {
+        const sessionStartMs = new Date(session.started_at).getTime();
+        const elapsedSeconds = (ts - sessionStartMs) / 1000;
+        return formatDuration(elapsedSeconds, 1);
+    } else {
+        // Clock mode: convert UTC ms to local time
+        const localDate = new Date(ts);
+        const hrs = localDate.getHours();
+        const mins = localDate.getMinutes();
+        const secs = localDate.getSeconds() + localDate.getMilliseconds() / 1000;
+        const totalSeconds = (hrs * 3600) + (mins * 60) + secs;
+        return formatDuration(totalSeconds, 1);
+    }
 }
 
 function captureDraftTimestamp() {
     if (activeDraftTimestamp !== null) return;
     if (currentSession && currentSession.started_at) {
-        activeDraftTimestamp = (Date.now() - new Date(currentSession.started_at).getTime()) / 1000;
+        // Timer mode: store as sessionStartMs + elapsed ms
+        activeDraftTimestamp = Date.now();
     } else {
-        activeDraftTimestamp = getSecondsSinceMidnight();
+        // Clock mode: store as Date.now() (UTC ms)
+        activeDraftTimestamp = Date.now();
     }
     updateDraftDisplay();
 }
@@ -194,7 +206,9 @@ function updateDraftDisplay() {
     const displayEl = document.getElementById('draft-timestamp-display');
     if (!displayEl) return;
     if (activeDraftTimestamp !== null) {
-        displayEl.textContent = formatDuration(activeDraftTimestamp, 1);
+        // Create a pseudo-note object for displayTimestamp
+        const pseudoNote = { timestamp_ms: activeDraftTimestamp };
+        displayEl.textContent = displayTimestamp(pseudoNote, currentSession);
         displayEl.style.display = 'block';
     } else {
         displayEl.style.display = 'none';
@@ -210,9 +224,7 @@ function renderQuickTags() {
         btn.className = 'tag-btn';
         btn.textContent = tag;
         btn.onclick = () => {
-            const timestamp = (currentSession && currentSession.started_at) 
-                ? (Date.now() - new Date(currentSession.started_at).getTime()) / 1000 
-                : getSecondsSinceMidnight();
+            const timestamp = Date.now();
             socket.send('CREATE_NOTE', {
                 payload: { content: tag, timestamp, color: selectedColor }
             });
@@ -430,7 +442,7 @@ function renderNotes(notes) {
             const div = document.createElement('div');
             div.className = 'note';
             div.dataset.noteId = note.id;
-            div.dataset.timestamp = note.timestamp; // Store for sorting
+            div.dataset.timestamp = note.timestamp_ms; // Store for sorting
             if (note.color) {
                 div.style.borderLeft = `4px solid ${note.color}`;
                 div.style.backgroundColor = note.color + '15';
@@ -439,7 +451,7 @@ function renderNotes(notes) {
             // Build DOM with createElement/textContent to avoid XSS from note.content
             const timestampSpan = document.createElement('span');
             timestampSpan.className = 'timestamp';
-            timestampSpan.textContent = formatDuration(note.timestamp, 1);
+            timestampSpan.textContent = displayTimestamp(note, currentSession);
 
             const contentSpan = document.createElement('span');
             contentSpan.className = 'content';
@@ -478,7 +490,7 @@ function renderNotes(notes) {
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
             const nextNote = currentNotes.find(existingNote => {
                 const existingTs = parseFloat(existingNote.dataset.timestamp);
-                return compareTimestamps(note.timestamp, existingTs) === -1;
+                return compareTimestamps(note.timestamp_ms, existingTs) === -1;
             });
 
             if (nextNote) {
@@ -567,7 +579,7 @@ async function sendNote() {
     // Save for next repeat
     lastManualNoteContent = content;
 
-    const timestamp = activeDraftTimestamp !== null ? activeDraftTimestamp : (currentSession?.started_at ? (Date.now() - new Date(currentSession.started_at).getTime()) / 1000 : getSecondsSinceMidnight());
+    const timestamp = activeDraftTimestamp !== null ? activeDraftTimestamp : Date.now();
 
     socket.send('CREATE_NOTE', {
         payload: { content, timestamp, color: selectedColor }

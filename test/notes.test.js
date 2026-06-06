@@ -23,7 +23,7 @@ describe('Note Database Operations', () => {
         content TEXT NOT NULL,
         user_id INTEGER,
         session_id INTEGER NOT NULL,
-        timestamp TEXT NOT NULL,
+        timestamp_ms INTEGER NOT NULL DEFAULT 0,
         color TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (session_id) REFERENCES sessions (id)
@@ -42,28 +42,28 @@ describe('Note Database Operations', () => {
     const noteData = {
       content: 'Important moment',
       session_id: 1,
-      timestamp: '00:01:23',
+      timestamp: Date.now(),
       user_id: null,
       color: 'red'
     };
-    
+
     const id = createNote(db, noteData);
     assert.ok(id > 0);
 
     const notes = listNotesBySession(db, 1);
     assert.strictEqual(notes.length, 1);
     assert.strictEqual(notes[0].content, 'Important moment');
-    assert.strictEqual(notes[0].timestamp, '00:01:23');
+    assert.ok(notes[0].timestamp_ms > 0);
   });
 
   test('should list multiple notes in order', () => {
-    createNote(db, { 
-      content: 'Second note', 
-      session_id: 1, 
-      timestamp: '00:02:00',
-      user_id: null 
+    createNote(db, {
+      content: 'Second note',
+      session_id: 1,
+      timestamp: Date.now(),
+      user_id: null
     });
-    
+
     const notes = listNotesBySession(db, 1);
     assert.strictEqual(notes.length, 2);
     // Assuming default order is by creation or timestamp

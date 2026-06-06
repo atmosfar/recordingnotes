@@ -106,11 +106,11 @@ describe('Management API Endpoints', () => {
 
     const createNoteRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Cookie': authCookie
       },
-      body: JSON.stringify({ content: 'Note to del', timestamp: 10 })
+      body: JSON.stringify({ content: 'Note to del', timestamp: Date.now() })
     });
     const { id: noteId } = await createNoteRes.json();
 

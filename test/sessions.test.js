@@ -37,7 +37,7 @@ describe('Session CRUD Operations', () => {
         content TEXT NOT NULL,
         user_id INTEGER,
         session_id INTEGER NOT NULL,
-        timestamp REAL NOT NULL,
+        timestamp_ms INTEGER NOT NULL DEFAULT 0,
         color TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (session_id) REFERENCES sessions (id)

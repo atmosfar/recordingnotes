@@ -76,7 +76,7 @@ describe('Database Schema Updates', () => {
     unlinkSync(migrationDbPath);
   });
 
-  test('should have REAL timestamp column in notes table', async () => {
+  test('should have INTEGER timestamp_ms column in notes table', async () => {
     process.env.RECNOTES_DB_PATH = testDbPath;
     const { initDb, resetDbInstance } = await import(`../db.js?notes=${Date.now()}`);
     resetDbInstance();
@@ -84,9 +84,10 @@ describe('Database Schema Updates', () => {
 
     const db = new DatabaseSync(testDbPath);
     const info = db.prepare("PRAGMA table_info(notes)").all();
-    const timestampCol = info.find(c => c.name === 'timestamp');
+    const timestampCol = info.find(c => c.name === 'timestamp_ms');
 
-    assert.strictEqual(timestampCol.type, 'REAL', 'notes.timestamp should be REAL');
+    assert.ok(timestampCol, 'notes table should have timestamp_ms column');
+    assert.strictEqual(timestampCol.type, 'INTEGER', 'notes.timestamp_ms should be INTEGER');
     
     db.close();
   });

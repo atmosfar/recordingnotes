@@ -31,7 +31,7 @@ describe('Session and Note Management Operations', () => {
         content TEXT NOT NULL,
         user_id INTEGER,
         session_id INTEGER NOT NULL,
-        timestamp REAL NOT NULL,
+        timestamp_ms INTEGER NOT NULL DEFAULT 0,
         color TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (session_id) REFERENCES sessions (id)
@@ -49,21 +49,21 @@ describe('Session and Note Management Operations', () => {
     const noteId = createNote(db, {
       content: 'Note to be deleted',
       session_id: sessionId,
-      timestamp: 123.45
+      timestamp: Date.now()
     });
 
     assert.ok(getNote(db, noteId), 'Note should exist before deletion');
-    
+
     // This will fail initially because deleteNote is not implemented or imported
     deleteNote(db, noteId);
-    
+
     assert.strictEqual(getNote(db, noteId), undefined, 'Note should not exist after deletion');
   });
 
   test('should delete a session and its associated notes', () => {
     const sessionId = createSession(db, { name: 'Session Cleanup Test' });
-    createNote(db, { content: 'Associated note 1', session_id: sessionId, timestamp: 10 });
-    createNote(db, { content: 'Associated note 2', session_id: sessionId, timestamp: 20 });
+    createNote(db, { content: 'Associated note 1', session_id: sessionId, timestamp: Date.now() });
+    createNote(db, { content: 'Associated note 2', session_id: sessionId, timestamp: Date.now() + 1000 });
 
     const notesBefore = listNotesBySession(db, sessionId);
     assert.strictEqual(notesBefore.length, 2);

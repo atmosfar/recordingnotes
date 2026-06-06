@@ -72,18 +72,18 @@ describe('Note API Endpoints', () => {
   test('POST /api/sessions/:id/notes should create a note', async () => {
     const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Cookie': authCookie
       },
       body: JSON.stringify({
         content: 'API Test Note',
-        timestamp: '00:05:00',
+        timestamp: Date.now(),
         color: 'blue'
       })
     });
     const data = await response.json();
-    
+
     assert.strictEqual(response.status, 201);
     assert.ok(data.id);
   });
@@ -104,13 +104,13 @@ describe('Note API Endpoints', () => {
     // Create a note first
     const createRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Cookie': authCookie
       },
       body: JSON.stringify({
         content: 'Note to be edited',
-        timestamp: 456.789,
+        timestamp: Date.now(),
         color: 'red'
       })
     });

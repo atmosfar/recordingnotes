@@ -15,6 +15,9 @@ import * as notes from './notes.js';
 const app = express();
 const port = process.env.RECNOTES_PORT || 3000;
 
+// Ground-truth timezone for exports (IANA timezone name, e.g. 'Europe/London', 'America/New_York', 'UTC')
+const EXPORT_TIMEZONE = process.env.RECNOTES_EXPORT_TIMEZONE || 'UTC';
+
 // Track whether the API token was explicitly set by the user (vs auto-generated)
 const apiTokenWasExplicitlySet = !!process.env.RECNOTES_AUTH_API_TOKEN;
 
@@ -588,6 +591,33 @@ app.get('/api/sessions/:id/export', (req, res) => {
     let contentType = 'text/csv';
     let extension = 'csv';
 
+    // Helper: convert timestamp_ms to seconds-since-midnight in the configured export timezone
+    function timestampToSeconds(note) {
+      const ts = note.timestamp_ms;
+      if (session.timestamp_mode === 'timer') {
+        // Timer mode: elapsed seconds from session start
+        const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
+        return (ts - sessionStartMs) / 1000;
+      } else {
+        // Clock mode: convert UTC ms to seconds-since-midnight in EXPORT_TIMEZONE
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: EXPORT_TIMEZONE,
+          hour: 'numeric', hour12: false,
+          minute: 'numeric',
+          second: 'numeric',
+          fractionalSecondDigits: 3
+        }).formatToParts(ts);
+
+        const get = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+        const hrs = get('hour');
+        const mins = get('minute');
+        const secs = get('second');
+        // fractionalSeconds from Intl may not be supported everywhere, fallback to ms
+        const ms = Math.round(ts % 1000);
+        return (hrs * 3600) + (mins * 60) + secs + ms / 1000;
+      }
+    }
+
     if (format === 'edl') {
       const fpsKey = req.query.fps || '23.976';
       const frameRate = FRAMERATES[fpsKey] || FRAMERATES['23.976'];
@@ -599,10 +629,11 @@ app.get('/api/sessions/:id/export', (req, res) => {
       list.forEach((note, index) => {
         const entryNum = (index + 1).toString().padStart(3, '0');
         const color = mapColorToResolve(note.color);
-        const startTimecode = timeToHmsf(note.timestamp, frameRate, isDfMode);
+        const seconds = timestampToSeconds(note);
+        const startTimecode = timeToHmsf(seconds, frameRate, isDfMode);
         
         // Calculate end timecode (start + 1 frame)
-        const endTimecode = timeToHmsf(note.timestamp + (1 / frameRate), frameRate, isDfMode);
+        const endTimecode = timeToHmsf(seconds + (1 / frameRate), frameRate, isDfMode);
         
         // Format: EntryNum  SourceID  V  C  StartTC EndTC StartTC EndTC
         // SourceID is usually 001 for markers
@@ -616,7 +647,8 @@ app.get('/api/sessions/:id/export', (req, res) => {
       content = 'Name\tStart\tDuration\tTime Format\tType\tDescription\n';
       list.forEach((note) => {
         const name = note.content.replace(/"/g, '""');
-        const start = formatDuration(note.timestamp);
+        const seconds = timestampToSeconds(note);
+        const start = formatDuration(seconds);
         const duration = '0:00.000';
         // Format: Name <tab> Start <tab> Duration <tab> decimal <tab> Cue <tab> Description
         content += `${name}\t${start}\t${duration}\tdecimal\tCue\t\n`;
@@ -628,7 +660,8 @@ app.get('/api/sessions/:id/export', (req, res) => {
         const name = `"${note.content.replace(/"/g, '""')}"`;
         const marker = `M${index + 1}`;
         const color = note.color ? note.color.replace('#', '').toUpperCase() : '';
-        const timestamp = formatDuration(note.timestamp);
+        const seconds = timestampToSeconds(note);
+        const timestamp = formatDuration(seconds);
         // Format: #,Name,Start,End,Length,Color
         content += `${marker},${name},${timestamp},,,${color}\n`;
       });

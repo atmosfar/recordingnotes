@@ -11,6 +11,15 @@ describe('CSV Export Endpoint', () => {
   let baseUrl;
   let sessionId;
   let authCookie;
+  let sessionStartMs;
+
+  // Helper: calculate UTC ms for N seconds since UTC midnight today
+  // (matches default EXPORT_TIMEZONE = 'UTC')
+  function utcSecondsToMs(seconds) {
+    const now = new Date();
+    const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0);
+    return utcMidnight + Math.round(seconds * 1000);
+  }
 
   before(async () => {
     process.env.RECNOTES_AUTH_USERNAME = 'testuser';
@@ -26,7 +35,7 @@ describe('CSV Export Endpoint', () => {
       server = app.listen(0, async () => {
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
-        
+
         // Login to get cookie
         const loginRes = await fetch(`${baseUrl}/login`, {
           method: 'POST',
@@ -38,7 +47,7 @@ describe('CSV Export Endpoint', () => {
         // Create session
         const createRes = await fetch(`${baseUrl}/api/sessions`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Cookie': authCookie
           },
@@ -47,16 +56,16 @@ describe('CSV Export Endpoint', () => {
         const created = await createRes.json();
         sessionId = created.id;
 
-        // Add a note
+        // Add a note at 00:01:00.000 (clock mode: UTC ms for 60s since UTC midnight)
         await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Cookie': authCookie
           },
-          body: JSON.stringify({ content: 'Test Note', timestamp: 60.0 })
+          body: JSON.stringify({ content: 'Test Note', timestamp: utcSecondsToMs(60.0) })
         });
-        
+
         resolve();
       });
     });
@@ -80,21 +89,21 @@ describe('CSV Export Endpoint', () => {
   });
 
   test('GET /api/sessions/:id/export should return REAPER compatible CSV with millisecond precision', async () => {
-    // Add a note with specific float seconds
+    // Add a note at 00:02:03.456 (clock mode: UTC ms for 123.456s since UTC midnight)
     await fetch(`${baseUrl}/api/sessions/${sessionId}/notes`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Cookie': authCookie
         },
-        body: JSON.stringify({ content: 'Precise Note', timestamp: 123.456, color: '#2ecc71' })
+        body: JSON.stringify({ content: 'Precise Note', timestamp: utcSecondsToMs(123.456), color: '#2ecc71' })
     });
 
     const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export`, {
       headers: { 'Cookie': authCookie }
     });
     const body = await response.text();
-    
+
     assert.strictEqual(response.status, 200);
     assert.ok(response.headers.get('content-type').includes('text/csv'));
     // 123.456s = 00:02:03.456
