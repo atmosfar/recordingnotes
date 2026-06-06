@@ -20,7 +20,7 @@ Open `http://localhost:3000` in your browser to start taking notes.
 
 ## Configuration
 
-Configure via `~/.config/recordingnotes/settings.conf` or environment variables:
+Configure via `~/.recordingnotes/settings.conf` or environment variables:
 
 ```bash
 # Server port

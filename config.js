@@ -3,12 +3,12 @@ import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const SETTINGS_DIR = join(homedir(), '.config', 'recordingnotes');
+const SETTINGS_DIR = join(homedir(), '.recordingnotes');
 const SETTINGS_FILE = join(SETTINGS_DIR, 'settings.conf');
 
 const DEFAULTS = {
   RECNOTES_PORT: '3000',
-  RECNOTES_DB_PATH: join(process.cwd(), 'dev.db'),
+  RECNOTES_DB_PATH: join(SETTINGS_DIR, 'default.db'),
   RECNOTES_EXPORT_TIMEZONE: 'UTC',
 };
 
@@ -50,6 +50,11 @@ function parseConfigFile(content) {
  */
 function loadSettingsFile() {
   if (cachedFileSettings !== null) return cachedFileSettings;
+  // Skip settings file in test mode to avoid leaking local config into tests
+  if (process.env.NODE_ENV === 'test') {
+    cachedFileSettings = {};
+    return cachedFileSettings;
+  }
   if (!existsSync(SETTINGS_FILE)) {
     cachedFileSettings = {};
     return cachedFileSettings;
@@ -66,7 +71,7 @@ function loadSettingsFile() {
 /**
  * Build the effective configuration:
  *   1. Start with defaults
- *   2. Overlay values from ~/.config/recordingnotes/settings.conf (cached)
+ *   2. Overlay values from ~/.recordingnotes/settings.conf (cached)
  *   3. Overlay environment variables (highest priority, read fresh every call)
  *
  * Environment variables are re-read on every call so that tests and runtime

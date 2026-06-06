@@ -1,13 +1,13 @@
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
-import { getConfig } from './config.js';
+import { getConfig, SETTINGS_DIR } from './config.js';
 
 let dbInstance = null;
 let initializedPaths = new Set();
 
 function getDbPath() {
   const config = getConfig();
-  return config.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
+  return config.RECNOTES_DB_PATH || join(SETTINGS_DIR, 'default.db');
 }
 
 function createDbInstance() {
