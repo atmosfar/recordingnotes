@@ -1,12 +1,18 @@
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
+import { getConfig } from './config.js';
 
 let dbInstance = null;
 let initializedPaths = new Set();
 
+function getDbPath() {
+  const config = getConfig();
+  return config.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
+}
+
 function createDbInstance() {
   if (!dbInstance) {
-    const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
+    const dbPath = getDbPath();
     dbInstance = new DatabaseSync(dbPath);
   }
   return dbInstance;
@@ -14,7 +20,7 @@ function createDbInstance() {
 
 export function getDb() {
   // Auto-initialize schema if not done yet for this path
-  const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
+  const dbPath = getDbPath();
   if (!initializedPaths.has(dbPath)) {
     initDb();
   }
@@ -27,7 +33,7 @@ export function resetDbInstance() {
 }
 
 export function initDb() {
-  const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
+  const dbPath = getDbPath();
   if (initializedPaths.has(dbPath)) return;
 
   const db = createDbInstance();

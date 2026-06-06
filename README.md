@@ -20,7 +20,7 @@ Open `http://localhost:3000` in your browser to start taking notes.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and customize:
+Configure via `~/.config/recordingnotes/settings.conf` or environment variables:
 
 ```bash
 # Server port
@@ -55,7 +55,7 @@ You can automate session creation and the running state of the session timer by 
 
 ### Authentication
 
-All integration requests must include the `RECNOTES_AUTH_API_TOKEN` (set in `.env`). If `RECNOTES_AUTH_API_TOKEN` is not explicitly set, it is auto-generated from your `RECNOTES_AUTH_USERNAME` and `RECNOTES_AUTH_PASSWORD`. The token is printed to the console during startup of the server.
+All integration requests must include the `RECNOTES_AUTH_API_TOKEN` (set in `settings.conf` or environment variables). If `RECNOTES_AUTH_API_TOKEN` is not explicitly set, it is auto-generated from your `RECNOTES_AUTH_USERNAME` and `RECNOTES_AUTH_PASSWORD`. The token is printed to the console during startup of the server.
 
 ### SquadCast
 

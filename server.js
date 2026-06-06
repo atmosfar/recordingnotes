@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import { WebSocketServer } from 'ws';
@@ -8,26 +7,57 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { getConfig } from './config.js';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 
 const app = express();
-const port = process.env.RECNOTES_PORT || 3000;
 
-// Track whether the API token was explicitly set by the user (vs auto-generated)
-const apiTokenWasExplicitlySet = !!process.env.RECNOTES_AUTH_API_TOKEN;
+// Lazy config accessors – read fresh on each call so env var changes are picked up
+function getPort() {
+  return Number(getConfig().RECNOTES_PORT) || 3000;
+}
 
-// Derive API Token from credentials if not explicitly set
-if (!process.env.RECNOTES_AUTH_API_TOKEN) {
-  const username = process.env.RECNOTES_AUTH_USERNAME;
-  const password = process.env.RECNOTES_AUTH_PASSWORD;
-  if (username && password) {
-    process.env.RECNOTES_AUTH_API_TOKEN = crypto
-      .createHash('sha256')
-      .update(`${username}:${password}`)
-      .digest('hex');
+function getApiToken() {
+  const config = getConfig();
+  let token = config.RECNOTES_AUTH_API_TOKEN;
+  if (!token) {
+    const username = config.RECNOTES_AUTH_USERNAME;
+    const password = config.RECNOTES_AUTH_PASSWORD;
+    if (username && password) {
+      token = crypto
+        .createHash('sha256')
+        .update(`${username}:${password}`)
+        .digest('hex');
+    }
   }
+  return token;
+}
+
+function wasApiTokenExplicitlySet() {
+  return !!getConfig().RECNOTES_AUTH_API_TOKEN;
+}
+
+function getAuthCredentials() {
+  const config = getConfig();
+  return {
+    username: config.RECNOTES_AUTH_USERNAME,
+    password: config.RECNOTES_AUTH_PASSWORD,
+  };
+}
+
+function authIsRequired() {
+  const config = getConfig();
+  return !!(config.RECNOTES_AUTH_USERNAME && config.RECNOTES_AUTH_PASSWORD);
+}
+
+function getSessionSecret() {
+  return getConfig().RECNOTES_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+}
+
+function getExportTimezone() {
+  return getConfig().RECNOTES_EXPORT_TIMEZONE || 'UTC';
 }
 
 app.use(express.json());
@@ -42,11 +72,14 @@ const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
 // Auth is only required if both env vars are explicitly set.
 // Otherwise the app runs in open/public mode (no login needed).
-const authRequired = !!(process.env.RECNOTES_AUTH_USERNAME && process.env.RECNOTES_AUTH_PASSWORD);
+// Checked dynamically per-request so env changes are picked up.
+function authRequired() {
+  return authIsRequired();
+}
 
 // Session configuration
 const sessionParser = session({
-  secret: process.env.RECNOTES_SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+  secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -64,7 +97,7 @@ app.use(sessionParser);
  */
 function checkAuth(req, res, next) {
   // If auth is not configured, run in open/public mode — everyone is "authenticated"
-  if (!authRequired) {
+  if (!authRequired()) {
     req.session.authenticated = true;
     return next();
   }
@@ -107,12 +140,12 @@ function checkAuth(req, res, next) {
  */
 function checkApiTokenAuth(req, res, next) {
   // In open mode (no auth configured), skip token check — endpoints are public
-  if (!authRequired) {
+  if (!authRequired()) {
     return next();
   }
 
   const token = req.params.token || req.query.token || req.headers['x-auth-token'];
-  const validToken = process.env.RECNOTES_AUTH_API_TOKEN;
+  const validToken = getApiToken();
 
   if (validToken && token && token.length === validToken.length && crypto.timingSafeEqual(
     Buffer.from(token),
@@ -127,7 +160,7 @@ function checkApiTokenAuth(req, res, next) {
 // Auth Routes
 app.get('/login', (req, res) => {
   // If auth is not configured, redirect to the main app
-  if (!authRequired) {
+  if (!authRequired()) {
     return res.redirect('/');
   }
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -135,8 +168,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.RECNOTES_AUTH_USERNAME;
-  const validPass = process.env.RECNOTES_AUTH_PASSWORD;
+  const { username: validUser, password: validPass } = getAuthCredentials();
 
   if (validUser && validPass && username === validUser && password === validPass) {
     req.session.authenticated = true;
@@ -599,7 +631,7 @@ app.get('/api/sessions/:id/export', (req, res) => {
       } else {
         // Clock mode: convert UTC ms to seconds-since-midnight
         // (IANA timezone from RECNOTES_EXPORT_TIMEZONE, defaults to UTC)
-        const exportTimezone = process.env.RECNOTES_EXPORT_TIMEZONE || 'UTC';
+        const exportTimezone = getExportTimezone();
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: exportTimezone,
           hour: 'numeric', hour12: false,
@@ -684,18 +716,20 @@ app.get('/api/sessions/:id/export', (req, res) => {
 initDb();
 
 if (process.env.NODE_ENV !== 'test') {
+  const port = getPort();
   const server = app.listen(port, () => {
     console.log(`\n✓ Recording Notes running at http://localhost:${port}`);
-    if (authRequired) {
-      console.log('  Auth mode: Login required (RECNOTES_AUTH_USERNAME / RECNOTES_AUTH_PASSWORD set in .env)');
+    if (authRequired()) {
+      console.log('  Auth mode: Login required (RECNOTES_AUTH_USERNAME & RECNOTES_AUTH_PASSWORD set)');
     } else {
       console.warn('  Warning: No authorization configured. Do not use this setup in untrusted environments. See .env.example for details.');
     }
-    if (process.env.RECNOTES_AUTH_API_TOKEN) {
-      if (apiTokenWasExplicitlySet) {
-        console.log(`  API token: ****${process.env.RECNOTES_AUTH_API_TOKEN.slice(-4)}`);
+    const token = getApiToken();
+    if (token) {
+      if (wasApiTokenExplicitlySet()) {
+        console.log(`  API token: ****${token.slice(-4)}`);
       } else {
-        console.log(`  API token (auto-generated): ${process.env.RECNOTES_AUTH_API_TOKEN}`);
+        console.log(`  API token (auto-generated): ${token}`);
       }
     }
   });
@@ -710,14 +744,14 @@ if (process.env.NODE_ENV !== 'test') {
       const isGuest = queryToken || (request.session && request.session.guestToken);
 
       // In open/public mode (no auth configured), skip the check
-      if (authRequired && !request.session.authenticated && !isGuest) {
+      if (authRequired() && !request.session.authenticated && !isGuest) {
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
         socket.destroy();
         return;
       }
 
       // Auto-authenticate in open mode
-      if (!authRequired) {
+      if (!authRequired()) {
         request.session.authenticated = true;
       }
 
