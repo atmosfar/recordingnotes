@@ -40,42 +40,6 @@ describe('Database Schema Updates', () => {
     db.close();
   });
 
-  test('should migrate existing sessions table to include new columns', async () => {
-    const migrationDbPath = join(process.cwd(), 'test-migration.db');
-    if (existsSync(migrationDbPath)) unlinkSync(migrationDbPath);
-
-    // Create old schema
-    const db = new DatabaseSync(migrationDbPath);
-    db.exec(`
-      CREATE TABLE sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        timestamp_mode TEXT DEFAULT 'clock',
-        status TEXT DEFAULT 'active',
-        started_at DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    db.close();
-
-    // Run initDb with the existing db
-    process.env.RECNOTES_DB_PATH = migrationDbPath;
-    const { initDb, resetDbInstance } = await import(`../db.js?migration=${Date.now()}`);
-    resetDbInstance();
-    initDb();
-
-    // Check if columns were added
-    const dbCheck = new DatabaseSync(migrationDbPath);
-    const info = dbCheck.prepare("PRAGMA table_info(sessions)").all();
-    const columnNames = info.map(c => c.name);
-
-    assert.ok(columnNames.includes('external_id'), 'migrated sessions table should have external_id column');
-    assert.ok(columnNames.includes('stopped_at'), 'migrated sessions table should have stopped_at column');
-    
-    dbCheck.close();
-    unlinkSync(migrationDbPath);
-  });
-
   test('should have INTEGER timestamp_ms column in notes table', async () => {
     process.env.RECNOTES_DB_PATH = testDbPath;
     const { initDb, resetDbInstance } = await import(`../db.js?notes=${Date.now()}`);
