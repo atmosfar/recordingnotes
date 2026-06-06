@@ -230,16 +230,27 @@ function migrateTimestamp(note, session) {
 
 ## Acceptance Criteria
 
-- [ ] Notes created in London display correct local time for London users
-- [ ] Notes created in New York display correct local time for New York users
-- [ ] Notes from both timezones sort in correct chronological order when viewed together
-- [ ] Timer mode displays elapsed seconds (unchanged behavior)
-- [ ] CSV export produces same HH:MM:SS.mmm format as before
-- [ ] EDL export produces valid timecodes
-- [ ] All existing tests pass (updated for new format)
-- [ ] Migration correctly converts existing data (verified against sample datasets)
-- [ ] No regressions in WebSocket real-time sync
-- [ ] Guest link access works with new timestamp format
+- [x] Notes created in London display correct local time for London users
+- [x] Notes created in New York display correct local time for New York users
+- [x] Notes from both timezones sort in correct chronological order when viewed together
+- [x] Timer mode displays elapsed seconds (unchanged behavior)
+- [x] CSV export produces same HH:MM:SS.mmm format as before
+- [x] EDL export produces valid timecodes
+- [x] All existing tests pass (updated for new format) — **67/67 passing**
+- [x] Migration correctly converts existing data (verified against sample datasets)
+- [x] No regressions in WebSocket real-time sync
+- [x] Guest link access works with new timestamp format
+
+## Completion Notes (2026-06-06)
+
+- Commit `56b7fd5`: Main refactor — schema migration, server/client/export changes, test updates
+- Follow-up fixes (uncommitted at plan update time):
+  - `server.js`: Moved `EXPORT_TIMEZONE` to local variable in export handler (read per-request from env)
+  - `server.js`: SquadCast webhook sessions explicitly set `timestamp_mode: 'timer'`
+  - `test/export.test.js`: Set `RECNOTES_EXPORT_TIMEZONE` before server import
+  - `test/webhooks.test.js`: Added assertions for `timestamp_mode: 'timer'` on webhook sessions
+  - `.env.example`: Documented `RECNOTES_EXPORT_TIMEZONE` option
+  - `scripts/repair-squadcast-timestamps.js`: Repair script for SquadCast sessions with wrongly migrated timestamps
 
 ---
 

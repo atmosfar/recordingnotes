@@ -1,3 +1,6 @@
+// Must set BEFORE importing server.js (which reads dotenv at load time)
+process.env.RECNOTES_EXPORT_TIMEZONE = 'UTC';
+
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';

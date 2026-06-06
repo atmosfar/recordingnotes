@@ -69,6 +69,7 @@ describe('SquadCast Webhook Endpoints', () => {
     const session = db.prepare('SELECT * FROM sessions WHERE external_id = ?').get('sq_session_new_created');
     assert.ok(session);
     assert.strictEqual(session.name, 'New SquadCast Session');
+    assert.strictEqual(session.timestamp_mode, 'timer');
   });
 
   test('POST /api/webhooks/squadcast - participant.joined (workaround)', async () => {
@@ -93,6 +94,7 @@ describe('SquadCast Webhook Endpoints', () => {
     const session = db.prepare('SELECT * FROM sessions WHERE external_id = ?').get(uniqueId);
     assert.ok(session);
     assert.strictEqual(session.name, 'Workaround Session');
+    assert.strictEqual(session.timestamp_mode, 'timer');
   });
 
   test('POST /api/webhooks/squadcast - recording.started', async () => {

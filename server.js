@@ -15,9 +15,6 @@ import * as notes from './notes.js';
 const app = express();
 const port = process.env.RECNOTES_PORT || 3000;
 
-// Ground-truth timezone for exports (IANA timezone name, e.g. 'Europe/London', 'America/New_York', 'UTC')
-const EXPORT_TIMEZONE = process.env.RECNOTES_EXPORT_TIMEZONE || 'UTC';
-
 // Track whether the API token was explicitly set by the user (vs auto-generated)
 const apiTokenWasExplicitlySet = !!process.env.RECNOTES_AUTH_API_TOKEN;
 
@@ -237,9 +234,10 @@ app.post('/api/webhooks/squadcast/:token', apiLimiter, checkApiTokenAuth, (req, 
     if (name === 'recording_session.created' || name === 'participant.joined') {
       const existing = sessions.getSessionByExternalId(db, sessionID);
       if (!existing) {
-        const id = sessions.createSession(db, { 
-          name: sessionTitle || 'Untitled SquadCast Session', 
-          external_id: sessionID 
+        const id = sessions.createSession(db, {
+          name: sessionTitle || 'Untitled SquadCast Session',
+          external_id: sessionID,
+          timestamp_mode: 'timer'
         });
         broadcastSessionList();
         return res.status(201).json({ id, status: 'created' });
@@ -599,9 +597,11 @@ app.get('/api/sessions/:id/export', (req, res) => {
         const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
         return (ts - sessionStartMs) / 1000;
       } else {
-        // Clock mode: convert UTC ms to seconds-since-midnight in EXPORT_TIMEZONE
+        // Clock mode: convert UTC ms to seconds-since-midnight
+        // (IANA timezone from RECNOTES_EXPORT_TIMEZONE, defaults to UTC)
+        const exportTimezone = process.env.RECNOTES_EXPORT_TIMEZONE || 'UTC';
         const parts = new Intl.DateTimeFormat('en-GB', {
-          timeZone: EXPORT_TIMEZONE,
+          timeZone: exportTimezone,
           hour: 'numeric', hour12: false,
           minute: 'numeric',
           second: 'numeric',
