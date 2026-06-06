@@ -1,0 +1,8 @@
+{
+  "track_id": "full_websocket_data_push_20260114",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-01-14T10:00:00Z",
+  "updated_at": "2026-01-14T11:30:00Z",
+  "description": "Complete the migration to WebSockets by pushing data directly through the socket, eliminating remaining HTTP GET requests for notes and session updates."
+}

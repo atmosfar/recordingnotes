@@ -1,0 +1,24 @@
+# Plan: Minimal HTTP Session Authentication
+
+## Phase 1: Basic Session Auth & Middleware [checkpoint: cd959ab]
+- [x] Task: Update `.env.example` with `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_WEBHOOK_TOKEN`. [60b36b9]
+- [x] Task: Install `express-session` dependency. [04eef26]
+- [x] Task: Write failing unit tests in `test/auth.test.js` for user login, session persistence, and unauthorized access redirection. [a437690]
+- [x] Task: Implement `userAuthMiddleware` and session management in `server.js`. [a437690]
+- [x] Task: Create `/login` routes and a minimal `public/login.html` page. [a437690]
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Basic Session Auth & Middleware' (Protocol in workflow.md) [cd959ab]
+
+## Phase 2: Webhook Token Auth [checkpoint: cd959ab]
+- [x] Task: Write failing unit tests in `test/webhook_auth.test.js` for token-based access to SquadCast and Companion routes. [cd959ab]
+- [x] Task: Implement `webhookAuthMiddleware` to check for query tokens or auth headers. [cd959ab]
+- [x] Task: Apply `webhookAuthMiddleware` to all `/api/webhooks/*` routes. [cd959ab]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Webhook Token Auth' (Protocol in workflow.md) [cd959ab]
+
+## Phase 3: Integration & UI Polish [checkpoint: 808cf12]
+- [x] Task: Add a "Logout" button/link to the main dashboard. [3d5b02d]
+- [x] Task: Verify that WebSocket connections are correctly handled (or blocked) for unauthenticated users. [ad09a5a]
+- [x] Task: Support "Enter" key submission on the login page. [84f9cc1]
+- [x] Task: Preserve deep-links (returnTo) after successful login. [be73d92]
+- [x] Task: Run final test suite and verify >80% coverage for new auth logic. [ad09a5a]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Integration & UI Polish' (Protocol in workflow.md) [ad09a5a]
+

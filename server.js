@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import { WebSocketServer } from 'ws';
+import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -12,14 +13,17 @@ import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.RECNOTES_PORT || 3000;
 
-// Derive Webhook Token from credentials if not explicitly set
-if (!process.env.AUTH_WEBHOOK_TOKEN) {
-  const username = process.env.AUTH_USERNAME;
-  const password = process.env.AUTH_PASSWORD;
+// Track whether the API token was explicitly set by the user (vs auto-generated)
+const apiTokenWasExplicitlySet = !!process.env.RECNOTES_AUTH_API_TOKEN;
+
+// Derive API Token from credentials if not explicitly set
+if (!process.env.RECNOTES_AUTH_API_TOKEN) {
+  const username = process.env.RECNOTES_AUTH_USERNAME;
+  const password = process.env.RECNOTES_AUTH_PASSWORD;
   if (username && password) {
-    process.env.AUTH_WEBHOOK_TOKEN = crypto
+    process.env.RECNOTES_AUTH_API_TOKEN = crypto
       .createHash('sha256')
       .update(`${username}:${password}`)
       .digest('hex');
@@ -28,17 +32,27 @@ if (!process.env.AUTH_WEBHOOK_TOKEN) {
 
 app.use(express.json());
 
+// Trust the reverse proxy's X-Forwarded-Proto header so Express knows when HTTPS is in use.
+// This enables secure: 'auto' on session cookies to work correctly behind nginx/cloudflare/etc.
+app.set('trust proxy', 1);
+
+// Rate limiting to prevent brute-force attacks
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
+
 // Auth is only required if both env vars are explicitly set.
 // Otherwise the app runs in open/public mode (no login needed).
-const authRequired = !!(process.env.AUTH_USERNAME && process.env.AUTH_PASSWORD);
+const authRequired = !!(process.env.RECNOTES_AUTH_USERNAME && process.env.RECNOTES_AUTH_PASSWORD);
 
 // Session configuration
 const sessionParser = session({
-  secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev_only',
+  secret: process.env.RECNOTES_SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: false, // Set to true if using HTTPS
+  cookie: {
+    secure: 'auto',
+    httpOnly: true,
+    sameSite: 'strict',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 });
@@ -60,8 +74,8 @@ function checkAuth(req, res, next) {
     return next();
   }
 
-  // Exempt webhooks from session auth (they use token auth)
-  if (req.path.startsWith('/api/webhooks/')) {
+  // Exempt integrations from session auth (they use token auth)
+  if (req.path.startsWith('/api/webhooks/') || req.path.startsWith('/api/triggers')) {
     return next();
   }
 
@@ -89,17 +103,25 @@ function checkAuth(req, res, next) {
 }
 
 /**
- * Middleware to check webhook token
+ * Middleware to check API token
  */
-function checkWebhookAuth(req, res, next) {
-  const token = req.params.token || req.query.token || req.headers['x-auth-token'];
-  const validToken = process.env.AUTH_WEBHOOK_TOKEN;
-
-  if (validToken && token === validToken) {
+function checkApiTokenAuth(req, res, next) {
+  // In open mode (no auth configured), skip token check — endpoints are public
+  if (!authRequired) {
     return next();
   }
 
-  res.status(401).json({ error: 'Unauthorized Webhook' });
+  const token = req.params.token || req.query.token || req.headers['x-auth-token'];
+  const validToken = process.env.RECNOTES_AUTH_API_TOKEN;
+
+  if (validToken && token && token.length === validToken.length && crypto.timingSafeEqual(
+    Buffer.from(token),
+    Buffer.from(validToken)
+  )) {
+    return next();
+  }
+
+  res.status(401).json({ error: 'Unauthorized' });
 }
 
 // Auth Routes
@@ -111,10 +133,10 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.AUTH_USERNAME;
-  const validPass = process.env.AUTH_PASSWORD;
+  const validUser = process.env.RECNOTES_AUTH_USERNAME;
+  const validPass = process.env.RECNOTES_AUTH_PASSWORD;
 
   if (validUser && validPass && username === validUser && password === validPass) {
     req.session.authenticated = true;
@@ -177,9 +199,9 @@ function broadcastNoteUpdate(sessionId) {
   broadcastToRoom(sessionId, { type: 'NOTE_UPDATE', sessionId, notes: list });
 }
 
-// Health check or API status
+// Health check
 app.get('/api/status', (req, res) => {
-  res.json({ status: 'ok', database: process.env.DB_PATH || 'dev.db' });
+  res.json({ status: 'ok' });
 });
 
 // Sessions API
@@ -200,7 +222,7 @@ app.post('/api/sessions', (req, res) => {
 });
 
 // SquadCast Webhooks
-app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
+app.post('/api/webhooks/squadcast/:token', apiLimiter, checkApiTokenAuth, (req, res) => {
   console.log('--- Received SquadCast Webhook ---');
   console.log('Event Name:', req.body.name);
   console.log('Payload:', JSON.stringify(req.body, null, 2));
@@ -260,8 +282,8 @@ app.post('/api/webhooks/squadcast/:token', checkWebhookAuth, (req, res) => {
 });
 
 // Bitfocus Companion Webhooks
-app.post('/api/webhooks/companion', checkWebhookAuth, (req, res) => {
-  console.log('--- Received Companion Webhook ---');
+app.post('/api/triggers', apiLimiter, checkApiTokenAuth, (req, res) => {
+  console.log('--- Received Trigger Request ---');
   const { action, id, name } = req.body;
   console.log('Action:', action, 'ID:', id, 'Name:', name);
 
@@ -632,12 +654,16 @@ if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(port, () => {
     console.log(`\n✓ Recording Notes running at http://localhost:${port}`);
     if (authRequired) {
-      console.log('  Auth mode: Login required (AUTH_USERNAME / AUTH_PASSWORD set in .env)');
+      console.log('  Auth mode: Login required (RECNOTES_AUTH_USERNAME / RECNOTES_AUTH_PASSWORD set in .env)');
     } else {
-      console.log('  Auth mode: OPEN (no login required — set AUTH_USERNAME/AUTH_PASSWORD in .env to enable auth)');
+      console.warn('  Warning: No authorization configured. Do not use this setup in untrusted environments. See .env.example for details.');
     }
-    if (process.env.AUTH_WEBHOOK_TOKEN) {
-      console.log(`  Webhook token: ${process.env.AUTH_WEBHOOK_TOKEN}`);
+    if (process.env.RECNOTES_AUTH_API_TOKEN) {
+      if (apiTokenWasExplicitlySet) {
+        console.log(`  API token: ****${process.env.RECNOTES_AUTH_API_TOKEN.slice(-4)}`);
+      } else {
+        console.log(`  API token (auto-generated): ${process.env.RECNOTES_AUTH_API_TOKEN}`);
+      }
     }
   });
 

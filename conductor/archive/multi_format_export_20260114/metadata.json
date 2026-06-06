@@ -1,0 +1,8 @@
+{
+  "track_id": "multi_format_export_20260114",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-01-14T14:30:00Z",
+  "updated_at": "2026-01-14T15:30:00Z",
+  "description": "Add support for Adobe Audition CSV export format and implement format selection UI."
+}

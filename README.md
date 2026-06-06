@@ -24,20 +24,20 @@ Copy `.env.example` to `.env` and customize:
 
 ```bash
 # Server port
-PORT=3000
+RECNOTES_PORT=3000
 
 # Database (npm native sqlite)
-DB_PATH=./dev.db
+RECNOTES_DB_PATH=./dev.db
 
 # Authentication (optional — public access when unset)
-AUTH_USERNAME=admin
-AUTH_PASSWORD=password123
+RECNOTES_AUTH_USERNAME=admin
+RECNOTES_AUTH_PASSWORD=CHANGE_ME_TO_A_STRONG_PASSWORD
 
 # Session secret (for cookie signing)
-SESSION_SECRET=your_secret_here
+RECNOTES_SESSION_SECRET=your_secret_here
 
-# Webhook token (auto-generated from AUTH credentials if not set)
-AUTH_WEBHOOK_TOKEN=your_webhook_token
+# API token (auto-generated from AUTH credentials if not set)
+RECNOTES_AUTH_API_TOKEN=your_api_token
 ```
 
 ## Features
@@ -46,7 +46,7 @@ AUTH_WEBHOOK_TOKEN=your_webhook_token
 - **Timestamps** - supports relative timestamps for automated sessions or time-of-day for manual sessions
 - **Session management** - create, edit, and delete recording sessions
 - **Export** - download notes as timeline markers in formatted CSV (REAPER, Audition) and CMX3600 EDL (Resolve) files
-- **Webhooks** - automated session management via SquadCast and Bitfocus Companion integrations
+- **Integrations** - automated session management via SquadCast webhooks and the triggers API
 - **Guest access** - generate shareable guest links for single-session collaborations (`/?token=xxx`)
 
 ## Integrations
@@ -55,7 +55,7 @@ You can automate session creation and the running state of the session timer by 
 
 ### Authentication
 
-All webhook requests must include the `AUTH_WEBHOOK_TOKEN` (set in `.env`). If `AUTH_WEBHOOK_TOKEN` is not explicitly set, it is auto-generated from your `AUTH_USERNAME` and `AUTH_PASSWORD`. The token is printed to the console during startup of the server.
+All integration requests must include the `RECNOTES_AUTH_API_TOKEN` (set in `.env`). If `RECNOTES_AUTH_API_TOKEN` is not explicitly set, it is auto-generated from your `RECNOTES_AUTH_USERNAME` and `RECNOTES_AUTH_PASSWORD`. The token is printed to the console during startup of the server.
 
 ### SquadCast
 
@@ -80,11 +80,11 @@ Example payload (`recording_session.created`):
 }
 ```
 
-### Bitfocus Companion
+### Triggers API
 
-**Endpoint:** `POST /api/webhooks/companion`
+**Endpoint:** `POST /api/triggers`
 
-Control sessions directly from Companion actions (buttons, etc.).
+Control sessions directly from any HTTP client (Bitfocus Companion, scripts, etc.).
 
 | Action | Body Fields | Description |
 |---|---|---|
@@ -96,14 +96,14 @@ Example curl:
 
 ```bash
 # Create a session
-curl -X POST "http://localhost:3000/api/webhooks/companion?token=YOUR_TOKEN" \
+curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"action":"create","name":"Companion Session"}'
+  -d '{"action":"create","name":"My Session"}'
 # Successful response
 {"id":1}
 
 # Start the session (use returned id)
-curl -X POST "http://localhost:3000/api/webhooks/companion?token=YOUR_TOKEN" \
+curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action":"start","id":1}'
   
@@ -111,7 +111,7 @@ curl -X POST "http://localhost:3000/api/webhooks/companion?token=YOUR_TOKEN" \
 {"status":"started","id":"1"}
 
 # Stop the session
-curl -X POST "http://localhost:3000/api/webhooks/companion?token=YOUR_TOKEN" \
+curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action":"stop","id":1}'
 

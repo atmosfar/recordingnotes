@@ -436,21 +436,32 @@ function renderNotes(notes) {
                 div.style.backgroundColor = note.color + '15';
             }
             
-            div.innerHTML = `
-                <span class="timestamp">${formatDuration(note.timestamp, 1)}</span>
-                <span class="content">${note.content}</span>
-                <div class="note-actions">
-                    <button class="edit-btn" title="Edit Note">✎</button>
-                    <button class="delete-btn" title="Delete Note">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 3 19 3 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                    <button class="save-btn" title="Save" style="display:none;">✓</button>
-                    <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
-                </div>
+            // Build DOM with createElement/textContent to avoid XSS from note.content
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            timestampSpan.textContent = formatDuration(note.timestamp, 1);
+
+            const contentSpan = document.createElement('span');
+            contentSpan.className = 'content';
+            contentSpan.textContent = note.content;
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'note-actions';
+            actionsDiv.innerHTML = `
+                <button class="edit-btn" title="Edit Note">✎</button>
+                <button class="delete-btn" title="Delete Note">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 3 19 3 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                <button class="save-btn" title="Save" style="display:none;">✓</button>
+                <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
             `;
+
+            div.appendChild(timestampSpan);
+            div.appendChild(contentSpan);
+            div.appendChild(actionsDiv);
 
             div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
             div.querySelector('.delete-btn').onclick = () => deleteNote(div);

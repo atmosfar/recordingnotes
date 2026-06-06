@@ -1,0 +1,8 @@
+{
+  "track_id": "mvp_manual_sessions_20260103",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-03T15:30:00Z",
+  "updated_at": "2026-01-03T15:30:00Z",
+  "description": "Implement manual session creation with timestamp mode selection, real-time collaborative note-taking with color coding, and REAPER-compatible CSV export."
+}

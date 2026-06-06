@@ -89,7 +89,7 @@ Two path-resolution bugs prevented the package from working via `npx`:
 | `SESSION_SECRET` | Yes (if auth enabled) | — | Cookie signing secret |
 | `AUTH_USERNAME` | No | — | Login username (leave unset for open mode) |
 | `AUTH_PASSWORD` | No | — | Login password (leave unset for open mode) |
-| `AUTH_WEBHOOK_TOKEN` | No | (auto-generated) | Token for webhook auth |
+| `AUTH_API_TOKEN` | No | (auto-generated) | Token for integration API auth |
 
 ---
 
@@ -119,8 +119,8 @@ Key test files: `server.test.js`, `sessions.test.js`, `notes.test.js`, `export.t
 ## Webhook Integrations
 
 - **SquadCast**: `POST /api/webhooks/squadcast/:token` — handles `recording_session.created`, `participant.joined`, `recording.started`, `recording.stopped` events.
-- **Bitfocus Companion**: `POST /api/webhooks/companion` — supports `create`, `start`, `stop` actions for session automation.
-- Both require webhook token auth. Token passed via URL path (SquadCast) or query/header (Companion).
+- **Triggers**: `POST /api/triggers` — supports `create`, `start`, `stop` actions for session automation (works with Bitfocus Companion, curl, scripts, etc.).
+- Both require API token auth. Token passed via URL path (SquadCast) or query/header (Triggers).
 
 ---
 

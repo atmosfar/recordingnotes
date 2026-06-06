@@ -6,7 +6,7 @@ let initializedPaths = new Set();
 
 function createDbInstance() {
   if (!dbInstance) {
-    const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+    const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
     dbInstance = new DatabaseSync(dbPath);
   }
   return dbInstance;
@@ -14,7 +14,7 @@ function createDbInstance() {
 
 export function getDb() {
   // Auto-initialize schema if not done yet for this path
-  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+  const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
   if (!initializedPaths.has(dbPath)) {
     initDb();
   }
@@ -27,7 +27,7 @@ export function resetDbInstance() {
 }
 
 export function initDb() {
-  const dbPath = process.env.DB_PATH || join(process.cwd(), 'dev.db');
+  const dbPath = process.env.RECNOTES_DB_PATH || join(process.cwd(), 'dev.db');
   if (initializedPaths.has(dbPath)) return;
 
   const db = createDbInstance();
