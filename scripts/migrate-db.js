@@ -81,6 +81,10 @@ if (!sessionsColumnNames.includes('guest_token')) {
   }
   console.log('Added guest_token column to sessions table');
 }
+if (!sessionsColumnNames.includes('elapsed_ms')) {
+  db.exec("ALTER TABLE sessions ADD COLUMN elapsed_ms INTEGER DEFAULT 0");
+  console.log('Added elapsed_ms column to sessions table');
+}
 
 console.log('Migration complete.');
 db.close();

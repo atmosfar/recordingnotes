@@ -16,12 +16,12 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h1 class="branding">RecNotes</h1>
-            <button id="close-sidebar" class="mobile-only icon-btn">✕</button>
+            <button id="close-sidebar" class="mobile-only icon-btn" aria-label="Close sidebar" aria-controls="sidebar">✕</button>
         </div>
         <div class="sidebar-content">
             <div class="sidebar-top-actions mobile-only">
-                <button id="new-session-btn-mobile" class="action-btn">+ New</button>
-                <button id="manage-sessions-btn" class="action-btn">✎ Edit</button>
+                <button id="new-session-btn-mobile" class="action-btn" aria-label="Create new session">+ New</button>
+                <button id="manage-sessions-btn" class="action-btn" aria-label="Manage sessions">✎ Edit</button>
             </div>
             <button id="new-session-btn" class="desktop-only">+ New Session</button>
             <div id="session-list"></div>
@@ -31,67 +31,91 @@
     <div id="app-body">
         <header style="position: relative;">
             <div class="header-left">
-                <button id="menu-toggle">☰</button>
+                <button id="sidebar-open" aria-label="Open sidebar" aria-controls="sidebar">☰</button>
                 <h1 id="header-session-title">No Session</h1>
             </div>
             <div id="header-right">
-                <div id="live-clock">00:00:00</div>
-                <div id="overflow-menu-toggle">⋮</div>
+                <div id="live-clock" aria-live="polite" aria-atomic="true">00:00:00</div>
+                <button id="overflow-menu-toggle" aria-label="Open options menu" aria-expanded="false">⋮</button>
             </div>
 
-            <div id="overflow-menu">
-                <div class="menu-item" id="menu-share-link">
+            <div id="overflow-menu" role="menu">
+                <div class="menu-item" id="menu-share-link" role="menuitem">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/>
                         </svg>
                     </span>
                     <span class="label">Share Guest Link</span>
                 </div>
-                <div class="menu-item" id="menu-edit-tags">
+                <div class="menu-item" id="menu-edit-tags" role="menuitem">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
                         </svg>
                     </span>
                     <span class="label">Manage Quick Tags</span>
                 </div>
-                <div class="menu-item" id="menu-theme-toggle">
+                <div class="menu-item" id="menu-theme-toggle" role="menuitem">
                     <span class="icon">
-                        <svg id="menu-theme-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <svg id="menu-theme-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                             <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
                         </svg>
                     </span>
                     <span class="label">Toggle Theme</span>
                 </div>
-                <div class="menu-item" id="menu-export-reaper">
+                <div class="menu-item" id="menu-timer-start" role="menuitem" aria-label="Start timer" style="display:none;">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </span>
+                    <span class="label">Start Timer</span>
+                </div>
+                <div class="menu-item" id="menu-timer-stop" role="menuitem" aria-label="Stop timer" style="display:none;">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                            <path d="M6 6h12v12H6z"/>
+                        </svg>
+                    </span>
+                    <span class="label">Stop Timer</span>
+                </div>
+                <div class="menu-item" id="menu-timer-reset" role="menuitem" aria-label="Reset timer" style="display:none;">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                        </svg>
+                    </span>
+                    <span class="label">Reset Timer</span>
+                </div>
+                <div class="menu-item" id="menu-export-reaper" role="menuitem">
+                    <span class="icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                         </svg>
                     </span>
                     <span class="label">Export REAPER CSV</span>
                 </div>
-                <div class="menu-item" id="menu-export-audition">
+                <div class="menu-item" id="menu-export-audition" role="menuitem">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                         </svg>
                     </span>
                     <span class="label">Export Audition CSV</span>
                 </div>
-                <div class="menu-item" id="menu-export-edl">
+                <div class="menu-item" id="menu-export-edl" role="menuitem">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                         </svg>
                     </span>
                     <span class="label">Export CMX3600 EDL</span>
                 </div>
-                <div class="menu-item" id="menu-logout">
+                <div class="menu-item" id="menu-logout" role="menuitem">
                     <span class="icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -104,7 +128,7 @@
         <main>
             <div id="content">
                 <div id="note-stream-container">
-                    <div id="note-stream">
+                    <div id="note-stream" aria-live="polite">
                         <div class="empty-state">Select a session to start taking notes.</div>
                     </div>
                     <div id="draft-timestamp-display"></div>
@@ -114,16 +138,16 @@
                         <div id="quick-tags-list"></div>
                     </div>
                     <div id="input-row">
-                        <input type="text" id="note-input" placeholder="Type a note and press Enter...">
+                        <input type="text" id="note-input" placeholder="Type a note and press Enter..." aria-label="Type a note">
                         <div id="palette">
-                            <div class="color-opt color-none selected" data-color="" title="No color"></div>
-                            <div class="color-opt color-red" data-color="#ff4d4d" title="Red"></div>
-                            <div class="color-opt color-green" data-color="#2ecc71" title="Green"></div>
-                            <div class="color-opt color-blue" data-color="#3498db" title="Blue"></div>
-                            <div class="color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
+                            <div class="color-opt color-none selected" data-color="" title="No color" role="button" tabindex="0" aria-label="No color" aria-pressed="true"></div>
+                            <div class="color-opt color-red" data-color="#ff4d4d" title="Red" role="button" tabindex="0" aria-label="Red" aria-pressed="false"></div>
+                            <div class="color-opt color-green" data-color="#2ecc71" title="Green" role="button" tabindex="0" aria-label="Green" aria-pressed="false"></div>
+                            <div class="color-opt color-blue" data-color="#3498db" title="Blue" role="button" tabindex="0" aria-label="Blue" aria-pressed="false"></div>
+                            <div class="color-opt color-yellow" data-color="#f1c40f" title="Yellow" role="button" tabindex="0" aria-label="Yellow" aria-pressed="false"></div>
                         </div>
-                        <div id="mobile-color-toggle">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
+                        <div id="mobile-color-toggle" role="button" tabindex="0" aria-label="Open color picker" aria-expanded="false">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
                             </svg>
                         </div>
@@ -134,9 +158,9 @@
         </main>
     </div>
 
-    <div id="bottom-sheet-backdrop"></div>
+    <div id="bottom-sheet-backdrop" aria-hidden="true"></div>
     
-    <div id="fps-modal" class="palette-popup">
+    <div id="fps-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Select EDL framerate">
         <h3 style="margin-top: 0; font-size: 1rem;">Select EDL Framerate</h3>
         <div class="fps-grid">
             <button class="fps-opt" data-fps="23.976">23.976</button>
@@ -149,24 +173,29 @@
         <button id="cancel-fps" class="icon-btn" style="width: 100%; border-radius: 8px; background: #eee; color: #333; font-size: 0.9rem;">Cancel</button>
     </div>
 
-    <div id="color-picker-popup" class="palette-popup">
+    <div id="color-picker-popup" class="palette-popup" role="dialog" aria-modal="true" aria-label="Color picker">
         <div class="sheet-palette">
-            <div class="sheet-color-opt color-none" data-color="" title="No color"></div>
-            <div class="sheet-color-opt color-red" data-color="#ff4d4d" title="Red"></div>
-            <div class="sheet-color-opt color-green" data-color="#2ecc71" title="Green"></div>
-            <div class="sheet-color-opt color-blue" data-color="#3498db" title="Blue"></div>
-            <div class="sheet-color-opt color-yellow" data-color="#f1c40f" title="Yellow"></div>
+            <div class="sheet-color-opt color-none" data-color="" title="No color" role="button" tabindex="0" aria-label="No color" aria-pressed="false"></div>
+            <div class="sheet-color-opt color-red" data-color="#ff4d4d" title="Red" role="button" tabindex="0" aria-label="Red" aria-pressed="false"></div>
+            <div class="sheet-color-opt color-green" data-color="#2ecc71" title="Green" role="button" tabindex="0" aria-label="Green" aria-pressed="false"></div>
+            <div class="sheet-color-opt color-blue" data-color="#3498db" title="Blue" role="button" tabindex="0" aria-label="Blue" aria-pressed="false"></div>
+            <div class="sheet-color-opt color-yellow" data-color="#f1c40f" title="Yellow" role="button" tabindex="0" aria-label="Yellow" aria-pressed="false"></div>
         </div>
     </div>
 
-    <div id="tags-modal" class="palette-popup">
+    <div id="tags-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Manage quick tags">
         <h3 style="margin-top: 0; font-size: 1rem;">Manage Quick Tags</h3>
         <div id="modal-tags-list"></div>
         <div class="modal-input-row">
-            <input type="text" id="new-tag-input" placeholder="New tag text...">
-            <button id="add-tag-btn" class="action-btn">Add</button>
+            <input type="text" id="new-tag-input" placeholder="New tag text..." aria-label="New tag text">
+            <button id="add-tag-btn" class="action-btn" aria-label="Add tag">Add</button>
         </div>
         <button id="close-tags-modal" class="icon-btn" style="width: 100%; border-radius: 8px; background: #eee; color: #333; font-size: 0.9rem; margin-top: 1rem;">Close</button>
+    </div>
+
+    <div id="timer-warning-modal" class="palette-popup" role="alertdialog" aria-modal="true" aria-label="Timer reset warning" style="display:none;">
+        <p id="timer-warning-message" style="margin-top:0; font-size:0.9rem;"></p>
+        <button id="timer-warning-ok" class="icon-btn" style="width:100%; border-radius:8px; background:var(--primary-color); color:white; font-size:0.9rem;" aria-label="Dismiss warning">OK</button>
     </div>
 
     <script src="app.js"></script>

@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { mkdirSync } from 'node:fs';
 import { getConfig, SETTINGS_DIR } from './config.js';
 
 let dbInstance = null;
@@ -13,6 +14,7 @@ function getDbPath() {
 function createDbInstance() {
   if (!dbInstance) {
     const dbPath = getDbPath();
+    mkdirSync(dirname(dbPath), { recursive: true });
     dbInstance = new DatabaseSync(dbPath);
   }
   return dbInstance;
@@ -55,6 +57,7 @@ export function initDb() {
       status TEXT DEFAULT 'active',
       started_at DATETIME,
       stopped_at DATETIME,
+      elapsed_ms INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 

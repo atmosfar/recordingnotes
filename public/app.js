@@ -174,11 +174,22 @@ function compareTimestamps(t1, t2) {
 function displayTimestamp(note, session) {
     const ts = note.timestamp_ms;
     if (!session) return formatDuration(ts / 1000, 1);
-    
-    if (session.timestamp_mode === 'timer' && session.started_at) {
-        const sessionStartMs = new Date(session.started_at).getTime();
-        const elapsedSeconds = (ts - sessionStartMs) / 1000;
-        return formatDuration(elapsedSeconds, 1);
+
+    if (session.timestamp_mode === 'timer') {
+        const elapsedMs = session.elapsed_ms || 0;
+        const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
+        if (!sessionStartMs) {
+            // Timer never started or reset — fall back to clock display
+            const localDate = new Date(ts);
+            const hrs = localDate.getHours();
+            const mins = localDate.getMinutes();
+            const secs = localDate.getSeconds() + localDate.getMilliseconds() / 1000;
+            const totalSeconds = (hrs * 3600) + (mins * 60) + secs;
+            return formatDuration(totalSeconds, 1);
+        }
+        // Total timer position at note capture = accumulated elapsed + time into current run
+        const totalMs = elapsedMs + (ts - sessionStartMs);
+        return formatDuration(totalMs / 1000, 1);
     } else {
         // Clock mode: convert UTC ms to local time
         const localDate = new Date(ts);
@@ -192,6 +203,10 @@ function displayTimestamp(note, session) {
 
 function captureDraftTimestamp() {
     if (activeDraftTimestamp !== null) return;
+    // Block draft timestamp capture when timer is stopped
+    if (currentSession && currentSession.timestamp_mode === 'timer' && !currentSession.started_at) {
+        return;
+    }
     if (currentSession && currentSession.started_at) {
         // Timer mode: store as sessionStartMs + elapsed ms
         activeDraftTimestamp = Date.now();
@@ -223,6 +238,7 @@ function renderQuickTags() {
         const btn = document.createElement('button');
         btn.className = 'tag-btn';
         btn.textContent = tag;
+        btn.setAttribute('aria-label', `Quick tag: ${tag}`);
         btn.onclick = () => {
             const timestamp = Date.now();
             socket.send('CREATE_NOTE', {
@@ -241,14 +257,32 @@ function updateRecordingState() {
     }
     const isRecording = currentSession && currentSession.started_at && !currentSession.stopped_at;
     document.body.classList.toggle('recording', !!isRecording);
-    
-    // Update placeholders
+
+    // Update input state
     const input = document.getElementById('note-input');
+    const inputArea = document.getElementById('input-area');
     if (input) {
-        if (window.innerWidth <= 768) {
-            input.placeholder = "Type a note";
+        const isTimerStopped = currentSession
+            && currentSession.timestamp_mode === 'timer'
+            && !currentSession.started_at;
+
+        if (isTimerStopped) {
+            input.placeholder = 'Timer stopped — start timer to add notes';
+            input.disabled = true;
+        } else if (!isRecording) {
+            input.disabled = false;
+            if (window.innerWidth <= 768) {
+                input.placeholder = "Type a note";
+            } else {
+                input.placeholder = "Type a note and press Enter...";
+            }
         } else {
-            input.placeholder = "Type a note and press Enter...";
+            input.disabled = false;
+            if (window.innerWidth <= 768) {
+                input.placeholder = "Type a note";
+            } else {
+                input.placeholder = "Type a note and press Enter...";
+            }
         }
     }
 }
@@ -261,15 +295,26 @@ function updateClock() {
     const headerTitle = document.getElementById('header-session-title');
 
     if (currentSession) {
-        if (currentSession.started_at) {
-            const start = new Date(currentSession.started_at).getTime();
-            const end = currentSession.stopped_at ? new Date(currentSession.stopped_at).getTime() : Date.now();
-            clockEl.textContent = formatDuration((end - start) / 1000, 1);
-            
-            const label = currentSession.stopped_at ? 'FINISHED' : '🔴 RECORDING';
-            if (infoEl) infoEl.textContent = `${label}: ${currentSession.name}`;
+        if (currentSession.timestamp_mode === 'timer') {
+            const elapsedMs = currentSession.elapsed_ms || 0;
+
+            if (currentSession.started_at && !currentSession.stopped_at) {
+                // Timer running: elapsed + current run
+                const currentRunStart = new Date(currentSession.started_at).getTime();
+                const totalMs = elapsedMs + (Date.now() - currentRunStart);
+                clockEl.textContent = formatDuration(totalMs / 1000, 1);
+                if (infoEl) infoEl.textContent = `🔴 RECORDING: ${currentSession.name}`;
+            } else if (elapsedMs > 0) {
+                // Timer stopped: show accumulated time
+                clockEl.textContent = formatDuration(elapsedMs / 1000, 1);
+                if (infoEl) infoEl.textContent = `FINISHED: ${currentSession.name}`;
+            } else {
+                // Timer never started
+                clockEl.textContent = '00:00:00';
+                if (infoEl) infoEl.textContent = currentSession.name;
+            }
         } else {
-            // Manual mode / No start time: use local Time-of-Day for clock
+            // Clock mode: time-of-day
             const now = new Date();
             const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
             clockEl.textContent = formatDuration(ssm, 1);
@@ -291,6 +336,90 @@ function updateClock() {
 // Initial clock call
 setInterval(updateClock, 100);
 
+// Timer Control Functions
+function updateTimerMenuVisibility() {
+    const startBtn = document.getElementById('menu-timer-start');
+    const stopBtn = document.getElementById('menu-timer-stop');
+    const resetBtn = document.getElementById('menu-timer-reset');
+
+    if (!startBtn || !stopBtn || !resetBtn) return;
+
+    if (!currentSession || window.isGuestMode) {
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'none';
+        resetBtn.style.display = 'none';
+        return;
+    }
+
+    const isTimer = currentSession.timestamp_mode === 'timer';
+    const isRunning = isTimer && currentSession.started_at && !currentSession.stopped_at;
+    const hasElapsed = isTimer && (currentSession.started_at || (currentSession.elapsed_ms || 0) > 0);
+    // Show Start for timer mode (stopped/never started) AND clock mode (to allow switching)
+    const canStart = !isRunning;
+
+    startBtn.style.display = canStart ? 'flex' : 'none';
+    stopBtn.style.display = isRunning ? 'flex' : 'none';
+    resetBtn.style.display = hasElapsed ? 'flex' : 'none';
+}
+
+async function startTimer() {
+    if (!currentSessionId) return;
+    try {
+        const res = await fetch(`/api/sessions/${currentSessionId}/timer/start`, { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            Object.assign(currentSession, data.session);
+            updateClock();
+            updateTimerMenuVisibility();
+        }
+    } catch (err) {
+        console.error('startTimer error:', err);
+    }
+}
+
+async function stopTimer() {
+    if (!currentSessionId) return;
+    try {
+        const res = await fetch(`/api/sessions/${currentSessionId}/timer/stop`, { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            Object.assign(currentSession, data.session);
+            updateClock();
+            updateTimerMenuVisibility();
+        }
+    } catch (err) {
+        console.error('stopTimer error:', err);
+    }
+}
+
+async function resetTimer() {
+    if (!currentSessionId) return;
+    try {
+        const res = await fetch(`/api/sessions/${currentSessionId}/timer/reset`, { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            Object.assign(currentSession, data.session);
+            updateClock();
+            updateTimerMenuVisibility();
+        } else {
+            const data = await res.json();
+            showTimerResetWarning(data.error);
+        }
+    } catch (err) {
+        console.error('resetTimer error:', err);
+    }
+}
+
+function showTimerResetWarning(message) {
+    const modal = document.getElementById('timer-warning-modal');
+    const msgEl = document.getElementById('timer-warning-message');
+    if (!modal || !msgEl) return;
+    msgEl.textContent = message;
+    modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+    document.getElementById('timer-warning-ok').focus();
+}
+
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
     if (!list) return;
@@ -308,12 +437,16 @@ function renderSessionList(sessions) {
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
+    list.setAttribute('role', 'list');
     list.innerHTML = '';
     sortedSessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'session-item';
+        item.setAttribute('role', 'listitem');
+        item.setAttribute('tabindex', '0');
         if (session.id.toString() === currentSessionId?.toString()) {
             item.classList.add('active');
+            item.setAttribute('aria-current', 'true');
             // Use setTimeout to ensure the DOM has updated before scrolling
             setTimeout(() => item.scrollIntoView({ block: 'nearest' }), 0);
         }
@@ -321,6 +454,9 @@ function renderSessionList(sessions) {
         const nameSpan = document.createElement('span');
         nameSpan.className = 'session-name';
         nameSpan.textContent = session.name;
+        nameSpan.setAttribute('role', 'button');
+        nameSpan.setAttribute('tabindex', '0');
+        nameSpan.setAttribute('aria-label', `Open session: ${session.name}`);
         nameSpan.onclick = () => selectSession(session.id);
         item.appendChild(nameSpan);
 
@@ -328,13 +464,13 @@ function renderSessionList(sessions) {
         indicators.className = 'session-indicators';
         
         if (session.started_at && !session.stopped_at) {
-            indicators.innerHTML += `<span class="recording-dot" title="Recording Active"></span>`;
+            indicators.innerHTML += `<span class="recording-dot" role="status" aria-label="Recording active"></span>`;
         }
 
         if (session.active_users > 0) {
             indicators.innerHTML += `
-                <span class="user-count" title="${session.active_users} users connected">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                <span class="user-count" role="status" aria-label="${session.active_users} users connected">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
                     ${session.active_users}
@@ -346,9 +482,9 @@ function renderSessionList(sessions) {
         const actions = document.createElement('div');
         actions.className = 'session-actions';
         actions.innerHTML = `
-            <button class="sess-edit-btn" title="Rename">✎</button>
-            <button class="sess-delete-btn" title="Delete">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="sess-edit-btn" title="Rename" aria-label="Rename session">✎</button>
+            <button class="sess-delete-btn" title="Delete" aria-label="Delete session">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 3 19 3 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
@@ -441,6 +577,7 @@ function renderNotes(notes) {
         } else {
             const div = document.createElement('div');
             div.className = 'note';
+            div.setAttribute('role', 'article');
             div.dataset.noteId = note.id;
             div.dataset.timestamp = note.timestamp_ms; // Store for sorting
             if (note.color) {
@@ -452,23 +589,25 @@ function renderNotes(notes) {
             const timestampSpan = document.createElement('span');
             timestampSpan.className = 'timestamp';
             timestampSpan.textContent = displayTimestamp(note, currentSession);
+            timestampSpan.setAttribute('aria-label', `Timestamp: ${displayTimestamp(note, currentSession)}`);
 
             const contentSpan = document.createElement('span');
             contentSpan.className = 'content';
             contentSpan.textContent = note.content;
+            contentSpan.setAttribute('aria-label', 'Note content');
 
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'note-actions';
             actionsDiv.innerHTML = `
-                <button class="edit-btn" title="Edit Note">✎</button>
-                <button class="delete-btn" title="Delete Note">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button class="edit-btn" title="Edit Note" aria-label="Edit note">✎</button>
+                <button class="delete-btn" title="Delete Note" aria-label="Delete note">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="3 6 5 3 19 3 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                 </button>
-                <button class="save-btn" title="Save" style="display:none;">✓</button>
-                <button class="cancel-btn" title="Cancel" style="display:none;">✕</button>
+                <button class="save-btn" title="Save" style="display:none;" aria-label="Save note">✓</button>
+                <button class="cancel-btn" title="Cancel" style="display:none;" aria-label="Cancel editing">✕</button>
             `;
 
             div.appendChild(timestampSpan);
@@ -513,6 +652,7 @@ function toggleEditMode(noteEl, editing) {
         noteEl.dataset.originalContent = contentEl.textContent;
         const textarea = document.createElement('textarea');
         textarea.value = contentEl.textContent;
+        textarea.setAttribute('aria-label', 'Edit note content');
         contentEl.replaceWith(textarea);
         
         textarea.oninput = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
@@ -566,7 +706,7 @@ async function deleteNote(noteEl) {
 
 async function sendNote() {
     const input = document.getElementById('note-input');
-    if (!input) return;
+    if (!input || input.disabled) return;
     let content = input.value.trim();
     
     // Repeat last note if input is empty
@@ -642,7 +782,9 @@ async function init() {
     if (mobileColorToggle) {
         mobileColorToggle.onclick = () => {
             const popup = document.getElementById('color-picker-popup');
-            toggleColorPicker(!popup.classList.contains('open'));
+            const isOpen = !popup.classList.contains('open');
+            toggleColorPicker(isOpen);
+            mobileColorToggle.setAttribute('aria-expanded', isOpen.toString());
         };
     }
     
@@ -719,9 +861,9 @@ async function init() {
         };
     }
 
-    const menuToggle = document.getElementById('menu-toggle');
-    if (menuToggle) {
-        menuToggle.onclick = () => {
+    const sidebarOpen = document.getElementById('sidebar-open');
+    if (sidebarOpen) {
+        sidebarOpen.onclick = () => {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('bottom-sheet-backdrop');
             if (sidebar) sidebar.classList.add('open');
@@ -746,7 +888,9 @@ async function init() {
     if (overflowMenuToggle) {
         overflowMenuToggle.onclick = () => {
             const menu = document.getElementById('overflow-menu');
-            toggleOverflow(!menu.classList.contains('open'));
+            const isOpen = !menu.classList.contains('open');
+            toggleOverflow(isOpen);
+            overflowMenuToggle.setAttribute('aria-expanded', isOpen.toString());
         };
     }
     
@@ -810,7 +954,35 @@ async function init() {
             }
         };
     }
-    
+
+    // Timer menu handlers
+    const menuTimerStart = document.getElementById('menu-timer-start');
+    if (menuTimerStart) {
+        menuTimerStart.onclick = () => { startTimer(); toggleOverflow(false); };
+    }
+
+    const menuTimerStop = document.getElementById('menu-timer-stop');
+    if (menuTimerStop) {
+        menuTimerStop.onclick = () => { stopTimer(); toggleOverflow(false); };
+    }
+
+    const menuTimerReset = document.getElementById('menu-timer-reset');
+    if (menuTimerReset) {
+        menuTimerReset.onclick = () => { resetTimer(); toggleOverflow(false); };
+    }
+
+    // Timer warning modal dismiss
+    const timerWarningOk = document.getElementById('timer-warning-ok');
+    if (timerWarningOk) {
+        timerWarningOk.onclick = () => {
+            const modal = document.getElementById('timer-warning-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        };
+    }
+
     const exportFn = (format = 'reaper', fps = '') => {
         if (!currentSessionId) return;
         let url = `/api/sessions/${currentSessionId}/export?format=${format}`;
@@ -891,13 +1063,15 @@ async function init() {
     const renderModalTags = () => {
         const list = document.getElementById('modal-tags-list');
         if (!list) return;
+        list.setAttribute('role', 'list');
         list.innerHTML = '';
         tagManager.getTags().forEach(tag => {
             const item = document.createElement('div');
             item.className = 'modal-tag-item';
+            item.setAttribute('role', 'listitem');
             item.innerHTML = `
                 <span>${tag}</span>
-                <button class="delete-tag-btn" title="Delete tag">×</button>
+                <button class="delete-tag-btn" title="Delete tag" aria-label="Delete tag: ${tag}">×</button>
             `;
             item.querySelector('.delete-tag-btn').onclick = () => {
                 tagManager.removeTag(tag);
@@ -972,6 +1146,7 @@ async function init() {
         renderQuickTags();
         renderNotes(notes);
         updateClock();
+        updateTimerMenuVisibility();
     });
 
     socket.on('ERROR', (data) => {
@@ -991,6 +1166,7 @@ async function init() {
             if (headerTitle) headerTitle.textContent = "";
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
+            updateTimerMenuVisibility();
         }
     });
 
@@ -1011,6 +1187,8 @@ async function init() {
                         console.log('Updating header title to:', updated.name);
                         headerTitle.textContent = updated.name;
                     }
+                    updateClock();
+                    updateTimerMenuVisibility();
                 } else {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
@@ -1040,6 +1218,7 @@ async function init() {
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle) headerTitle.textContent = "";
+            updateTimerMenuVisibility();
         }
     });
 
@@ -1076,6 +1255,16 @@ async function init() {
                 currentSession.stopped_at = new Date().toISOString();
             }
             updateClock();
+            updateTimerMenuVisibility();
+        }
+    });
+
+    socket.on('SESSION_UPDATE', (data) => {
+        if (data.session.id.toString() === currentSessionId?.toString()) {
+            console.log('Session updated via WebSocket');
+            currentSession = data.session;
+            updateClock();
+            updateTimerMenuVisibility();
         }
     });
 }
