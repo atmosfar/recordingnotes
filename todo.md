@@ -169,8 +169,8 @@ Tests use Node's built-in test runner (no Jest/Mocha).
 ## Git State
 
 - **Branch**: `dev`
-- **Tracked files** (15): `.env.example`, `LICENSE`, `README.md`, `bin/recordingnotes.cjs`, `db.js`, `init-db.js`, `notes.js`, `package.json`, `public/app.js`, `public/index.html`, `public/login.html`, `public/style.css`, `scripts/migrate-db.js`, `server.js`, `sessions.js`
-- **Untracked** (on disk): `test/` (19 files), `conductor/`, `archived/`, `scripts/`, various dev artifacts
+- **Tracked files** (14): `.env.example`, `LICENSE`, `README.md`, `bin/recordingnotes.cjs`, `db.js`, `init-db.js`, `notes.js`, `package.json`, `public/app.js`, `public/index.html`, `public/login.html`, `public/style.css`, `server.js`, `sessions.js`
+- **Untracked** (on disk): `test/` (19 files), `scripts/` (5 dev helpers), `conductor/`, `archived/`, various dev artifacts
 - **`.npmignore`**: Safety net alongside `"files"` whitelist in `package.json`
 
 ---
