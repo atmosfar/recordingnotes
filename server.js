@@ -168,11 +168,15 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', loginLimiter, (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, rememberMe } = req.body;
   const { username: validUser, password: validPass } = getAuthCredentials();
 
   if (validUser && validPass && username === validUser && password === validPass) {
     req.session.authenticated = true;
+    if (rememberMe) {
+      // Extend session to 30 days when "Remember me" is checked
+      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+    }
     res.json({ status: 'ok' });
   } else {
     res.status(401).json({ error: 'Invalid credentials' });
@@ -181,7 +185,7 @@ app.post('/login', loginLimiter, (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.session.destroy();
-  res.redirect('/login');
+  res.redirect('/login?cleared=1');
 });
 
 // Protect all following routes
