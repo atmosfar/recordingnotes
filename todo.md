@@ -31,8 +31,8 @@
 
 ### Database Schema
 
-- **sessions**: `id`, `name`, `external_id`, `created_at`, `started_at`, `stopped_at`, `status`
-- **notes**: `id`, `session_id`, `content`, `timestamp` (REAL seconds), `color`, `user_id`, `created_at`
+- **sessions**: `id`, `name`, `external_id`, `created_at`, `started_at`, `stopped_at`, `status`, `timestamp_mode`, `elapsed_ms`, `guest_token`
+- **notes**: `id`, `session_id`, `content`, `timestamp` (REAL seconds), `timestamp_ms` (INTEGER), `color`, `user_id`, `created_at`
 
 ---
 
@@ -59,7 +59,7 @@ Two path-resolution bugs prevented the package from working via `npx`:
 
 ### Validation
 
-- **66 tests** — all passing (`npm test`)
+- **84 tests** — all passing (`npm test`)
 - **Tarball** — 14 files, matches git-tracked list
 - **Clean npx smoke test** — verified in fresh temp directory: server starts, DB auto-inits, static files serve (200), API works, full CRUD (sessions + notes), CSV export
 
@@ -69,8 +69,10 @@ Two path-resolution bugs prevented the package from working via `npx`:
 
 ### Immediate (Pre-Publish)
 
-1. **Check npm 2FA** — Ensure your npm account has two-factor authentication enabled (`npm profile enable-2fa`).
-2. **`npm publish`** — Push v0.1.0 to npm registry. All gates passed; no blocking issues remain.
+0. **Add ARIA accessibility labels** — ✅ **Complete**. All `aria-label`, `aria-*`, and `role` attributes applied across `public/index.html`, `public/login.html`, `public/app.js`, and `public/style.css`. Icon-only buttons, dynamic DOM elements (session list, notes, modals), form inputs, and toggle states all have appropriate accessibility markup. See `aria-todo.md` for full itemised list.
+1. **Manual timer controls in overflow menu** — ✅ **Complete**. Start/Stop/Reset timer in header overflow menu with `elapsed_ms` accumulation across stop/start cycles. Input disabled when timer stopped. Reset blocked if notes exist (warning modal). `/api/triggers` start/stop also switched to timer mode. Commit `55fbd4f`.
+2. **Check npm 2FA** — Ensure your npm account has two-factor authentication enabled (`npm profile enable-2fa`).
+3. **`npm publish`** — Push v0.1.0 to npm registry. All gates passed; no blocking issues remaining.
 
 ### Post-Publish
 
@@ -106,7 +108,7 @@ Two path-resolution bugs prevented the package from working via `npx`:
 
 ## Test Suite (on disk, untracked in git)
 
-Test files exist in `test/` directory (19 test files, 66 tests total). They are **not tracked in git** but remain on disk. To run:
+Test files exist in `test/` directory (19 test files, 84 tests total). They are **not tracked in git** but remain on disk. To run:
 
 ```bash
 npm test
@@ -119,14 +121,15 @@ Key test files: `server.test.js`, `sessions.test.js`, `notes.test.js`, `export.t
 ## Webhook Integrations
 
 - **SquadCast**: `POST /api/webhooks/squadcast/:token` — handles `recording_session.created`, `participant.joined`, `recording.started`, `recording.stopped` events.
-- **Triggers**: `POST /api/triggers` — supports `create`, `start`, `stop` actions for session automation (works with Bitfocus Companion, curl, scripts, etc.).
+- **Triggers**: `POST /api/triggers` — supports `create`, `start`, `stop` actions for session automation (works with Bitfocus Companion, curl, scripts, etc.). `start` and `stop` actions switch session to timer mode and accumulate `elapsed_ms`.
 - Both require API token auth. Token passed via URL path (SquadCast) or query/header (Triggers).
 
 ---
 
 ## Export Formats
 
-- **CSV**: `GET /api/sessions/:id/export` — REAPER-compatible CSV with `HH:MM:SS.mmm` precision timestamps, sanitized filename from session name.
+- **CSV / Reaper / Audition / EDL**: `GET /api/sessions/:id/export` — REAPER-compatible CSV with `HH:MM:SS.mmm` precision timestamps, sanitized filename from session name.
+- **Timer mode**: Timestamps account for `elapsed_ms` (accumulated active time across stop/start cycles). Notes created during a stopped timer are blocked.
 - Timestamps use REAL seconds (floating-point) in DB, formatted to 0.1s precision in UI, 0.001s precision in CSV export.
 
 ---
@@ -166,7 +169,7 @@ Tests use Node's built-in test runner (no Jest/Mocha).
 ## Git State
 
 - **Branch**: `dev`
-- **Tracked files** (14): `.env.example`, `LICENSE`, `README.md`, `bin/recordingnotes.cjs`, `db.js`, `init-db.js`, `notes.js`, `package.json`, `public/app.js`, `public/index.html`, `public/login.html`, `public/style.css`, `server.js`, `sessions.js`
+- **Tracked files** (15): `.env.example`, `LICENSE`, `README.md`, `bin/recordingnotes.cjs`, `db.js`, `init-db.js`, `notes.js`, `package.json`, `public/app.js`, `public/index.html`, `public/login.html`, `public/style.css`, `scripts/migrate-db.js`, `server.js`, `sessions.js`
 - **Untracked** (on disk): `test/` (19 files), `conductor/`, `archived/`, `scripts/`, various dev artifacts
 - **`.npmignore`**: Safety net alongside `"files"` whitelist in `package.json`
 
