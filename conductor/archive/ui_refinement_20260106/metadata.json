@@ -1,8 +1,0 @@
-{
-  "track_id": "ui_refinement_20260106",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-06T12:00:00Z",
-  "updated_at": "2026-01-06T12:00:00Z",
-  "description": "Tidy up the UI, especially on mobile, by introducing an overflow menu, repositioning elements, fixing layout issues, and refactoring CSS into an external file."
-}

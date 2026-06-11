@@ -1,8 +1,0 @@
-{
-  "track_id": "session_not_found_fix_20260111",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-01-11T15:11:00Z",
-  "updated_at": "2026-01-11T15:11:00Z",
-  "description": "bug fix: joining a session URL for a session which does not exist shows a page with a blank header with a flashing red bar (the recording status indicator) and \"No notes yet.\" in the notes stream. Instead it should show a blank header with a solid yellow bar and a message \"Session not found.\" in the notes stream. The input section should be hidden."
-}

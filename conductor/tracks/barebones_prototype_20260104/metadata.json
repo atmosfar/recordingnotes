@@ -1,8 +1,0 @@
-{
-  "track_id": "barebones_prototype_20260104",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-04T12:00:00Z",
-  "updated_at": "2026-01-04T12:00:00Z",
-  "description": "A bare minimum prototype using Vanilla JS, Node http/express, and native SQLite."
-}

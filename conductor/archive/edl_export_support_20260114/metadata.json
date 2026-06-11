@@ -1,8 +1,0 @@
-{
-  "track_id": "edl_export_support_20260114",
-  "type": "feature",
-  "status": "completed",
-  "created_at": "2026-01-14T15:45:00Z",
-  "updated_at": "2026-01-14T16:30:00Z",
-  "description": "Add ability to export markers as CMX3600 EDL file for import into Resolve and Premiere."
-}

@@ -1,8 +1,0 @@
-{
-  "track_id": "highlight_active_session_20260109",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-09T15:30:00Z",
-  "updated_at": "2026-01-09T15:30:00Z",
-  "description": "Highlight active session in sidebar when opened from URL"
-}
