@@ -140,4 +140,91 @@ describe('SquadCast Webhook Endpoints', () => {
     const session = db.prepare('SELECT * FROM sessions WHERE external_id = ?').get('sq_session_123');
     assert.ok(session.stopped_at);
   });
+
+  // T45: SquadCast — session already exists (already_exists)
+  test('T45: SquadCast webhook returns already_exists for duplicate external_id', async () => {
+    const payload = {
+      "name": "recording_session.created",
+      "sessionID": "sq_session_123",
+      "sessionTitle": "Duplicate Session",
+      "orgID": "org_abc"
+    };
+
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    assert.strictEqual(response.status, 200);
+    const data = await response.json();
+    assert.strictEqual(data.status, 'already_exists');
+    assert.ok(data.id);
+
+    // Verify the original session name was NOT changed
+    const db = getDb();
+    const session = db.prepare('SELECT * FROM sessions WHERE external_id = ?').get('sq_session_123');
+    assert.strictEqual(session.name, 'SquadCast Session 123');
+  });
+
+  // T46: SquadCast — unknown event type (ignored)
+  test('T46: SquadCast webhook returns ignored for unknown event type', async () => {
+    const payload = {
+      "name": "some.unknown.event",
+      "sessionID": "sq_session_999",
+      "sessionTitle": "Unknown Event",
+      "orgID": "org_abc"
+    };
+
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    assert.strictEqual(response.status, 200);
+    const data = await response.json();
+    assert.strictEqual(data.status, 'ignored');
+    assert.ok(data.message);
+    assert.ok(data.message.includes('Unsupported event'));
+  });
+
+  // T47: SquadCast — recording.started/stopped for non-existent session (404)
+  test('T47: SquadCast recording.started returns 404 for non-existent session', async () => {
+    const payload = {
+      "name": "recording.started",
+      "sessionID": "sq_session_nonexistent",
+      "sessionTitle": "Non-existent",
+      "orgID": "org_abc"
+    };
+
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    assert.strictEqual(response.status, 404);
+    const data = await response.json();
+    assert.ok(data.error);
+  });
+
+  test('T47: SquadCast recording.stopped returns 404 for non-existent session', async () => {
+    const payload = {
+      "name": "recording.stopped",
+      "sessionID": "sq_session_nonexistent",
+      "sessionTitle": "Non-existent",
+      "orgID": "org_abc"
+    };
+
+    const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    assert.strictEqual(response.status, 404);
+    const data = await response.json();
+    assert.ok(data.error);
+  });
 });
