@@ -1033,5 +1033,5 @@ if (process.env.NODE_ENV !== 'test') {
   })();
 }
 
-export { app, wss, broadcastToAll, broadcastToRoom, timeToHmsf, mapColorToResolve };
+export { app, wss, broadcastToAll, broadcastToRoom, timeToHmsf, mapColorToResolve, formatDuration };
 export default app;
