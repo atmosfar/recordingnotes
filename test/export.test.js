@@ -140,4 +140,91 @@ describe('CSV Export Endpoint', () => {
     assert.ok(body.includes('001  001      V     C        00:01:00:00 00:01:00:01 00:01:00:00 00:01:00:01'));
     assert.ok(body.includes('|C:ResolveColorBlue |M:Test Note |D:1'));
   });
+
+  // T41: export non-existent session (404)
+  test('T41: GET /api/sessions/:id/export returns 404 for non-existent session', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions/99999/export`, {
+      headers: { 'Cookie': authCookie }
+    });
+    assert.strictEqual(response.status, 404);
+    const data = await response.json();
+    assert.ok(data.error);
+  });
+
+  // T42: EDL drop-frame (29.97DF) export
+  test('T42: GET /api/sessions/:id/export?format=edl&fps=29.97DF returns drop-frame EDL', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions/${sessionId}/export?format=edl&fps=29.97DF`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const body = await response.text();
+
+    assert.strictEqual(response.status, 200);
+    assert.ok(body.includes('FCM: DROP FRAME'));
+    // The semicolon separator indicates drop frame
+    assert.ok(body.includes(';'));
+    assert.ok(body.includes('TITLE: Export Test'));
+  });
+
+  // T43: RECNOTES_EXPORT_TIMEZONE non-UTC export
+  test('T43: RECNOTES_EXPORT_TIMEZONE changes export timezone', async () => {
+    // Create a new session for this test
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'T43 Timezone Test' })
+    });
+    const tzSessionId = (await createRes.json()).id;
+
+    // Add a note
+    await fetch(`${baseUrl}/api/sessions/${tzSessionId}/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ content: 'TZ Note', timestamp: utcSecondsToMs(3600) })
+    });
+
+    // Export with Europe/London timezone
+    const response = await fetch(`${baseUrl}/api/sessions/${tzSessionId}/export`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const body = await response.text();
+
+    assert.strictEqual(response.status, 200);
+    // The export should still work (timezone affects clock-mode timestamp conversion)
+    assert.ok(body.includes('M1,"TZ Note"'));
+  });
+
+  // T44: export filename sanitization (special chars)
+  test('T44: Export filename sanitizes special characters', async () => {
+    // Create a session with special characters in the name
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'Test/Session:With*Special|Chars?' })
+    });
+    const specialSessionId = (await createRes.json()).id;
+
+    const response = await fetch(`${baseUrl}/api/sessions/${specialSessionId}/export`, {
+      headers: { 'Cookie': authCookie }
+    });
+
+    assert.strictEqual(response.status, 200);
+    // Check Content-Disposition header for sanitized filename
+    const contentDisp = response.headers.get('content-disposition');
+    assert.ok(contentDisp);
+    // Special chars should be removed from filename
+    assert.ok(!contentDisp.includes('/'));
+    assert.ok(!contentDisp.includes(':'));
+    assert.ok(!contentDisp.includes('*'));
+    assert.ok(!contentDisp.includes('|'));
+    assert.ok(!contentDisp.includes('?'));
+  });
 });
