@@ -275,13 +275,13 @@ button#new-session-btn {
 button#new-session-btn:hover { filter: brightness(1.1); }
 button#new-session-btn:active { transform: scale(0.98); }
 
-#menu-toggle {
+#sidebar-open {
     background: none; border: none; color: var(--text-color);
     font-size: 1.5rem; padding: 0.25rem; cursor: pointer;
     transition: color 0.2s;
     display: none;
 }
-#menu-toggle:hover { color: var(--primary-color); }
+#sidebar-open:hover { color: var(--primary-color); }
 
 .note-actions button {
     background: none; border: none; color: var(--secondary-color); cursor: pointer;
@@ -452,7 +452,7 @@ body.dark-mode .fps-opt:hover {
 
 /* Guest Mode Restrictions */
 body.guest-mode #sidebar { display: none !important; }
-body.guest-mode #menu-toggle { display: none !important; }
+body.guest-mode #sidebar-open { display: none !important; }
 body.guest-mode #logout-btn { display: none !important; }
 body.guest-mode #mobile-logout { display: none !important; }
 body.guest-mode #app-body { width: 100%; margin-left: 0; }
@@ -465,6 +465,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
 .menu-item .label { font-size: 0.9rem; }
 
 #overflow-menu-toggle { 
+    background: none; border: none;
     font-size: 1.5rem; 
     cursor: pointer; 
     padding: 0.5rem; 
@@ -490,7 +491,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
         line-height: 1.2;
     }
     #overflow-menu-toggle { display: block; padding: 0; }
-    #menu-toggle { display: block; padding: 0; }
+    #sidebar-open { display: block; padding: 0; }
     #live-clock { line-height: 1; }
     
     #sidebar {
@@ -545,7 +546,7 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
     #mobile-color-toggle svg { width: 20px; height: 22px; }
     
     #palette { display: none; }
-    #menu-toggle { display: block; }
+    #sidebar-open { display: block; }
 }
 
 /* Quick Tags Styles */
