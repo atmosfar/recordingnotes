@@ -887,11 +887,30 @@ if (process.env.NODE_ENV !== 'test') {
               request.session.authenticated = true;
             }
 
-            wss.handleUpgrade(request, socket, head, (ws) => {
-              wss.emit('connection', ws, request);
+            // Ensure session is saved before upgrade
+            request.session.save(() => {
+              wss.handleUpgrade(request, socket, head, (ws) => {
+                wss.emit('connection', ws, request);
+              });
             });
           });
         });
+
+        // Store server reference for external access (e.g., tests)
+        globalThis.__RECNOTES_SERVER_READY__ = true;
+      } catch (err) {
+        if (err.code === 'EADDRINUSE' && attempts < maxAttempts - 1) {
+          console.warn(`  Port ${port} is in use, trying ${port + 1}...`);
+          port++;
+          attempts++;
+        } else {
+          console.error(`  Failed to start server on port ${port}: ${err.message}`);
+          console.error('  Set RECNOTES_PORT to a different port and try again.');
+          process.exit(1);
+        }
+      }
+    }
+  })();
 
         wss.on('connection', (ws, request) => {
           ws.currentSessionId = null;
