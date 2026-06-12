@@ -172,12 +172,17 @@ app.post('/login', loginLimiter, (req, res) => {
   const { username: validUser, password: validPass } = getAuthCredentials();
 
   if (validUser && validPass && username === validUser && password === validPass) {
-    req.session.authenticated = true;
-    if (rememberMe) {
-      // Extend session to 30 days when "Remember me" is checked
-      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
-    }
-    res.json({ status: 'ok' });
+    // Rotate session: destroy old session ID and create a fresh one.
+    // This invalidates any previously issued session cookie for this user,
+    // so a compromised session ID can't be reused after a legitimate login.
+    req.session.regenerate(() => {
+      req.session.authenticated = true;
+      if (rememberMe) {
+        // Extend session to 30 days when "Remember me" is checked
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+      }
+      res.json({ status: 'ok' });
+    });
   } else {
     res.status(401).json({ error: 'Invalid credentials' });
   }
