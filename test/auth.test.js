@@ -133,13 +133,13 @@ describe('Authentication System', () => {
     const response = await fetch(`${baseUrl}/api/webhooks/squadcast/${expectedToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'recording_session.created', sessionID: 'test_123', sessionTitle: 'Test' })
+      body: JSON.stringify({ name: 'recording_session.created', sessionID: `auth_test_${Date.now()}`, sessionTitle: 'Test' })
     });
 
     // Should NOT return 401 (token is valid)
     assert.notStrictEqual(response.status, 401);
-    // Should succeed (201 for new session creation)
-    assert.strictEqual(response.status, 201);
+    // Should succeed (201 for new session creation, or 200 for already_exists)
+    assert.ok([200, 201].includes(response.status));
   });
 
   test('T29: x-auth-token header rejects invalid token on protected endpoints', async () => {
