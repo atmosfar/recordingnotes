@@ -13,7 +13,7 @@ export function listNotesBySession(db, session_id) {
   const stmt = db.prepare(`
     SELECT * FROM notes 
     WHERE session_id = ? 
-    ORDER BY created_at ASC
+    ORDER BY timestamp_ms ASC
   `);
   return stmt.all(session_id);
 }

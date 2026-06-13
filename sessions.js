@@ -25,8 +25,14 @@ export function listSessions(db) {
 }
 
 export function updateSession(db, id, updates) {
-  const fields = Object.keys(updates);
-  const values = Object.values(updates);
+  const ALLOWED_FIELDS = ['name', 'timestamp_mode', 'external_id', 'status', 'started_at', 'stopped_at', 'elapsed_ms', 'guest_token'];
+  const filteredEntries = Object.entries(updates).filter(([key]) => ALLOWED_FIELDS.includes(key));
+
+  if (filteredEntries.length === 0) return;
+
+  const fields = filteredEntries.map(([key]) => key);
+  const values = filteredEntries.map(([, value]) => value);
+  
   const setClause = fields.map(field => `${field} = ?`).join(', ');
   const stmt = db.prepare(`UPDATE sessions SET ${setClause} WHERE id = ?`);
   return stmt.run(...values, id);

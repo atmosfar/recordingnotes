@@ -305,9 +305,14 @@ app.post('/api/webhooks/squadcast/:token', apiLimiter, checkApiTokenAuth, (req, 
     if (name === 'recording.stopped') {
       const session = sessions.getSessionByExternalId(db, sessionID);
       if (session) {
+        const startedAt = session.started_at ? new Date(session.started_at).getTime() : 0;
+        const elapsedThisRun = startedAt ? Date.now() - startedAt : 0;
+        const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
+
         sessions.updateSession(db, session.id, { 
           stopped_at: new Date().toISOString(),
-          status: 'completed'
+          status: 'completed',
+          elapsed_ms: newElapsedMs
         });
         broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'completed' });
         broadcastSessionList();
@@ -367,6 +372,9 @@ app.post('/api/triggers', apiLimiter, checkApiTokenAuth, (req, res) => {
       }
       const session = sessions.getSession(db, id);
       if (session) {
+        if (session.status !== 'active') {
+          return res.status(400).json({ error: 'Session is not in active status' });
+        }
         const startedAt = session.started_at ? new Date(session.started_at).getTime() : 0;
         const elapsedThisRun = startedAt ? Date.now() - startedAt : 0;
         const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
@@ -505,6 +513,9 @@ app.post('/api/sessions/:id/timer/stop', (req, res) => {
     const session = sessions.getSession(db, req.params.id);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+    if (session.status !== 'active') {
+      return res.status(400).json({ error: 'Session is not active' });
     }
     if (!session.started_at) {
       return res.status(400).json({ error: 'Timer not started' });
