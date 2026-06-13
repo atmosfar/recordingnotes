@@ -35,8 +35,9 @@
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
-    --sidebar-bg: rgba(249, 251, 14, 0.5);
-    --header-bg: rgba(254, 200, 50, 0.5);
+    --color-intensity: 0.33;
+    --sidebar-bg: rgba(249, 251, 14, var(--color-intensity));
+    --header-bg: rgba(254, 200, 50, var(--color-intensity));
 }
 
 body.dark-mode {
@@ -75,8 +76,9 @@ body.dark-mode {
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
-    --sidebar-bg: rgba(53, 42, 135, 0.5);
-    --header-bg: rgba(15, 92, 221, 0.5);
+    --color-intensity: 0.33;
+    --sidebar-bg: rgba(53, 42, 135, var(--color-intensity));
+    --header-bg: rgba(15, 92, 221, var(--color-intensity));
 }
 
 html { scroll-behavior: smooth; height: 100%; }
