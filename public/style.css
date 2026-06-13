@@ -37,7 +37,7 @@
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(249, 251, 14, var(--color-intensity));
-    --header-bg: #d0d0d0;
+    --header-bg: #222;
     --input-bg: rgba(46, 183, 164, var(--color-intensity));
 }
 
@@ -79,7 +79,7 @@ body.dark-mode {
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(53, 42, 135, var(--color-intensity));
-    --header-bg: #2a2a2a;
+    --header-bg: #f0f0f0;
     --input-bg: rgba(46, 183, 164, var(--color-intensity));
 }
 
