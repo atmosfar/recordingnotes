@@ -35,7 +35,7 @@
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
-    --sidebar-bg: #f9fb0e;
+    --sidebar-bg: rgba(249, 251, 14, 0.5);
 }
 
 body.dark-mode {
@@ -74,7 +74,7 @@ body.dark-mode {
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
-    --sidebar-bg: #352a87;
+    --sidebar-bg: rgba(53, 42, 135, 0.5);
 }
 
 html { scroll-behavior: smooth; height: 100%; }
