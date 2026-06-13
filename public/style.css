@@ -36,7 +36,7 @@
     --session-item-height: 50px;
     --status-bar-height: 3px;
     --color-intensity: 0.33;
-    --sidebar-bg: rgba(249, 251, 14, var(--color-intensity));
+    --sidebar-bg: rgba(46, 183, 164, var(--color-intensity));
     --header-bg: rgba(254, 200, 50, var(--color-intensity));
 }
 
@@ -77,7 +77,7 @@ body.dark-mode {
     --session-item-height: 50px;
     --status-bar-height: 3px;
     --color-intensity: 0.33;
-    --sidebar-bg: rgba(53, 42, 135, var(--color-intensity));
+    --sidebar-bg: rgba(46, 183, 164, var(--color-intensity));
     --header-bg: rgba(15, 92, 221, var(--color-intensity));
 }
 
