@@ -10,7 +10,7 @@ import http from 'http';
 import { unlinkSync, existsSync } from 'node:fs';
 import WebSocket from 'ws';
 import { resetDbInstance, initDb, getDb } from '../db.js';
-import app from '../server.js';
+import app, { setupWebSocket } from '../server.js';
 
 describe('WebSocket API', () => {
   let server;
@@ -27,6 +27,7 @@ describe('WebSocket API', () => {
 
     return new Promise((resolve) => {
       server = app.listen(0, async () => {
+        setupWebSocket(server);
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
         wssUrl = `ws://localhost:${port}`;
@@ -81,14 +82,18 @@ describe('WebSocket API', () => {
     });
   }
 
-  // Helper: send message and wait for response
-  function sendMessage(ws, msg) {
+  // Helper: send message and wait for response matching a type filter
+  function sendMessage(ws, msg, expectedType) {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('WebSocket message timeout')), 5000);
       const handler = (data) => {
-        clearTimeout(timeout);
-        ws.removeListener('message', handler);
-        resolve(JSON.parse(data.toString()));
+        const parsed = JSON.parse(data.toString());
+        if (!expectedType || parsed.type === expectedType) {
+          clearTimeout(timeout);
+          ws.removeListener('message', handler);
+          resolve(parsed);
+        }
+        // If expectedType specified and type doesn't match, keep listening
       };
       ws.on('message', handler);
       ws.send(JSON.stringify(msg));
@@ -102,7 +107,7 @@ describe('WebSocket API', () => {
     const response = await sendMessage(ws, {
       type: 'JOIN_SESSION',
       sessionId: sessionId.toString()
-    });
+    }, 'SESSION_DATA');
 
     assert.strictEqual(response.type, 'SESSION_DATA');
     assert.ok(response.session);
@@ -176,7 +181,7 @@ describe('WebSocket API', () => {
     });
 
     assert.strictEqual(response.type, 'NOTE_UPDATE');
-    assert.strictEqual(response.sessionId, sessionId.toString());
+    assert.strictEqual(response.sessionId, sessionId);
 
     ws.close();
   });
@@ -230,10 +235,10 @@ describe('WebSocket API', () => {
     const deleteResp = await sendMessage(ws, {
       type: 'DELETE_NOTE',
       noteId: '1'
-    });
+    }, 'NOTE_DELETED');
 
     assert.strictEqual(deleteResp.type, 'NOTE_DELETED');
-    assert.strictEqual(deleteResp.sessionId, sessionId.toString());
+    assert.strictEqual(deleteResp.sessionId, sessionId);
 
     ws.close();
   });
@@ -273,7 +278,7 @@ describe('WebSocket API', () => {
     });
 
     assert.strictEqual(response.type, 'SESSION_DELETED');
-    assert.strictEqual(response.sessionId, delSessionId);
+    assert.strictEqual(response.sessionId, delSessionId.toString());
 
     ws.close();
   });

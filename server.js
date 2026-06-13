@@ -241,6 +241,162 @@ function broadcastNoteUpdate(sessionId) {
   broadcastToRoom(sessionId, { type: 'NOTE_UPDATE', sessionId, notes: list });
 }
 
+function setupWebSocket(httpServer) {
+  wss = new WebSocketServer({ noServer: true });
+
+  httpServer.on('upgrade', (request, socket, head) => {
+    sessionParser(request, {}, () => {
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const queryToken = url.searchParams.get('token');
+
+      const isGuest = queryToken || (request.session && request.session.guestToken);
+
+      // In open/public mode (no auth configured), skip the check
+      if (authRequired() && !request.session.authenticated && !isGuest) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      // Auto-authenticate in open mode
+      if (!authRequired()) {
+        request.session.authenticated = true;
+      }
+
+      // Ensure session is saved before upgrade
+      request.session.save(() => {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit('connection', ws, request);
+        });
+      });
+    });
+  });
+
+  wss.on('connection', (ws, request) => {
+    ws.currentSessionId = null;
+
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message);
+
+        if (data.type === 'JOIN_SESSION') {
+          const { sessionId, guestToken } = data;
+          let session = null;
+          const db = getDb();
+
+          const effectiveToken = guestToken || request.session.guestToken;
+
+          if (request.session.authenticated && sessionId) {
+            session = sessions.getSession(db, sessionId);
+          } else if (effectiveToken) {
+            session = sessions.getSessionByGuestToken(db, effectiveToken);
+          }
+
+          if (!session) {
+            return ws.send(JSON.stringify({ type: 'ERROR', message: 'Session not found or unauthorized', code: 404 }));
+          }
+
+          const resolvedSessionId = session.id;
+
+          if (ws.currentSessionId) {
+            const oldRoom = sessionRooms.get(ws.currentSessionId.toString());
+            if (oldRoom) oldRoom.delete(ws);
+          }
+
+          ws.currentSessionId = resolvedSessionId;
+          if (!sessionRooms.has(resolvedSessionId.toString())) {
+            sessionRooms.set(resolvedSessionId.toString(), new Set());
+          }
+          sessionRooms.get(resolvedSessionId.toString()).add(ws);
+          broadcastSessionList();
+
+          const list = notes.listNotesBySession(db, resolvedSessionId);
+          ws.send(JSON.stringify({
+            type: 'SESSION_DATA',
+            session,
+            notes: list
+          }));
+        } else if (data.type === 'GET_SESSIONS') {
+          if (!request.session.authenticated) return;
+          const db = getDb();
+          const list = sessions.listSessions(db).map(session => {
+            const room = sessionRooms.get(session.id.toString());
+            return {
+              ...session,
+              active_users: room ? room.size : 0
+            };
+          });
+          ws.send(JSON.stringify({ type: 'SESSION_LIST_UPDATE', sessions: list }));
+        } else if (data.type === 'LEAVE_SESSION') {
+          if (ws.currentSessionId) {
+            const room = sessionRooms.get(ws.currentSessionId.toString());
+            if (room) room.delete(ws);
+            ws.currentSessionId = null;
+            broadcastSessionList();
+          }
+        } else if (data.type === 'CREATE_SESSION') {
+          if (!request.session.authenticated) return;
+          const db = getDb();
+          const { name } = data;
+          const id = sessions.createSession(db, { name });
+          ws.send(JSON.stringify({ type: 'SESSION_CREATED', id, name }));
+          broadcastSessionList();
+        } else if (data.type === 'UPDATE_SESSION') {
+          if (!request.session.authenticated) return;
+          const db = getDb();
+          const { sessionId, name } = data;
+          sessions.updateSession(db, sessionId, { name });
+          broadcastSessionList();
+        } else if (data.type === 'DELETE_SESSION') {
+          if (!request.session.authenticated) return;
+          const db = getDb();
+          const { sessionId } = data;
+          sessions.deleteSession(db, sessionId);
+          broadcastToAll({ type: 'SESSION_DELETED', sessionId });
+          broadcastSessionList();
+        } else if (data.type === 'CREATE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
+          const db = getDb();
+          const { payload } = data;
+          if (ws.currentSessionId) {
+            notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
+            broadcastNoteUpdate(ws.currentSessionId);
+          }
+        } else if (data.type === 'UPDATE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
+          const db = getDb();
+          const { noteId, content } = data;
+          if (ws.currentSessionId) {
+            notes.updateNote(db, noteId, content);
+            broadcastNoteUpdate(ws.currentSessionId);
+          }
+        } else if (data.type === 'DELETE_NOTE') {
+          if (!request.session.authenticated && !request.session.guestToken) return;
+          const db = getDb();
+          const { noteId } = data;
+          if (ws.currentSessionId) {
+            notes.deleteNote(db, noteId);
+            broadcastToRoom(ws.currentSessionId, { type: 'NOTE_DELETED', noteId, sessionId: ws.currentSessionId });
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (ws.currentSessionId) {
+        const room = sessionRooms.get(ws.currentSessionId.toString());
+        if (room) {
+          room.delete(ws);
+          if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
+        }
+        broadcastSessionList();
+      }
+    });
+  });
+}
+
 // Health check
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
@@ -866,162 +1022,10 @@ if (process.env.NODE_ENV !== 'test') {
           }
         }
         // WebSocket setup (only after server is listening)
-        wss = new WebSocketServer({ noServer: true });
-
-        server.on('upgrade', (request, socket, head) => {
-          sessionParser(request, {}, () => {
-            const url = new URL(request.url, `http://${request.headers.host}`);
-            const queryToken = url.searchParams.get('token');
-            
-            const isGuest = queryToken || (request.session && request.session.guestToken);
-
-            // In open/public mode (no auth configured), skip the check
-            if (authRequired() && !request.session.authenticated && !isGuest) {
-              socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-              socket.destroy();
-              return;
-            }
-
-            // Auto-authenticate in open mode
-            if (!authRequired()) {
-              request.session.authenticated = true;
-            }
-
-            // Ensure session is saved before upgrade
-            request.session.save(() => {
-              wss.handleUpgrade(request, socket, head, (ws) => {
-                wss.emit('connection', ws, request);
-              });
-            });
-          });
-        });
+        setupWebSocket(server);
 
         // Store server reference for external access (e.g., tests)
         globalThis.__RECNOTES_SERVER_READY__ = true;
-
-        wss.on('connection', (ws, request) => {
-          ws.currentSessionId = null;
-
-          ws.on('message', (message) => {
-            try {
-              const data = JSON.parse(message);
-              
-              if (data.type === 'JOIN_SESSION') {
-                const { sessionId, guestToken } = data;
-                let session = null;
-                const db = getDb();
-
-                const effectiveToken = guestToken || request.session.guestToken;
-
-                if (request.session.authenticated && sessionId) {
-                  session = sessions.getSession(db, sessionId);
-                } else if (effectiveToken) {
-                  session = sessions.getSessionByGuestToken(db, effectiveToken);
-                }
-
-                if (!session) {
-                  return ws.send(JSON.stringify({ type: 'ERROR', message: 'Session not found or unauthorized', code: 404 }));
-                }
-
-                const resolvedSessionId = session.id;
-
-                if (ws.currentSessionId) {
-                  const oldRoom = sessionRooms.get(ws.currentSessionId.toString());
-                  if (oldRoom) oldRoom.delete(ws);
-                }
-                
-                ws.currentSessionId = resolvedSessionId;
-                if (!sessionRooms.has(resolvedSessionId.toString())) {
-                  sessionRooms.set(resolvedSessionId.toString(), new Set());
-                }
-                sessionRooms.get(resolvedSessionId.toString()).add(ws);
-                broadcastSessionList();
-
-                const list = notes.listNotesBySession(db, resolvedSessionId);
-                ws.send(JSON.stringify({ 
-                  type: 'SESSION_DATA', 
-                  session, 
-                  notes: list 
-                }));
-              } else if (data.type === 'GET_SESSIONS') {
-                if (!request.session.authenticated) return;
-                const db = getDb();
-                const list = sessions.listSessions(db).map(session => {
-                  const room = sessionRooms.get(session.id.toString());
-                  return {
-                    ...session,
-                    active_users: room ? room.size : 0
-                  };
-                });
-                ws.send(JSON.stringify({ type: 'SESSION_LIST_UPDATE', sessions: list }));
-              } else if (data.type === 'LEAVE_SESSION') {
-                if (ws.currentSessionId) {
-                  const room = sessionRooms.get(ws.currentSessionId.toString());
-                  if (room) room.delete(ws);
-                  ws.currentSessionId = null;
-                  broadcastSessionList();
-                }
-              } else if (data.type === 'CREATE_SESSION') {
-                if (!request.session.authenticated) return;
-                const db = getDb();
-                const { name } = data;
-                const id = sessions.createSession(db, { name });
-                ws.send(JSON.stringify({ type: 'SESSION_CREATED', id, name }));
-                broadcastSessionList();
-              } else if (data.type === 'UPDATE_SESSION') {
-                if (!request.session.authenticated) return;
-                const db = getDb();
-                const { sessionId, name } = data;
-                sessions.updateSession(db, sessionId, { name });
-                broadcastSessionList();
-              } else if (data.type === 'DELETE_SESSION') {
-                if (!request.session.authenticated) return;
-                const db = getDb();
-                const { sessionId } = data;
-                sessions.deleteSession(db, sessionId);
-                broadcastToAll({ type: 'SESSION_DELETED', sessionId });
-                broadcastSessionList();
-              } else if (data.type === 'CREATE_NOTE') {
-                if (!request.session.authenticated && !request.session.guestToken) return;
-                const db = getDb();
-                const { payload } = data;
-                if (ws.currentSessionId) {
-                  notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
-                  broadcastNoteUpdate(ws.currentSessionId);
-                }
-              } else if (data.type === 'UPDATE_NOTE') {
-                if (!request.session.authenticated && !request.session.guestToken) return;
-                const db = getDb();
-                const { noteId, content } = data;
-                if (ws.currentSessionId) {
-                  notes.updateNote(db, noteId, content);
-                  broadcastNoteUpdate(ws.currentSessionId);
-                }
-              } else if (data.type === 'DELETE_NOTE') {
-                if (!request.session.authenticated && !request.session.guestToken) return;
-                const db = getDb();
-                const { noteId } = data;
-                if (ws.currentSessionId) {
-                  notes.deleteNote(db, noteId);
-                  broadcastToRoom(ws.currentSessionId, { type: 'NOTE_DELETED', noteId, sessionId: ws.currentSessionId });
-                }
-              }
-            } catch (error) {
-              console.error('WebSocket message error:', error);
-            }
-          });
-
-          ws.on('close', () => {
-            if (ws.currentSessionId) {
-              const room = sessionRooms.get(ws.currentSessionId.toString());
-              if (room) {
-                room.delete(ws);
-                if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
-              }
-              broadcastSessionList();
-            }
-          });
-        });
 
         break;
       } catch (err) {
@@ -1039,5 +1043,5 @@ if (process.env.NODE_ENV !== 'test') {
   })();
 }
 
-export { app, wss, broadcastToAll, broadcastToRoom, timeToHmsf, mapColorToResolve, formatDuration };
+export { app, wss, setupWebSocket, broadcastToAll, broadcastToRoom, timeToHmsf, mapColorToResolve, formatDuration };
 export default app;

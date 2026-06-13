@@ -8,6 +8,7 @@ describe('Server Basic Functionality', () => {
   let authCookie;
 
   before(async () => {
+    process.env.RECNOTES_DB_PATH = 'test-server.db';
     process.env.RECNOTES_AUTH_USERNAME = 'testuser';
     process.env.RECNOTES_AUTH_PASSWORD = 'testpassword';
     process.env.RECNOTES_SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
