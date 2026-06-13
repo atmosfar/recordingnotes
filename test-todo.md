@@ -63,18 +63,16 @@
 
 ## Phase 3 — WebSocket Tests
 
-- [ ] **T53** `test/websocket.test.js` — NEW: WebSocket connection + `JOIN_SESSION`
-- [ ] **T54** `test/websocket.test.js` — add: `GET_SESSIONS` message handler
-- [ ] **T55** `test/websocket.test.js` — add: `LEAVE_SESSION` + `sessionRooms` cleanup
-- [ ] **T56** `test/websocket.test.js` — add: `CREATE_SESSION` via WebSocket
-- [ ] **T57** `test/websocket.test.js` — add: `CREATE_NOTE` via WebSocket
-- [ ] **T58** `test/websocket.test.js` — add: `UPDATE_NOTE` via WebSocket
-- [ ] **T59** `test/websocket.test.js` — add: `DELETE_NOTE` via WebSocket
-- [ ] **T60** `test/websocket.test.js` — add: `UPDATE_SESSION` / `DELETE_SESSION` via WebSocket
+- [x] **T53** `test/websocket.test.js` — NEW: WebSocket connection + `JOIN_SESSION`
+- [x] **T54** `test/websocket.test.js` — add: `GET_SESSIONS` message handler
+- [x] **T55** `test/websocket.test.js` — add: `LEAVE_SESSION` + `sessionRooms` cleanup
+- [x] **T56** `test/websocket.test.js` — add: `CREATE_SESSION` via WebSocket
+- [x] **T57** `test/websocket.test.js` — add: `CREATE_NOTE` via WebSocket
+- [x] **T58** `test/websocket.test.js` — add: `UPDATE_NOTE` via WebSocket
+- [x] **T59** `test/websocket.test.js` — add: `DELETE_NOTE` via WebSocket
+- [x] **T60** `test/websocket.test.js` — add: `UPDATE_SESSION` / `DELETE_SESSION` via WebSocket
 - [x] **T61** `test/websocket.test.js` — add: WebSocket upgrade auth (401 for unauthenticated)
-- [ ] **T62** `test/websocket.test.js` — add: `ws.on('close')` room cleanup
-
-> Note: T53-T60, T62 require server.js session persistence fix for WebSocket upgrade. Test file exists with all test cases written.
+- [x] **T62** `test/websocket.test.js` — add: `ws.on('close')` room cleanup
 
 ## Phase 4 — Browser-Side (`public/app.js`)
 
@@ -99,7 +97,7 @@
 |-------|-------|------|
 | 1 — Unit | T01–T19 (19) | 13/19 |
 | 2 — API | T20–T52 (33) | 33/33 |
-| 3 — WebSocket | T53–T62 (10) | 1/10 (needs server fix) |
+| 3 — WebSocket | T53–T62 (10) | 10/10 |
 | 4 — Browser | T63–T67 (5) | 0/5 |
 | 5 — Misc | T68–T69 (2) | 2/2 |
-| **Total** | **69** | **49/69** |
+| **Total** | **69** | **58/69** |
