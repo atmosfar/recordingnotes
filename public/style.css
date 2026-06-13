@@ -655,3 +655,34 @@ body.dark-mode .menu-item:hover { background: rgba(255,255,255,0.05); }
 
 /* Guest Mode Restrictions */
 body.guest-mode #quick-tags-bar { display: none !important; }
+
+/* Share Link Modal */
+#share-link-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 280px;
+    max-width: 90vw;
+}
+
+#share-link-url {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 0.75rem;
+    font-family: monospace;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+#share-link-url:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}

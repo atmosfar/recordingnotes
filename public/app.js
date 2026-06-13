@@ -790,9 +790,11 @@ async function init() {
     
     const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (backdrop) {
-        backdrop.onclick = () => { 
+        backdrop.onclick = () => {
             closeSidebarFn();
             toggleFpsModal(false);
+            toggleTagsModal(false);
+            toggleShareLinkModal(false);
         };
     }
 
@@ -947,7 +949,7 @@ async function init() {
                 const { token } = await res.json();
                 const guestUrl = `${window.location.origin}/?token=${token}#\/guest\/${token}`;
                 await navigator.clipboard.writeText(guestUrl);
-                alert('Guest link copied to clipboard!');
+                toggleShareLinkModal(true, guestUrl);
             } catch (e) {
                 console.error('Error sharing guest link:', e);
                 alert('Failed to generate guest link.');
@@ -1060,6 +1062,32 @@ async function init() {
         if (open) renderModalTags();
     };
 
+    const toggleShareLinkModal = (open, url) => {
+        const modal = document.getElementById('share-link-modal');
+        const backdrop = document.getElementById('bottom-sheet-backdrop');
+        const messageEl = document.getElementById('share-link-message');
+        const urlInput = document.getElementById('share-link-url');
+        const qrContainer = document.getElementById('qr-code-container');
+        if (modal) modal.classList.toggle('open', open);
+        if (backdrop) {
+            backdrop.style.display = open ? 'block' : 'none';
+            backdrop.style.opacity = open ? '1' : '0';
+        }
+        if (open && url) {
+            messageEl.textContent = 'Link copied to clipboard!';
+            urlInput.value = url;
+            qrContainer.innerHTML = '';
+            QrCreator.render({
+                text: url,
+                radius: 0,
+                ecLevel: 'M',
+                fill: '#000000',
+                background: '#ffffff',
+                size: 200
+            }, qrContainer);
+        }
+    };
+
     const renderModalTags = () => {
         const list = document.getElementById('modal-tags-list');
         if (!list) return;
@@ -1092,6 +1120,20 @@ async function init() {
 
     const closeTagsModalBtn = document.getElementById('close-tags-modal');
     if (closeTagsModalBtn) closeTagsModalBtn.onclick = () => toggleTagsModal(false);
+
+    const closeShareModalBtn = document.getElementById('close-share-modal');
+    if (closeShareModalBtn) closeShareModalBtn.onclick = () => toggleShareLinkModal(false);
+
+    const shareLinkUrlInput = document.getElementById('share-link-url');
+    if (shareLinkUrlInput) {
+        shareLinkUrlInput.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(shareLinkUrlInput.value);
+                shareLinkUrlInput.title = 'Copied!';
+                setTimeout(() => { shareLinkUrlInput.title = 'Click to copy'; }, 1500);
+            } catch (_) { /* silent */ }
+        };
+    }
 
     const addTagBtn = document.getElementById('add-tag-btn');
     const newTagInput = document.getElementById('new-tag-input');
