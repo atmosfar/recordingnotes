@@ -37,7 +37,7 @@
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(249, 251, 14, var(--color-intensity));
-    --input-bg: rgba(46, 183, 164, var(--color-intensity));
+    --input-bg: rgba(209, 187, 89, var(--color-intensity));
 }
 
 body.dark-mode {
@@ -78,7 +78,7 @@ body.dark-mode {
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(53, 42, 135, var(--color-intensity));
-    --input-bg: rgba(46, 183, 164, var(--color-intensity));
+    --input-bg: rgba(20, 129, 214, var(--color-intensity));
 }
 
 html { scroll-behavior: smooth; height: 100%; }
