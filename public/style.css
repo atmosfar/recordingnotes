@@ -35,6 +35,7 @@
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
+    --sidebar-bg: #f9fb0e;
 }
 
 body.dark-mode {
@@ -73,6 +74,7 @@ body.dark-mode {
     --header-height: 60px;
     --session-item-height: 50px;
     --status-bar-height: 3px;
+    --sidebar-bg: #352a87;
 }
 
 html { scroll-behavior: smooth; height: 100%; }
@@ -102,7 +104,7 @@ body.session-not-found {
 }
 
 #sidebar {
-    width: var(--sidebar-width); background-color: var(--card-bg);
+    width: var(--sidebar-width); background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     display: flex; flex-direction: column; transition: transform 0.3s ease;
     height: 100%;
