@@ -198,6 +198,15 @@
         <button id="timer-warning-ok" class="icon-btn" style="width:100%; border-radius:8px; background:var(--primary-color); color:white; font-size:0.9rem;" aria-label="Dismiss warning">OK</button>
     </div>
 
+    <div id="share-link-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Share guest link">
+        <h3 style="margin-top: 0; font-size: 1rem;">Share Guest Link</h3>
+        <p id="share-link-message" style="font-size: 0.85rem; color: var(--secondary-color); margin: 0.5rem 0;"></p>
+        <div id="qr-code-container" style="display: flex; justify-content: center; padding: 1rem;"></div>
+        <input type="text" id="share-link-url" readonly aria-label="Guest link URL" title="Click to copy">
+        <button id="close-share-modal" class="icon-btn" style="width: 100%; border-radius: 8px; background: var(--bg-color); color: var(--text-color); font-size: 0.9rem; margin-top: 1rem;">Close</button>
+    </div>
+
+    <script src="qr-creator.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
