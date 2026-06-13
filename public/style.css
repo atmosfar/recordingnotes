@@ -37,7 +37,7 @@
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(46, 183, 164, var(--color-intensity));
-    --header-bg: rgba(254, 200, 50, var(--color-intensity));
+    --header-bg: rgba(46, 183, 164, var(--color-intensity));
 }
 
 body.dark-mode {
@@ -78,7 +78,7 @@ body.dark-mode {
     --status-bar-height: 3px;
     --color-intensity: 0.33;
     --sidebar-bg: rgba(46, 183, 164, var(--color-intensity));
-    --header-bg: rgba(15, 92, 221, var(--color-intensity));
+    --header-bg: rgba(46, 183, 164, var(--color-intensity));
 }
 
 html { scroll-behavior: smooth; height: 100%; }
