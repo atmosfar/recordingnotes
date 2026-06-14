@@ -1,7 +1,7 @@
 :root {
     --bg-color: #f4f4f9;
     --text-color: #333;
-    --primary-color: #007bff;
+    --primary-color: #0f5cdd;
     --secondary-color: #6c757d;
     --border-color: #ddd;
     --card-bg: #fff;
@@ -13,10 +13,10 @@
     --surface-muted: #eee;
     --surface-muted-dark: #8c8c8c;
     --text-muted-dark: #333;
-    --accent-green: #2ecc71;
-    --accent-blue: #3498db;
+    --accent-green: #2eb7a4;
+    --accent-blue: #1481d6;
     --text-tertiary: #999;
-    --primary-alpha-10: rgba(0, 123, 255, 0.1);
+    --primary-alpha-10: rgba(15, 92, 221, 0.1);
     --hover-bg: rgba(0,0,0,0.05);
     --hover-bg-strong: rgba(0,0,0,0.1);
     --shadow-sm: 0 2px 5px rgba(0,0,0,0.1);
@@ -36,8 +36,8 @@
     --session-item-height: 50px;
     --status-bar-height: 3px;
     --color-intensity: 0.33;
-    --sidebar-bg: rgba(249, 251, 14, var(--color-intensity));
-    --input-bg: rgba(209, 187, 89, var(--color-intensity));
+    --sidebar-bg: rgba(209, 187, 89, var(--color-intensity));
+    --input-bg: rgba(254, 200, 50, var(--color-intensity));
 }
 
 body.dark-mode {
@@ -157,7 +157,6 @@ main { flex: 1; display: flex; overflow: hidden; position: relative; }
 .sidebar-header { 
     padding: 0 1rem;
     height: var(--header-height);
-    background-color: var(--bg-color);
     border-bottom: 1px solid var(--border-color); 
     display: flex; align-items: center; justify-content: space-between; 
     flex-shrink: 0;
@@ -308,7 +307,7 @@ body.dark-mode .user-count {
     background-color: var(--card-bg);
     position: relative;
 }
-.note .timestamp { color: var(--secondary-color); font-family: var(--font-mono); font-size: 0.85rem; padding-right: 0.5rem; border-right: 1px solid var(--border-color); }
+.note .timestamp { color: var(--primary-color); font-family: var(--font-mono); font-size: 0.85rem; padding-right: 0.5rem; border-right: 1px solid var(--border-color); }
 .note .content { word-break: break-word; padding-left: 0.5rem; }
 
 .note-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; margin-left: 0.5rem; }
@@ -364,7 +363,7 @@ button#new-session-btn:active { transform: scale(0.98); }
     color: var(--text-color); resize: none; overflow: hidden;
 }
 
-#input-area { padding: 1rem; border-top: 1px solid var(--border-color); background: var(--input-bg); }
+#input-area { padding: 1rem; border-top: 1px solid var(--border-color); background: transparent; }
 #input-row { display: flex; gap: 0.75rem; width: 100%; align-items: center; }
 
 #palette { display: flex; gap: 0.5rem; align-items: center; }
@@ -520,7 +519,7 @@ body.guest-mode #overflow-menu-toggle { display: block !important; }
 body.guest-mode .desktop-only:not(#theme-toggle):not(#export-btn) { display: none !important; }
 .menu-item:hover { background: var(--hover-bg); }
 body.dark-mode .menu-item:hover { background: var(--hover-bg); }
-.menu-item .icon { display: flex; align-items: center; color: var(--secondary-color); }
+.menu-item .icon { display: flex; align-items: center; color: var(--primary-color); }
 .menu-item .label { font-size: 0.9rem; }
 
 #overflow-menu-toggle { 
