@@ -78,6 +78,7 @@ body.dark-mode {
     --status-bar-height: 3px;
     --sidebar-bg: rgba(53, 42, 135, var(--color-intensity));
     --input-bg: rgba(20, 129, 214, var(--color-intensity));
+    background: linear-gradient(to right, rgba(53, 42, 135, var(--color-intensity)), var(--bg-color));
 }
 
 html { scroll-behavior: smooth; height: 100%; }
@@ -87,7 +88,9 @@ html { scroll-behavior: smooth; height: 100%; }
 
 body {
     font-family: var(--font-family);
-    margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color);
+    margin: 0; padding: 0;
+    background: linear-gradient(to right, #e8e8e8, #ffffff);
+    color: var(--text-color);
     display: flex; flex-direction: row; height: 100%; overflow: hidden;
     position: relative;
     -webkit-font-smoothing: antialiased;
@@ -108,8 +111,7 @@ body.session-not-found {
 }
 
 #sidebar {
-    width: var(--sidebar-width); background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
+    width: var(--sidebar-width);
     display: flex; flex-direction: column; transition: transform 0.3s ease;
     height: 100%;
     flex-shrink: 0;
@@ -124,7 +126,7 @@ body.session-not-found {
 }
 
 header {
-    background-color: var(--bg-color);
+    background: transparent;
     padding: 0 1rem;
     height: var(--header-height);
     border-bottom: 1px solid var(--border-color);
@@ -154,14 +156,14 @@ header {
 
 main { flex: 1; display: flex; overflow: hidden; position: relative; }
 
-.sidebar-header { 
+.sidebar-header {
     padding: 0 1rem;
     height: var(--header-height);
-    border-bottom: 1px solid var(--border-color); 
-    display: flex; align-items: center; justify-content: space-between; 
+    display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0;
+    background: transparent;
 }
-.sidebar-content { padding: 1rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+.sidebar-content { padding: 1rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; border-right: 1px solid var(--border-color); }
 
 .sidebar-top-actions {
     display: flex;
