@@ -798,6 +798,14 @@ async function init() {
         };
     }
 
+    const quickTagsToggle = document.getElementById('quick-tags-toggle');
+    const inputArea = document.getElementById('input-area');
+    if (quickTagsToggle && inputArea) {
+        quickTagsToggle.addEventListener('click', () => {
+            inputArea.classList.toggle('show-quicktags');
+        });
+    }
+
     // Close menus if clicking anywhere else
     document.addEventListener('click', (e) => {
         const overflowMenu = document.getElementById('overflow-menu');
