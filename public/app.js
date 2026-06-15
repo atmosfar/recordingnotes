@@ -362,6 +362,15 @@ function updateTimerMenuVisibility() {
     resetBtn.style.display = hasElapsed ? 'flex' : 'none';
 }
 
+function updateSessionMenuVisibility() {
+    const items = ['menu-share-link', 'menu-export-reaper', 'menu-export-audition', 'menu-export-edl'];
+    const show = !!(currentSessionId && !window.isGuestMode);
+    items.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = show ? 'flex' : 'none';
+    });
+}
+
 async function startTimer() {
     if (!currentSessionId) return;
     try {
@@ -530,6 +539,7 @@ async function deleteSession(id) {
         if (mobileExportBtn) mobileExportBtn.disabled = true;
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
+        updateSessionMenuVisibility();
     }
 }
 
@@ -598,6 +608,12 @@ function renderNotes(notes) {
 
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'note-actions';
+            actionsDiv.onclick = (e) => {
+                e.stopPropagation();
+                if (window.innerWidth <= 768) {
+                    div.classList.remove('reveal-actions');
+                }
+            };
             actionsDiv.innerHTML = `
                 <button class="edit-btn" title="Edit Note" aria-label="Edit note">✎</button>
                 <button class="delete-btn" title="Delete Note" aria-label="Delete note">
@@ -654,7 +670,8 @@ function toggleEditMode(noteEl, editing) {
         textarea.value = contentEl.textContent;
         textarea.setAttribute('aria-label', 'Edit note content');
         contentEl.replaceWith(textarea);
-        
+        textarea.style.height = contentEl.offsetHeight + 'px';
+
         textarea.oninput = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
         textarea.onkeydown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(noteEl); }
@@ -1213,15 +1230,8 @@ async function init() {
         if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
         
         document.getElementById('input-area').style.display = 'block';
-        
-        document.getElementById('menu-export-reaper').style.display = 'flex';
-        document.getElementById('menu-export-audition').style.display = 'flex';
-        document.getElementById('menu-export-edl').style.display = 'flex';
-        
-        const menuShareLink = document.getElementById('menu-share-link');
-        if (menuShareLink) {
-            menuShareLink.style.display = window.isGuestMode ? 'none' : 'flex';
-        }
+
+        updateSessionMenuVisibility();
 
         const menuEditTags = document.getElementById('menu-edit-tags');
         if (menuEditTags) {
@@ -1247,10 +1257,7 @@ async function init() {
             document.body.classList.add('session-not-found');
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
-            document.getElementById('menu-export-reaper').style.display = 'none';
-            document.getElementById('menu-export-audition').style.display = 'none';
-            document.getElementById('menu-export-edl').style.display = 'none';
-            document.getElementById('menu-share-link').style.display = 'none';
+            updateSessionMenuVisibility();
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
@@ -1282,8 +1289,10 @@ async function init() {
                 } else {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
+                    currentSessionId = null;
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
+                    updateSessionMenuVisibility();
                 }
             }
         }
@@ -1301,10 +1310,7 @@ async function init() {
             if (inputArea) inputArea.style.display = 'none';
             toggleExportMenu(false);
 
-            document.getElementById('menu-export-reaper').style.display = 'none';
-            document.getElementById('menu-export-audition').style.display = 'none';
-            document.getElementById('menu-export-edl').style.display = 'none';
-            document.getElementById('menu-share-link').style.display = 'none';
+            updateSessionMenuVisibility();
 
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
