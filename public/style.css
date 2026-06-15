@@ -204,8 +204,8 @@ body.dark-mode .sidebar-top-actions #manage-sessions-btn {
 }
 
 .sidebar-top-actions #manage-sessions-btn.active {
-    background-color: #eee;
-    color: #333;
+    background-color: var(--surface-muted);
+    color: var(--text-muted-dark);
 }
 
 #session-list { flex: 1; overflow-y: auto; }
@@ -590,8 +590,8 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     }
     
     .sidebar-top-actions #manage-sessions-btn.active {
-        background-color: #eee;
-        color: #333;
+        background-color: var(--surface-muted);
+        color: var(--text-muted-dark);
     }
 
     .session-actions { display: none; opacity: 1; }
