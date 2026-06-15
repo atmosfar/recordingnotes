@@ -726,6 +726,34 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     box-sizing: border-box;
 }
 
+.modal-primary-btn {
+    padding: 0.6rem 0.8rem;
+    background-color: var(--primary-color);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+}
+.modal-primary-btn:hover { filter: brightness(1.1); }
+.modal-primary-btn:active { transform: scale(0.98); }
+
+.modal-secondary-btn {
+    padding: 0.6rem 0.8rem;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+}
+.modal-secondary-btn:hover { background: var(--hover-bg); }
+.modal-secondary-btn:active { transform: scale(0.98); }
+
 #modal-tags-list {
     display: flex;
     flex-direction: column;

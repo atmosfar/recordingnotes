@@ -835,6 +835,7 @@ async function init() {
     });
     
     const handleNewSession = () => {
+        closeSidebarFn();
         toggleNewSessionModal(true);
     };
 
