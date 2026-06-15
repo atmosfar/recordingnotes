@@ -320,14 +320,14 @@ function updateClock() {
             clockEl.textContent = formatDuration(ssm, 1);
             if (infoEl) infoEl.textContent = currentSession.name;
         }
-        if (headerTitle) headerTitle.textContent = currentSession.name;
+        if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
     } else {
         // No session selected
         const now = new Date();
         const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
         clockEl.textContent = formatDuration(ssm, 1);
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = "";
+        if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
         if (infoEl) infoEl.textContent = "No Session";
     }
     updateRecordingState();
@@ -529,7 +529,7 @@ async function deleteSession(id) {
         const mobileExportBtn = document.getElementById('mobile-export-btn');
         if (mobileExportBtn) mobileExportBtn.disabled = true;
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = "";
+        if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
     }
 }
 
@@ -1170,7 +1170,7 @@ async function init() {
         currentSessionId = session.id;
         
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = currentSession.name;
+        if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
         
         document.getElementById('input-area').style.display = 'block';
         
@@ -1213,7 +1213,7 @@ async function init() {
             document.getElementById('menu-share-link').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "";
+            if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             updateTimerMenuVisibility();
@@ -1233,7 +1233,7 @@ async function init() {
                 if (updated) {
                     currentSession = updated;
                     const headerTitle = document.getElementById('header-session-title');
-                    if (headerTitle) {
+                    if (headerTitle && headerTitle.textContent !== updated.name) {
                         console.log('Updating header title to:', updated.name);
                         headerTitle.textContent = updated.name;
                     }
@@ -1243,7 +1243,7 @@ async function init() {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
                     const headerTitle = document.getElementById('header-session-title');
-                    if (headerTitle) headerTitle.textContent = "";
+                    if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
                 }
             }
         }
@@ -1267,7 +1267,7 @@ async function init() {
             document.getElementById('menu-share-link').style.display = 'none';
 
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "";
+            if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             updateTimerMenuVisibility();
         }
     });
