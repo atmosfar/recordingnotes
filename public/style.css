@@ -208,17 +208,6 @@ body.dark-mode .sidebar-top-actions #manage-sessions-btn {
     color: var(--text-muted-dark);
 }
 
-.modal-cancel-btn {
-    width: 100%;
-    border-radius: 8px;
-    background-color: var(--surface-muted);
-    color: var(--text-muted-dark);
-    font-size: 0.9rem;
-}
-body.dark-mode .modal-cancel-btn {
-    background-color: var(--surface-muted-dark);
-}
-
 #session-list { flex: 1; overflow-y: auto; }
 .session-item {
     height: var(--session-item-height);
