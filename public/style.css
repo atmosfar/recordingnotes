@@ -707,6 +707,25 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     max-width: 90vw;
 }
 
+#new-session-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 320px;
+    max-width: 90vw;
+}
+
+#new-session-name-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
 #modal-tags-list {
     display: flex;
     flex-direction: column;

@@ -795,6 +795,7 @@ async function init() {
             toggleFpsModal(false);
             toggleTagsModal(false);
             toggleShareLinkModal(false);
+            toggleNewSessionModal(false);
         };
     }
 
@@ -834,9 +835,21 @@ async function init() {
     });
     
     const handleNewSession = () => {
-        const name = prompt('Enter session name:');
-        if (name) {
-            socket.send('CREATE_SESSION', { name });
+        toggleNewSessionModal(true);
+    };
+
+    const toggleNewSessionModal = (open) => {
+        const modal = document.getElementById('new-session-modal');
+        const backdrop = document.getElementById('bottom-sheet-backdrop');
+        const input = document.getElementById('new-session-name-input');
+        if (modal) modal.classList.toggle('open', open);
+        if (backdrop) {
+            backdrop.style.display = open ? 'block' : 'none';
+            backdrop.style.opacity = open ? '1' : '0';
+        }
+        if (open && input) {
+            input.value = '';
+            input.focus();
         }
     };
 
@@ -1131,6 +1144,32 @@ async function init() {
 
     const closeShareModalBtn = document.getElementById('close-share-modal');
     if (closeShareModalBtn) closeShareModalBtn.onclick = () => toggleShareLinkModal(false);
+
+    const createSessionBtn = document.getElementById('create-session-btn');
+    if (createSessionBtn) {
+        createSessionBtn.onclick = () => {
+            const input = document.getElementById('new-session-name-input');
+            const name = input?.value.trim();
+            if (name) {
+                socket.send('CREATE_SESSION', { name });
+                toggleNewSessionModal(false);
+            }
+        };
+    }
+
+    const cancelNewSessionBtn = document.getElementById('cancel-new-session-btn');
+    if (cancelNewSessionBtn) cancelNewSessionBtn.onclick = () => toggleNewSessionModal(false);
+
+    // Allow Enter key in the session name input to create
+    const newSessionNameInput = document.getElementById('new-session-name-input');
+    if (newSessionNameInput) {
+        newSessionNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createSessionBtn?.click();
+            }
+        });
+    }
 
     const shareLinkUrlInput = document.getElementById('share-link-url');
     if (shareLinkUrlInput) {
