@@ -193,10 +193,19 @@ app.get('/logout', (req, res) => {
   res.redirect('/login?cleared=1');
 });
 
-// Protect all following routes
-app.use(checkAuth);
+// Root route requires auth
+app.get('/', (req, res) => {
+  if (authRequired() && !req.session?.authenticated) {
+    return res.redirect('/login?returnTo=/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
+// Serve static files (publicly accessible, including from login page)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Protect all following API routes
+app.use(checkAuth);
 
 // WebSocket Server Initialization
 let wss;
