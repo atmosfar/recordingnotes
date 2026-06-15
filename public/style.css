@@ -214,6 +214,12 @@ body.dark-mode .sidebar-top-actions #manage-sessions-btn {
     background-color: var(--surface-muted);
     color: var(--text-muted-dark);
     font-size: 0.9rem;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 body.dark-mode .modal-cancel-btn {
     background-color: var(--surface-muted-dark);
