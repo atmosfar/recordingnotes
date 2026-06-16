@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Recording Notes</title>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #e8e8e8, #ffffff);
+            color: var(--text-color);
+        }
+        body.dark-mode {
+            background: linear-gradient(to right, #1a1a2e, var(--bg-color));
+        }
+        .login-box {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: calc(100% - 6rem);
+            max-width: 320px;
+            margin: 0 auto;
+            border: 1px solid var(--border-color);
+        }
+        .login-box h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: 16px;
+        }
+        .login-box button[type="submit"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            background: var(--primary-color);
+            color: var(--color-white);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: var(--font-family);
+            transition: filter 0.2s, transform 0.1s;
+        }
+        .login-box button[type="submit"]:hover { filter: brightness(1.1); }
+        .login-box button[type="submit"]:active { transform: scale(0.98); }
+        #error { color: var(--recording-red); font-size: 0.9rem; text-align: center; margin-top: 0.5rem; display: none; }
+        .remember-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; }
+        .remember-row input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--primary-color); }
+        .remember-row label { font-size: 0.9rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Recording Notes Login</h1>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Username" required aria-label="Username">
+            <input type="password" id="password" placeholder="Password" required aria-label="Password">
+            <div class="remember-row">
+                <input type="checkbox" id="remember-me">
+                <label for="remember-me">Remember me</label>
+            </div>
+            <button type="submit" id="login-btn">Login</button>
+        </form>
+        <div id="error" role="alert" aria-live="assertive">Invalid credentials</div>
+    </div>
+    <script>
+        // Clear remembered user after logout
+        if (new URLSearchParams(window.location.search).get('cleared') === '1') {
+            localStorage.removeItem('recnotes_remembered_user');
+            // Clean the URL
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+
+        // Auto-fill saved username
+        const savedUser = localStorage.getItem('recnotes_remembered_user');
+        if (savedUser) {
+            document.getElementById('username').value = savedUser;
+            document.getElementById('remember-me').checked = true;
+        }
+
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            const error = document.getElementById('error');
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, rememberMe })
+            });
+
+            if (response.ok) {
+                if (rememberMe) {
+                    localStorage.setItem('recnotes_remembered_user', username);
+                } else {
+                    localStorage.removeItem('recnotes_remembered_user');
+                }
+                const params = new URLSearchParams(window.location.search);
+                const returnTo = params.get('returnTo') || '/';
+                // Preserve hash if it exists (e.g. #/session/123)
+                window.location.href = returnTo + window.location.hash;
+            } else {
+                error.style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
