@@ -414,13 +414,15 @@ button#new-session-btn:active { transform: scale(0.98); }
 }
 .note-actions .save-btn:hover { filter: brightness(1.1); }
 
-/* Cancel: secondary */
+/* Cancel: secondary (matches modal-secondary-btn) */
 .note-actions .cancel-btn {
     background-color: var(--bg-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
+    transition: background 0.2s, transform 0.1s;
 }
 .note-actions .cancel-btn:hover { background: var(--hover-bg); }
+.note-actions .cancel-btn:active { transform: scale(0.98); }
 
 /* Confirm Del.: red */
 .note-actions .confirm-del-btn {

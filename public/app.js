@@ -621,8 +621,8 @@ function renderNotes(notes) {
             actionsDiv.className = 'note-actions';
             actionsDiv.innerHTML = `
                 <button class="edit-btn" title="Edit Note" aria-label="Edit note">Edit</button>
-                <button class="delete-btn" title="Delete Note" aria-label="Delete note">Delete</button>
                 <button class="save-btn" title="Save" aria-label="Save note">Save</button>
+                <button class="delete-btn" title="Delete Note" aria-label="Delete note">Delete</button>
                 <button class="cancel-btn" title="Cancel" aria-label="Cancel editing">Cancel</button>
                 <button class="confirm-del-btn" title="Confirm Delete" aria-label="Confirm delete">Confirm Del.</button>
             `;
