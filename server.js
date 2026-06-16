@@ -554,6 +554,34 @@ app.post('/api/triggers', apiLimiter, checkApiTokenAuth, (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
+    if (action === 'add_note') {
+      if (!id) {
+        return res.status(400).json({ error: 'Session ID is required for add_note action' });
+      }
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ error: 'Text is required for add_note action' });
+      }
+      const session = sessions.getSession(db, id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      // Block note creation if timer mode and timer not running
+      if (session.timestamp_mode === 'timer' && (!session.started_at || session.stopped_at)) {
+        return res.status(400).json({ error: 'Timer is not running. Start the timer to add notes.' });
+      }
+      // Sanitize: trim whitespace
+      const content = String(text).trim();
+      if (!content) {
+        return res.status(400).json({ error: 'Text cannot be empty after trimming' });
+      }
+      // Use current time as timestamp (UTC ms)
+      const timestamp = Date.now();
+      const noteId = notes.createNote(db, { content, timestamp, session_id: id });
+      broadcastNoteUpdate(id);
+      return res.status(201).json({ id: noteId, status: 'created' });
+    }
+
     res.status(400).json({ error: `Invalid or missing action: ${action}` });
   } catch (error) {
     console.error('Companion Webhook Error:', error);
