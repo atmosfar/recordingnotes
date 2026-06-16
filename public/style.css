@@ -694,7 +694,7 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     
     .note { grid-template-columns: 80px 1fr; gap: 0.5rem; padding: 0.5rem; }
     .note .timestamp { font-size: 0.75rem; padding-right: 0.25rem; }
-    .note-actions { display: none; }
+    .note-actions { display: none; grid-column: 2; }
     .note.editing .note-actions { display: flex; }
 
     #mobile-color-toggle {
