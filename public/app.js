@@ -57,9 +57,11 @@ const tagManager = new TagManager();
 class SocketManager {
     constructor() {
         this.ws = null;
-        this.reconnectInterval = 1000;
-        this.maxReconnectInterval = 30000;
+        this.reconnectInterval = 500;
+        this.maxReconnectInterval = 15000;
         this.listeners = new Map();
+        this._readyResolve = null;
+        this.ready = new Promise(resolve => { this._readyResolve = resolve; });
         this.connect();
     }
 
@@ -71,9 +73,22 @@ class SocketManager {
         }
         this.ws = new WebSocket(url);
 
+        // Connection timeout: if onopen doesn't fire within 5s, close and reconnect
+        const connectTimeout = setTimeout(() => {
+            if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+                console.warn('WebSocket connection timed out, reconnecting...');
+                this.ws.close();
+            }
+        }, 5000);
+
         this.ws.onopen = () => {
+            clearTimeout(connectTimeout);
             console.log('WebSocket connected');
-            this.reconnectInterval = 1000;
+            this.reconnectInterval = 500;
+            if (this._readyResolve) {
+                this._readyResolve();
+                this._readyResolve = null;
+            }
             
             if (window.isGuestMode && window.guestToken) {
                 this.send('JOIN_SESSION', { guestToken: window.guestToken });
@@ -98,6 +113,7 @@ class SocketManager {
         };
 
         this.ws.onclose = () => {
+            clearTimeout(connectTimeout);
             console.log('WebSocket disconnected. Reconnecting...');
             setTimeout(() => this.connect(), this.reconnectInterval);
             this.reconnectInterval = Math.min(this.reconnectInterval * 2, this.maxReconnectInterval);
@@ -204,7 +220,7 @@ function displayTimestamp(note, session) {
 function captureDraftTimestamp() {
     if (activeDraftTimestamp !== null) return;
     // Block draft timestamp capture when timer is stopped
-    if (currentSession && currentSession.timestamp_mode === 'timer' && !currentSession.started_at) {
+    if (currentSession && currentSession.timestamp_mode === 'timer' && (!currentSession.started_at || currentSession.stopped_at)) {
         return;
     }
     if (currentSession && currentSession.started_at) {
@@ -240,6 +256,10 @@ function renderQuickTags() {
         btn.textContent = tag;
         btn.setAttribute('aria-label', `Quick tag: ${tag}`);
         btn.onclick = () => {
+            // Block note creation if timer mode and timer not running
+            if (currentSession && currentSession.timestamp_mode === 'timer' && (!currentSession.started_at || currentSession.stopped_at)) {
+                return;
+            }
             const timestamp = Date.now();
             socket.send('CREATE_NOTE', {
                 payload: { content: tag, timestamp, color: selectedColor }
@@ -264,10 +284,12 @@ function updateRecordingState() {
     if (input) {
         const isTimerStopped = currentSession
             && currentSession.timestamp_mode === 'timer'
-            && !currentSession.started_at;
+            && (!currentSession.started_at || currentSession.stopped_at);
+
+        document.body.classList.toggle('timer-stopped', !!isTimerStopped);
 
         if (isTimerStopped) {
-            input.placeholder = 'Timer stopped — start timer to add notes';
+            input.placeholder = 'Timer stopped - start timer to add notes';
             input.disabled = true;
         } else if (!isRecording) {
             input.disabled = false;
@@ -320,14 +342,14 @@ function updateClock() {
             clockEl.textContent = formatDuration(ssm, 1);
             if (infoEl) infoEl.textContent = currentSession.name;
         }
-        if (headerTitle) headerTitle.textContent = currentSession.name;
+        if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
     } else {
         // No session selected
         const now = new Date();
         const ssm = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds() + (now.getMilliseconds() / 1000);
         clockEl.textContent = formatDuration(ssm, 1);
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = "";
+        if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
         if (infoEl) infoEl.textContent = "No Session";
     }
     updateRecordingState();
@@ -360,6 +382,15 @@ function updateTimerMenuVisibility() {
     startBtn.style.display = canStart ? 'flex' : 'none';
     stopBtn.style.display = isRunning ? 'flex' : 'none';
     resetBtn.style.display = hasElapsed ? 'flex' : 'none';
+}
+
+function updateSessionMenuVisibility() {
+    const items = ['menu-share-link', 'menu-export-reaper', 'menu-export-audition', 'menu-export-edl'];
+    const show = !!(currentSessionId && !window.isGuestMode);
+    items.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = show ? 'flex' : 'none';
+    });
 }
 
 async function startTimer() {
@@ -529,7 +560,8 @@ async function deleteSession(id) {
         const mobileExportBtn = document.getElementById('mobile-export-btn');
         if (mobileExportBtn) mobileExportBtn.disabled = true;
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = "";
+        if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
+        updateSessionMenuVisibility();
     }
 }
 
@@ -591,39 +623,99 @@ function renderNotes(notes) {
             timestampSpan.textContent = displayTimestamp(note, currentSession);
             timestampSpan.setAttribute('aria-label', `Timestamp: ${displayTimestamp(note, currentSession)}`);
 
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'content-wrapper';
+
             const contentSpan = document.createElement('span');
             contentSpan.className = 'content';
             contentSpan.textContent = note.content;
             contentSpan.setAttribute('aria-label', 'Note content');
 
+            const editArea = document.createElement('textarea');
+            editArea.className = 'edit-area';
+            editArea.setAttribute('aria-label', 'Edit note content');
+            editArea.rows = 1;
+
+            contentWrapper.appendChild(contentSpan);
+            contentWrapper.appendChild(editArea);
+
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'note-actions';
             actionsDiv.innerHTML = `
-                <button class="edit-btn" title="Edit Note" aria-label="Edit note">✎</button>
-                <button class="delete-btn" title="Delete Note" aria-label="Delete note">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="3 6 5 3 19 3 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-                <button class="save-btn" title="Save" style="display:none;" aria-label="Save note">✓</button>
-                <button class="cancel-btn" title="Cancel" style="display:none;" aria-label="Cancel editing">✕</button>
+                <button class="edit-btn" title="Edit Note" aria-label="Edit note">Edit</button>
+                <button class="save-btn" title="Save" aria-label="Save note">Save</button>
+                <button class="delete-btn" title="Delete Note" aria-label="Delete note">Delete</button>
+                <button class="confirm-del-btn" title="Confirm Delete" aria-label="Confirm delete">Confirm Del.</button>
+                <button class="cancel-btn" title="Cancel" aria-label="Cancel editing">Cancel</button>
             `;
 
             div.appendChild(timestampSpan);
-            div.appendChild(contentSpan);
+            div.appendChild(contentWrapper);
             div.appendChild(actionsDiv);
 
-            div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
-            div.querySelector('.delete-btn').onclick = () => deleteNote(div);
-            div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
-            div.querySelector('.save-btn').onclick = () => saveEdit(div);
-            div.onclick = () => {
-                if (window.innerWidth <= 768 && !div.classList.contains('editing')) {
-                    document.querySelectorAll('.note.reveal-actions').forEach(n => n !== div && n.classList.remove('reveal-actions'));
-                    div.classList.toggle('reveal-actions');
+            // Helper: close editing/delete-confirm on all other notes (desktop)
+            const closeOtherNotesActions = (self) => {
+                if (window.innerWidth > 768) {
+                    document.querySelectorAll('.note.editing, .note.delete-confirm').forEach(other => {
+                        if (other !== self) {
+                            if (other.classList.contains('editing')) toggleEditMode(other, false);
+                            other.classList.remove('delete-confirm');
+                        }
+                    });
                 }
             };
+
+            div.querySelector('.edit-btn').onclick = () => { closeOtherNotesActions(div); toggleEditMode(div, true); };
+            div.querySelector('.delete-btn').onclick = () => {
+                closeOtherNotesActions(div);
+                div.classList.remove('editing');
+                showDeleteConfirm(div);
+            };
+            div.querySelector('.save-btn').onclick = () => { closeOtherNotesActions(div); saveEdit(div); };
+            div.querySelector('.cancel-btn').onclick = () => {
+                closeOtherNotesActions(div);
+                if (div.classList.contains('editing')) {
+                    toggleEditMode(div, false);
+                } else if (div.classList.contains('delete-confirm')) {
+                    div.classList.remove('delete-confirm');
+                }
+            };
+            div.querySelector('.confirm-del-btn').onclick = () => { closeOtherNotesActions(div); deleteNote(div); };
+
+            // Long-press to enter edit mode (mobile)
+            let longPressTimer = null;
+            let longPressTriggered = false;
+
+            const startLongPress = (e) => {
+                if (window.innerWidth > 768) return;
+                if (div.classList.contains('editing')) return;
+                if (e.target.closest('.note-actions')) return;
+                longPressTriggered = false;
+                longPressTimer = setTimeout(() => {
+                    longPressTriggered = true;
+                    // Exit editing mode on all other notes
+                    document.querySelectorAll('.note.editing').forEach(other => {
+                        if (other !== div) toggleEditMode(other, false);
+                    });
+                    toggleEditMode(div, true);
+                }, 500);
+            };
+
+            const cancelLongPress = () => {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            };
+
+            div.addEventListener('touchstart', startLongPress, { passive: true });
+            div.addEventListener('touchend', (e) => {
+                cancelLongPress();
+            });
+            div.addEventListener('touchmove', cancelLongPress, { passive: true });
+            div.addEventListener('mousedown', startLongPress);
+            div.addEventListener('mouseup', (e) => {
+                if (!longPressTriggered) cancelLongPress();
+            });
+            div.addEventListener('mousemove', cancelLongPress);
 
             // Find correct insertion point
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
@@ -644,62 +736,74 @@ function renderNotes(notes) {
 }
 
 function toggleEditMode(noteEl, editing) {
-    const contentEl = noteEl.querySelector('.content');
-    const actions = ['edit-btn', 'save-btn', 'cancel-btn', 'delete-btn'].map(c => noteEl.querySelector('.' + c));
+    const wrapper = noteEl.querySelector('.content-wrapper');
+    const span = noteEl.querySelector('.content');
+    const ta = noteEl.querySelector('.edit-area');
 
     if (editing) {
         noteEl.classList.add('editing');
-        noteEl.dataset.originalContent = contentEl.textContent;
-        const textarea = document.createElement('textarea');
-        textarea.value = contentEl.textContent;
-        textarea.setAttribute('aria-label', 'Edit note content');
-        contentEl.replaceWith(textarea);
-        
-        textarea.oninput = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
-        textarea.onkeydown = (e) => {
+        noteEl.classList.remove('delete-confirm');
+
+        // Copy computed font styles from span to textarea for pixel-perfect match
+        const cs = getComputedStyle(span);
+        ta.style.fontFamily = cs.fontFamily;
+        ta.style.fontSize = cs.fontSize;
+        ta.style.lineHeight = cs.lineHeight;
+        ta.style.letterSpacing = cs.letterSpacing;
+
+        // Lock wrapper size to prevent layout shift
+        const rect = wrapper.getBoundingClientRect();
+        wrapper.style.width = rect.width + 'px';
+        wrapper.style.height = rect.height + 'px';
+
+        ta.value = span.textContent;
+        autosizeEditArea(ta);
+
+        ta.onkeydown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(noteEl); }
             else if (e.key === 'Escape') toggleEditMode(noteEl, false);
         };
-        textarea.onblur = () => setTimeout(() => {
-            if (noteEl.classList.contains('editing') && !document.activeElement.closest('.note-actions')) toggleEditMode(noteEl, false);
-        }, 150);
+        ta.oninput = () => {
+            autosizeEditArea(ta);
+            wrapper.style.height = ta.scrollHeight + 'px';
+        };
 
-        textarea.focus();
-        textarea.oninput();
-        actions[0].style.display = 'none'; // edit
-        actions[1].style.display = 'inline-block'; // save
-        actions[2].style.display = 'inline-block'; // cancel
-        if (actions[3]) actions[3].style.display = 'none'; // delete
+        ta.focus();
     } else {
         noteEl.classList.remove('editing');
-        const span = document.createElement('span');
-        span.className = 'content';
-        span.textContent = noteEl.dataset.originalContent;
-        noteEl.querySelector('textarea').replaceWith(span);
-        actions[0].style.display = 'inline-block';
-        actions[1].style.display = 'none';
-        actions[2].style.display = 'none';
-        if (actions[3]) actions[3].style.display = 'inline-block';
+        noteEl.classList.remove('delete-confirm');
+
+        // Copy value back to span
+        span.textContent = ta.value;
+
+        // Unlock wrapper
+        wrapper.style.width = '';
+        wrapper.style.height = '';
     }
+}
+
+function autosizeEditArea(ta) {
+    ta.style.height = '0px';
+    ta.style.height = ta.scrollHeight + 'px';
 }
 
 async function saveEdit(noteEl) {
     const noteId = noteEl.dataset.noteId;
-    const textarea = noteEl.querySelector('textarea');
-    if (!textarea) return;
-    const newContent = textarea.value.trim();
+    const ta = noteEl.querySelector('.edit-area');
+    if (!ta) return;
+    const newContent = ta.value.trim();
     if (!newContent) return;
 
     socket.send('UPDATE_NOTE', { noteId, content: newContent });
-    
-    noteEl.dataset.originalContent = newContent;
     toggleEditMode(noteEl, false);
 }
 
-async function deleteNote(noteEl) {
-    const noteId = noteEl.dataset.noteId;
-    if (!confirm('Are you sure you want to delete this note?')) return;
+function showDeleteConfirm(noteEl) {
+    noteEl.classList.add('delete-confirm');
+}
 
+function deleteNote(noteEl) {
+    const noteId = noteEl.dataset.noteId;
     socket.send('DELETE_NOTE', { noteId });
     noteEl.remove();
 }
@@ -770,9 +874,16 @@ async function init() {
         window.isGuestMode = true;
         window.guestToken = effectiveGuestToken;
         document.body.classList.add('guest-mode');
+        // Show connecting message while waiting for WebSocket
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'block';
     } else if (sessionMatch) {
         currentSessionId = sessionMatch[1];
-        selectSession(sessionMatch[1]);
+        // Show connecting message while waiting for WebSocket
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'block';
+        // Wait for WebSocket to be ready before joining to avoid dropped messages
+        socket.ready.then(() => selectSession(sessionMatch[1]));
     }
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
@@ -795,8 +906,44 @@ async function init() {
             toggleFpsModal(false);
             toggleTagsModal(false);
             toggleShareLinkModal(false);
+            toggleNewSessionModal(false);
         };
     }
+
+    const quickTagsToggle = document.getElementById('quick-tags-toggle');
+    const inputArea = document.getElementById('input-area');
+    if (quickTagsToggle && inputArea) {
+        quickTagsToggle.addEventListener('click', () => {
+            inputArea.classList.toggle('show-quicktags');
+        });
+    }
+
+    // Esc key closes all open modals, menus, popups, and sidebar
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        // Don't intercept Esc inside inputs/textarea (e.g. edit area handles its own Esc)
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+        closeSidebarFn();
+        toggleFpsModal(false);
+        toggleTagsModal(false);
+        toggleShareLinkModal(false);
+        toggleNewSessionModal(false);
+        toggleOverflow(false);
+        toggleExportMenu(false);
+        toggleColorPicker(false);
+
+        // Close timer warning modal
+        const timerModal = document.getElementById('timer-warning-modal');
+        if (timerModal) {
+            timerModal.style.display = 'none';
+            timerModal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Close quick tags bar
+        const qa = document.getElementById('input-area');
+        if (qa) qa.classList.remove('show-quicktags');
+    });
 
     // Close menus if clicking anywhere else
     document.addEventListener('click', (e) => {
@@ -826,9 +973,22 @@ async function init() {
     });
     
     const handleNewSession = () => {
-        const name = prompt('Enter session name:');
-        if (name) {
-            socket.send('CREATE_SESSION', { name });
+        closeSidebarFn();
+        toggleNewSessionModal(true);
+    };
+
+    const toggleNewSessionModal = (open) => {
+        const modal = document.getElementById('new-session-modal');
+        const backdrop = document.getElementById('bottom-sheet-backdrop');
+        const input = document.getElementById('new-session-name-input');
+        if (modal) modal.classList.toggle('open', open);
+        if (backdrop) {
+            backdrop.style.display = open ? 'block' : 'none';
+            backdrop.style.opacity = open ? '1' : '0';
+        }
+        if (open && input) {
+            input.value = '';
+            input.focus();
         }
     };
 
@@ -1097,23 +1257,15 @@ async function init() {
             const item = document.createElement('div');
             item.className = 'modal-tag-item';
             item.setAttribute('role', 'listitem');
-
-            const span = document.createElement('span');
-            span.textContent = tag;
-            item.appendChild(span);
-
-            const btn = document.createElement('button');
-            btn.className = 'delete-tag-btn';
-            btn.textContent = '×';
-            btn.title = 'Delete tag';
-            btn.setAttribute('aria-label', `Delete tag: ${tag}`);
-            btn.onclick = () => {
+            item.innerHTML = `
+                <span>${tag}</span>
+                <button class="delete-tag-btn" title="Delete tag" aria-label="Delete tag: ${tag}">×</button>
+            `;
+            item.querySelector('.delete-tag-btn').onclick = () => {
                 tagManager.removeTag(tag);
                 renderModalTags();
                 renderQuickTags();
             };
-            item.appendChild(btn);
-
             list.appendChild(item);
         });
     };
@@ -1131,6 +1283,32 @@ async function init() {
 
     const closeShareModalBtn = document.getElementById('close-share-modal');
     if (closeShareModalBtn) closeShareModalBtn.onclick = () => toggleShareLinkModal(false);
+
+    const createSessionBtn = document.getElementById('create-session-btn');
+    if (createSessionBtn) {
+        createSessionBtn.onclick = () => {
+            const input = document.getElementById('new-session-name-input');
+            const name = input?.value.trim();
+            if (name) {
+                socket.send('CREATE_SESSION', { name });
+                toggleNewSessionModal(false);
+            }
+        };
+    }
+
+    const cancelNewSessionBtn = document.getElementById('cancel-new-session-btn');
+    if (cancelNewSessionBtn) cancelNewSessionBtn.onclick = () => toggleNewSessionModal(false);
+
+    // Allow Enter key in the session name input to create
+    const newSessionNameInput = document.getElementById('new-session-name-input');
+    if (newSessionNameInput) {
+        newSessionNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createSessionBtn?.click();
+            }
+        });
+    }
 
     const shareLinkUrlInput = document.getElementById('share-link-url');
     if (shareLinkUrlInput) {
@@ -1166,22 +1344,18 @@ async function init() {
         const { session, notes } = data;
         
         document.body.classList.remove('session-not-found');
+        // Hide connecting message
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'none';
         currentSession = session;
         currentSessionId = session.id;
         
         const headerTitle = document.getElementById('header-session-title');
-        if (headerTitle) headerTitle.textContent = currentSession.name;
+        if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
         
         document.getElementById('input-area').style.display = 'block';
-        
-        document.getElementById('menu-export-reaper').style.display = 'flex';
-        document.getElementById('menu-export-audition').style.display = 'flex';
-        document.getElementById('menu-export-edl').style.display = 'flex';
-        
-        const menuShareLink = document.getElementById('menu-share-link');
-        if (menuShareLink) {
-            menuShareLink.style.display = window.isGuestMode ? 'none' : 'flex';
-        }
+
+        updateSessionMenuVisibility();
 
         const menuEditTags = document.getElementById('menu-edit-tags');
         if (menuEditTags) {
@@ -1207,13 +1381,10 @@ async function init() {
             document.body.classList.add('session-not-found');
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
-            document.getElementById('menu-export-reaper').style.display = 'none';
-            document.getElementById('menu-export-audition').style.display = 'none';
-            document.getElementById('menu-export-edl').style.display = 'none';
-            document.getElementById('menu-share-link').style.display = 'none';
+            updateSessionMenuVisibility();
 
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "";
+            if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             updateTimerMenuVisibility();
@@ -1233,7 +1404,7 @@ async function init() {
                 if (updated) {
                     currentSession = updated;
                     const headerTitle = document.getElementById('header-session-title');
-                    if (headerTitle) {
+                    if (headerTitle && headerTitle.textContent !== updated.name) {
                         console.log('Updating header title to:', updated.name);
                         headerTitle.textContent = updated.name;
                     }
@@ -1242,8 +1413,10 @@ async function init() {
                 } else {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
+                    currentSessionId = null;
                     const headerTitle = document.getElementById('header-session-title');
-                    if (headerTitle) headerTitle.textContent = "";
+                    if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
+                    updateSessionMenuVisibility();
                 }
             }
         }
@@ -1261,13 +1434,10 @@ async function init() {
             if (inputArea) inputArea.style.display = 'none';
             toggleExportMenu(false);
 
-            document.getElementById('menu-export-reaper').style.display = 'none';
-            document.getElementById('menu-export-audition').style.display = 'none';
-            document.getElementById('menu-export-edl').style.display = 'none';
-            document.getElementById('menu-share-link').style.display = 'none';
+            updateSessionMenuVisibility();
 
             const headerTitle = document.getElementById('header-session-title');
-            if (headerTitle) headerTitle.textContent = "";
+            if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             updateTimerMenuVisibility();
         }
     });
