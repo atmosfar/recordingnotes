@@ -608,12 +608,6 @@ function renderNotes(notes) {
 
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'note-actions';
-            actionsDiv.onclick = (e) => {
-                e.stopPropagation();
-                if (window.innerWidth <= 768) {
-                    div.classList.remove('reveal-actions');
-                }
-            };
             actionsDiv.innerHTML = `
                 <button class="edit-btn" title="Edit Note" aria-label="Edit note">✎</button>
                 <button class="delete-btn" title="Delete Note" aria-label="Delete note">
@@ -622,24 +616,52 @@ function renderNotes(notes) {
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                 </button>
-                <button class="save-btn" title="Save" style="display:none;" aria-label="Save note">✓</button>
-                <button class="cancel-btn" title="Cancel" style="display:none;" aria-label="Cancel editing">✕</button>
+                <button class="save-btn" title="Save" aria-label="Save note">✓</button>
+                <button class="cancel-btn" title="Cancel" aria-label="Cancel editing">✕</button>
+                <button class="confirm-del-btn" title="Confirm Delete" aria-label="Confirm delete">Confirm Del.</button>
             `;
 
             div.appendChild(timestampSpan);
             div.appendChild(contentSpan);
             div.appendChild(actionsDiv);
 
+            // Button handlers
             div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
-            div.querySelector('.delete-btn').onclick = () => deleteNote(div);
-            div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
+            div.querySelector('.delete-btn').onclick = () => showDeleteConfirm(div);
             div.querySelector('.save-btn').onclick = () => saveEdit(div);
-            div.onclick = () => {
-                if (window.innerWidth <= 768 && !div.classList.contains('editing')) {
-                    document.querySelectorAll('.note.reveal-actions').forEach(n => n !== div && n.classList.remove('reveal-actions'));
-                    div.classList.toggle('reveal-actions');
-                }
+            div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
+            div.querySelector('.confirm-del-btn').onclick = () => deleteNote(div);
+
+            // Long-press to enter edit mode (mobile)
+            let longPressTimer = null;
+            let longPressTriggered = false;
+
+            const startLongPress = (e) => {
+                if (window.innerWidth > 768) return;
+                if (div.classList.contains('editing')) return;
+                if (e.target.closest('.note-actions')) return;
+                longPressTriggered = false;
+                longPressTimer = setTimeout(() => {
+                    longPressTriggered = true;
+                    toggleEditMode(div, true);
+                }, 500);
             };
+
+            const cancelLongPress = () => {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            };
+
+            div.addEventListener('touchstart', startLongPress, { passive: true });
+            div.addEventListener('touchend', (e) => {
+                cancelLongPress();
+            });
+            div.addEventListener('touchmove', cancelLongPress, { passive: true });
+            div.addEventListener('mousedown', startLongPress);
+            div.addEventListener('mouseup', (e) => {
+                if (!longPressTriggered) cancelLongPress();
+            });
+            div.addEventListener('mousemove', cancelLongPress);
 
             // Find correct insertion point
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
@@ -661,11 +683,12 @@ function renderNotes(notes) {
 
 function toggleEditMode(noteEl, editing) {
     const contentEl = noteEl.querySelector('.content');
-    const actions = ['edit-btn', 'save-btn', 'cancel-btn', 'delete-btn'].map(c => noteEl.querySelector('.' + c));
 
     if (editing) {
         noteEl.classList.add('editing');
+        noteEl.classList.remove('delete-confirm');
         noteEl.dataset.originalContent = contentEl.textContent;
+
         const textarea = document.createElement('textarea');
         textarea.value = contentEl.textContent;
         textarea.setAttribute('aria-label', 'Edit note content');
@@ -683,20 +706,14 @@ function toggleEditMode(noteEl, editing) {
 
         textarea.focus();
         textarea.oninput();
-        actions[0].style.display = 'none'; // edit
-        actions[1].style.display = 'inline-block'; // save
-        actions[2].style.display = 'inline-block'; // cancel
-        if (actions[3]) actions[3].style.display = 'none'; // delete
     } else {
         noteEl.classList.remove('editing');
+        noteEl.classList.remove('delete-confirm');
+
         const span = document.createElement('span');
         span.className = 'content';
         span.textContent = noteEl.dataset.originalContent;
         noteEl.querySelector('textarea').replaceWith(span);
-        actions[0].style.display = 'inline-block';
-        actions[1].style.display = 'none';
-        actions[2].style.display = 'none';
-        if (actions[3]) actions[3].style.display = 'inline-block';
     }
 }
 
@@ -708,15 +725,17 @@ async function saveEdit(noteEl) {
     if (!newContent) return;
 
     socket.send('UPDATE_NOTE', { noteId, content: newContent });
-    
+
     noteEl.dataset.originalContent = newContent;
     toggleEditMode(noteEl, false);
 }
 
-async function deleteNote(noteEl) {
-    const noteId = noteEl.dataset.noteId;
-    if (!confirm('Are you sure you want to delete this note?')) return;
+function showDeleteConfirm(noteEl) {
+    noteEl.classList.add('delete-confirm');
+}
 
+function deleteNote(noteEl) {
+    const noteId = noteEl.dataset.noteId;
     socket.send('DELETE_NOTE', { noteId });
     noteEl.remove();
 }

@@ -324,7 +324,6 @@ body.dark-mode .user-count {
 .note-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; margin-left: 0.5rem; }
 .note:hover .note-actions { opacity: 1; }
 .note.editing .note-actions { opacity: 1; }
-.note.reveal-actions .note-actions { opacity: 1; }
 
 /* Buttons */
 .icon-btn { 
@@ -362,9 +361,36 @@ button#new-session-btn:active { transform: scale(0.98); }
 }
 .note-actions .delete-btn { font-size: 1.2rem; line-height: 1; }
 .note-actions button:hover { background-color: var(--hover-bg); color: var(--primary-color); }
-.note-actions .save-btn { color: var(--accent-green); }
-.note-actions .cancel-btn { color: #ff4d4d; }
 .note-actions .delete-btn:hover { color: #ff4d4d; }
+
+/* Button visibility: hidden by default, shown via .editing / .delete-confirm */
+.note-actions .save-btn,
+.note-actions .cancel-btn,
+.note-actions .confirm-del-btn { display: none; }
+
+.note.editing .note-actions .edit-btn,
+.note.editing .note-actions .delete-btn { display: none; }
+
+.note.editing .note-actions .save-btn,
+.note.editing .note-actions .cancel-btn { display: inline-flex; }
+
+.note.delete-confirm .note-actions .delete-btn { display: none; }
+.note.delete-confirm .note-actions .confirm-del-btn { display: inline-flex; }
+
+.note-actions .save-btn { color: var(--accent-green); }
+.note-actions .save-btn:hover { color: var(--accent-green); background-color: var(--hover-bg); }
+
+.note-actions .cancel-btn { color: #ff4d4d; }
+.note-actions .cancel-btn:hover { color: #ff4d4d; background-color: var(--hover-bg); }
+
+.note-actions .confirm-del-btn {
+    font-size: 0.85rem;
+    color: #ff4d4d;
+}
+.note-actions .confirm-del-btn:hover {
+    color: #ff4d4d;
+    background-color: var(--hover-bg);
+}
 
 .session-actions button svg, .note-actions button svg {
     display: block;
@@ -606,42 +632,11 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     .session-item { height: var(--session-item-height); box-sizing: border-box; align-items: center; }
     .session-item .session-name { max-width: 100%; transition: max-width 0.2s; }
     
-    .note { grid-template-columns: 80px 1fr; gap: 0.5rem; padding: 0.5rem; position: relative; }
+    .note { grid-template-columns: 80px 1fr; gap: 0.5rem; padding: 0.5rem; }
     .note .timestamp { font-size: 0.75rem; padding-right: 0.25rem; }
-    .note-actions { 
-        position: absolute; 
-        right: 0; 
-        top: 0; 
-        bottom: 0; 
-        width: 100%; 
-        height: 100%; 
-        display: flex; 
-        justify-content: flex-end; 
-        align-items: center; 
-        opacity: 0; 
-        pointer-events: none;
-        padding-right: 0.75rem;
-        transition: opacity 0.2s;
-        background: linear-gradient(to right, transparent 0%, var(--card-bg) 75%);
-        z-index: 10;
-    }
-    .note.reveal-actions .note-actions, .note.editing .note-actions { 
-        opacity: 1; 
-        visibility: visible;
-        pointer-events: auto;
-    }
+    .note-actions { display: none; }
+    .note.editing .note-actions { display: flex; }
 
-    .note.editing .note-actions {
-        position: static;
-        width: auto;
-        height: auto;
-        background: var(--card-bg);
-        border-radius: var(--radius-sm);
-        padding: 0.25rem 0.5rem;
-        margin: 0;
-        justify-content: flex-end;
-    }
-    
     #mobile-color-toggle {
         display: flex; align-items: center; justify-content: center;
         width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
