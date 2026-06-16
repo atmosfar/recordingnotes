@@ -16,6 +16,14 @@
 - Removed when Save/Cancel/Delete completes
 - CSS handles all button visibility — zero inline `style.display` toggling
 
+### Overlay textarea (no layout shift)
+- `.content-wrapper` holds both `.content` (span) and `.edit-area` (textarea)
+- Textarea is `position: absolute; inset: 0` over the span — always present in DOM
+- On edit: wrapper size locked (`width` + `minHeight`), span faded to `opacity: 0`, textarea shown
+- On exit: value copied back to span, wrapper unlocked
+- `getComputedStyle` copies font metrics from span → textarea for pixel-perfect match
+- `autosizeEditArea` resets height to 0 then sets to `scrollHeight` for auto-grow
+
 ### Delete confirm guard: `.delete-confirm`
 - Added when Delete is first pressed (hides Delete, shows "Confirm Del.")
 - Removed when exiting edit mode

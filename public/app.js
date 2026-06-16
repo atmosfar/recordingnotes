@@ -601,10 +601,21 @@ function renderNotes(notes) {
             timestampSpan.textContent = displayTimestamp(note, currentSession);
             timestampSpan.setAttribute('aria-label', `Timestamp: ${displayTimestamp(note, currentSession)}`);
 
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'content-wrapper';
+
             const contentSpan = document.createElement('span');
             contentSpan.className = 'content';
             contentSpan.textContent = note.content;
             contentSpan.setAttribute('aria-label', 'Note content');
+
+            const editArea = document.createElement('textarea');
+            editArea.className = 'edit-area';
+            editArea.setAttribute('aria-label', 'Edit note content');
+            editArea.rows = 1;
+
+            contentWrapper.appendChild(contentSpan);
+            contentWrapper.appendChild(editArea);
 
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'note-actions';
@@ -622,7 +633,7 @@ function renderNotes(notes) {
             `;
 
             div.appendChild(timestampSpan);
-            div.appendChild(contentSpan);
+            div.appendChild(contentWrapper);
             div.appendChild(actionsDiv);
 
             // Button handlers
@@ -682,51 +693,62 @@ function renderNotes(notes) {
 }
 
 function toggleEditMode(noteEl, editing) {
-    const contentEl = noteEl.querySelector('.content');
+    const wrapper = noteEl.querySelector('.content-wrapper');
+    const span = noteEl.querySelector('.content');
+    const ta = noteEl.querySelector('.edit-area');
 
     if (editing) {
         noteEl.classList.add('editing');
         noteEl.classList.remove('delete-confirm');
-        noteEl.dataset.originalContent = contentEl.textContent;
 
-        const textarea = document.createElement('textarea');
-        textarea.value = contentEl.textContent;
-        textarea.setAttribute('aria-label', 'Edit note content');
-        contentEl.replaceWith(textarea);
-        textarea.style.height = contentEl.offsetHeight + 'px';
+        // Copy computed font styles from span to textarea for pixel-perfect match
+        const cs = getComputedStyle(span);
+        ta.style.fontFamily = cs.fontFamily;
+        ta.style.fontSize = cs.fontSize;
+        ta.style.lineHeight = cs.lineHeight;
+        ta.style.letterSpacing = cs.letterSpacing;
 
-        textarea.oninput = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
-        textarea.onkeydown = (e) => {
+        // Lock wrapper size to prevent layout shift
+        const rect = wrapper.getBoundingClientRect();
+        wrapper.style.width = rect.width + 'px';
+        wrapper.style.minHeight = rect.height + 'px';
+
+        ta.value = span.textContent;
+        autosizeEditArea(ta);
+
+        ta.onkeydown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(noteEl); }
             else if (e.key === 'Escape') toggleEditMode(noteEl, false);
         };
-        textarea.onblur = () => setTimeout(() => {
-            if (noteEl.classList.contains('editing') && !document.activeElement.closest('.note-actions')) toggleEditMode(noteEl, false);
-        }, 150);
+        ta.oninput = () => autosizeEditArea(ta);
 
-        textarea.focus();
-        textarea.oninput();
+        ta.focus();
     } else {
         noteEl.classList.remove('editing');
         noteEl.classList.remove('delete-confirm');
 
-        const span = document.createElement('span');
-        span.className = 'content';
-        span.textContent = noteEl.dataset.originalContent;
-        noteEl.querySelector('textarea').replaceWith(span);
+        // Copy value back to span
+        span.textContent = ta.value;
+
+        // Unlock wrapper
+        wrapper.style.width = '';
+        wrapper.style.minHeight = '';
     }
+}
+
+function autosizeEditArea(ta) {
+    ta.style.height = '0px';
+    ta.style.height = ta.scrollHeight + 'px';
 }
 
 async function saveEdit(noteEl) {
     const noteId = noteEl.dataset.noteId;
-    const textarea = noteEl.querySelector('textarea');
-    if (!textarea) return;
-    const newContent = textarea.value.trim();
+    const ta = noteEl.querySelector('.edit-area');
+    if (!ta) return;
+    const newContent = ta.value.trim();
     if (!newContent) return;
 
     socket.send('UPDATE_NOTE', { noteId, content: newContent });
-
-    noteEl.dataset.originalContent = newContent;
     toggleEditMode(noteEl, false);
 }
 

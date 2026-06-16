@@ -319,7 +319,32 @@ body.dark-mode .user-count {
     position: relative;
 }
 .note .timestamp { color: var(--timestamp-color); font-family: var(--font-mono); font-size: 0.85rem; padding-right: 0.5rem; }
-.note .content { word-break: break-word; padding-left: 0.5rem; overflow: hidden; line-height: 1.4; }
+
+/* Content wrapper: holds span + overlay textarea, locks size during editing */
+.content-wrapper { position: relative; min-height: 1.4em; }
+.content-wrapper .content { word-break: break-word; padding-left: 0.5rem; overflow: hidden; line-height: 1.4; display: block; transition: opacity 0.15s; }
+
+/* Edit textarea: absolutely positioned over the span — zero layout shift */
+.edit-area {
+    position: absolute; inset: 0;
+    margin: 0;
+    padding: inherit;
+    border: none; border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit; font-size: inherit; line-height: inherit;
+    letter-spacing: inherit; text-transform: inherit; text-align: inherit;
+    resize: none; overflow: auto;
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-sizing: border-box;
+    display: none;
+    transition: opacity 0.15s;
+}
+
+.note.editing .content-wrapper .content { opacity: 0; pointer-events: none; }
+.note.editing .content-wrapper .edit-area { display: block; opacity: 1; }
 
 .note-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; margin-left: 0.5rem; }
 .note:hover .note-actions { opacity: 1; }
@@ -404,6 +429,13 @@ button#new-session-btn:active { transform: scale(0.98); }
     color: var(--text-color); resize: none; overflow: hidden;
     box-sizing: border-box;
     word-break: break-word; padding-left: 0.5rem;
+}
+
+/* .edit-area overrides for the overlay textarea */
+.edit-area {
+    width: 100%;
+    padding: 0;
+    padding-left: 0.5rem;
 }
 
 #input-area { padding: 1rem; border-top: 1px solid var(--border-color); background: transparent; }
