@@ -434,11 +434,11 @@ button#new-session-btn:active { transform: scale(0.98); }
 .note-actions .cancel-btn,
 .note-actions .confirm-del-btn { display: none; }
 
-.note.editing .note-actions .edit-btn,
-.note.editing .note-actions .delete-btn { display: none; }
+.note.editing .note-actions .edit-btn { display: none; }
 
 .note.editing .note-actions .save-btn,
-.note.editing .note-actions .cancel-btn { display: inline-flex; }
+.note.editing .note-actions .cancel-btn,
+.note.editing .note-actions .delete-btn { display: inline-flex; }
 
 .note.delete-confirm .note-actions .delete-btn { display: none; }
 .note.delete-confirm .note-actions .confirm-del-btn { display: inline-flex; }
