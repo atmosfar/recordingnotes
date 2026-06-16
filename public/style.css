@@ -309,7 +309,7 @@ body.dark-mode .user-count {
 
 .note {
     display: grid;
-    grid-template-columns: 95px 1fr auto;
+    grid-template-columns: 95px 1fr minmax(0, 180px);
     gap: 1rem;
     padding: 0.6rem 0.75rem;
     border-radius: var(--radius-sm);
@@ -346,7 +346,7 @@ body.dark-mode .user-count {
 .note.editing .content-wrapper .content { opacity: 0; pointer-events: none; }
 .note.editing .content-wrapper .edit-area { display: block; opacity: 1; }
 
-.note-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; margin-left: 0.5rem; }
+.note-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; opacity: 0; transition: opacity 0.2s; margin-left: 0.5rem; justify-content: flex-end; }
 .note:hover .note-actions { opacity: 1; }
 .note.editing .note-actions { opacity: 1; }
 
