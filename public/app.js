@@ -60,6 +60,8 @@ class SocketManager {
         this.reconnectInterval = 1000;
         this.maxReconnectInterval = 30000;
         this.listeners = new Map();
+        this._readyResolve = null;
+        this.ready = new Promise(resolve => { this._readyResolve = resolve; });
         this.connect();
     }
 
@@ -74,6 +76,10 @@ class SocketManager {
         this.ws.onopen = () => {
             console.log('WebSocket connected');
             this.reconnectInterval = 1000;
+            if (this._readyResolve) {
+                this._readyResolve();
+                this._readyResolve = null;
+            }
             
             if (window.isGuestMode && window.guestToken) {
                 this.send('JOIN_SESSION', { guestToken: window.guestToken });
@@ -860,7 +866,8 @@ async function init() {
         document.body.classList.add('guest-mode');
     } else if (sessionMatch) {
         currentSessionId = sessionMatch[1];
-        selectSession(sessionMatch[1]);
+        // Wait for WebSocket to be ready before joining to avoid dropped messages
+        socket.ready.then(() => selectSession(sessionMatch[1]));
     }
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
