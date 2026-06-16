@@ -322,7 +322,7 @@ body.dark-mode .user-count {
 
 /* Content wrapper: holds span + overlay textarea, locks size during editing */
 .content-wrapper { position: relative; min-height: 1.4em; }
-.content-wrapper .content { word-break: break-word; padding-left: 0.5rem; overflow: hidden; line-height: 1.4; display: block; transition: opacity 0.15s; }
+.content-wrapper .content { word-break: break-word; padding-left: 0.5rem; overflow: hidden; line-height: 1.4; display: block; transition: opacity 0.15s; white-space: pre-wrap; }
 
 /* Edit textarea: absolutely positioned over the span — zero layout shift */
 .edit-area {

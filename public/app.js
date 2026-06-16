@@ -719,7 +719,7 @@ function toggleEditMode(noteEl, editing) {
         // Lock wrapper size to prevent layout shift
         const rect = wrapper.getBoundingClientRect();
         wrapper.style.width = rect.width + 'px';
-        wrapper.style.minHeight = rect.height + 'px';
+        wrapper.style.height = rect.height + 'px';
 
         ta.value = span.textContent;
         autosizeEditArea(ta);
@@ -728,7 +728,10 @@ function toggleEditMode(noteEl, editing) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(noteEl); }
             else if (e.key === 'Escape') toggleEditMode(noteEl, false);
         };
-        ta.oninput = () => autosizeEditArea(ta);
+        ta.oninput = () => {
+            autosizeEditArea(ta);
+            wrapper.style.height = ta.scrollHeight + 'px';
+        };
 
         ta.focus();
     } else {
@@ -740,7 +743,7 @@ function toggleEditMode(noteEl, editing) {
 
         // Unlock wrapper
         wrapper.style.width = '';
-        wrapper.style.minHeight = '';
+        wrapper.style.height = '';
     }
 }
 
