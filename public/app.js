@@ -633,9 +633,18 @@ function renderNotes(notes) {
 
             // Button handlers
             div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
-            div.querySelector('.delete-btn').onclick = () => showDeleteConfirm(div);
+            div.querySelector('.delete-btn').onclick = () => {
+                div.classList.remove('editing');
+                showDeleteConfirm(div);
+            };
             div.querySelector('.save-btn').onclick = () => saveEdit(div);
-            div.querySelector('.cancel-btn').onclick = () => toggleEditMode(div, false);
+            div.querySelector('.cancel-btn').onclick = () => {
+                if (div.classList.contains('editing')) {
+                    toggleEditMode(div, false);
+                } else if (div.classList.contains('delete-confirm')) {
+                    div.classList.remove('delete-confirm');
+                }
+            };
             div.querySelector('.confirm-del-btn').onclick = () => deleteNote(div);
 
             // Long-press to enter edit mode (mobile)
@@ -649,6 +658,10 @@ function renderNotes(notes) {
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
+                    // Exit editing mode on all other notes
+                    document.querySelectorAll('.note.editing').forEach(other => {
+                        if (other !== div) toggleEditMode(other, false);
+                    });
                     toggleEditMode(div, true);
                 }, 500);
             };
