@@ -204,7 +204,7 @@ function displayTimestamp(note, session) {
 function captureDraftTimestamp() {
     if (activeDraftTimestamp !== null) return;
     // Block draft timestamp capture when timer is stopped
-    if (currentSession && currentSession.timestamp_mode === 'timer' && !currentSession.started_at) {
+    if (currentSession && currentSession.timestamp_mode === 'timer' && (!currentSession.started_at || currentSession.stopped_at)) {
         return;
     }
     if (currentSession && currentSession.started_at) {
@@ -240,6 +240,10 @@ function renderQuickTags() {
         btn.textContent = tag;
         btn.setAttribute('aria-label', `Quick tag: ${tag}`);
         btn.onclick = () => {
+            // Block note creation if timer mode and timer not running
+            if (currentSession && currentSession.timestamp_mode === 'timer' && (!currentSession.started_at || currentSession.stopped_at)) {
+                return;
+            }
             const timestamp = Date.now();
             socket.send('CREATE_NOTE', {
                 payload: { content: tag, timestamp, color: selectedColor }
@@ -264,10 +268,12 @@ function updateRecordingState() {
     if (input) {
         const isTimerStopped = currentSession
             && currentSession.timestamp_mode === 'timer'
-            && !currentSession.started_at;
+            && (!currentSession.started_at || currentSession.stopped_at);
+
+        document.body.classList.toggle('timer-stopped', !!isTimerStopped);
 
         if (isTimerStopped) {
-            input.placeholder = 'Timer stopped — start timer to add notes';
+            input.placeholder = 'Timer stopped - start timer to add notes';
             input.disabled = true;
         } else if (!isRecording) {
             input.disabled = false;
@@ -875,6 +881,33 @@ async function init() {
             inputArea.classList.toggle('show-quicktags');
         });
     }
+
+    // Esc key closes all open modals, menus, popups, and sidebar
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        // Don't intercept Esc inside inputs/textarea (e.g. edit area handles its own Esc)
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+        closeSidebarFn();
+        toggleFpsModal(false);
+        toggleTagsModal(false);
+        toggleShareLinkModal(false);
+        toggleNewSessionModal(false);
+        toggleOverflow(false);
+        toggleExportMenu(false);
+        toggleColorPicker(false);
+
+        // Close timer warning modal
+        const timerModal = document.getElementById('timer-warning-modal');
+        if (timerModal) {
+            timerModal.style.display = 'none';
+            timerModal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Close quick tags bar
+        const qa = document.getElementById('input-area');
+        if (qa) qa.classList.remove('show-quicktags');
+    });
 
     // Close menus if clicking anywhere else
     document.addEventListener('click', (e) => {

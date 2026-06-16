@@ -100,7 +100,9 @@ body {
 }
 
 /* Recording Indicator / Status Bar */
-body.recording::after {
+body.recording::after,
+body.session-not-found::after,
+body.timer-stopped::after {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -110,6 +112,10 @@ body.recording::after {
 }
 
 body.session-not-found {
+    --status-bar-color: var(--error-yellow);
+}
+
+body.timer-stopped {
     --status-bar-color: var(--error-yellow);
 }
 

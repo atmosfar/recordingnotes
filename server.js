@@ -368,6 +368,11 @@ function setupWebSocket(httpServer) {
           const db = getDb();
           const { payload } = data;
           if (ws.currentSessionId) {
+            // Block note creation if timer mode and timer not running
+            const session = sessions.getSession(db, ws.currentSessionId);
+            if (session && session.timestamp_mode === 'timer' && !session.started_at) {
+              return ws.send(JSON.stringify({ type: 'ERROR', message: 'Timer is not running. Start the timer to add notes.' }));
+            }
             notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
             broadcastNoteUpdate(ws.currentSessionId);
           }
