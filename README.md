@@ -91,6 +91,7 @@ Control sessions directly from any HTTP client (Bitfocus Companion, scripts, etc
 | `create` | `name` (required) | Create a new session |
 | `start` | `id` (required) | Mark an existing session as active |
 | `stop` | `id` (required) | Mark an existing session as completed |
+| `add_note` | `id` (required), `text` (required) | Add a timestamped note to an existing session |
 
 Example curl:
 
@@ -117,6 +118,14 @@ curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
 
 # Successful response
 {"status":"stopped","id":"1"}
+
+# Add a note to the session
+curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"add_note","id":1,"text":"Great point about latency"}'
+
+# Successful response
+{"id":1,"status":"created"}
 ```
 
 ## Requirements
