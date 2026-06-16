@@ -864,8 +864,14 @@ async function init() {
         window.isGuestMode = true;
         window.guestToken = effectiveGuestToken;
         document.body.classList.add('guest-mode');
+        // Show connecting message while waiting for WebSocket
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'block';
     } else if (sessionMatch) {
         currentSessionId = sessionMatch[1];
+        // Show connecting message while waiting for WebSocket
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'block';
         // Wait for WebSocket to be ready before joining to avoid dropped messages
         socket.ready.then(() => selectSession(sessionMatch[1]));
     }
@@ -1328,6 +1334,9 @@ async function init() {
         const { session, notes } = data;
         
         document.body.classList.remove('session-not-found');
+        // Hide connecting message
+        const connectingMsg = document.getElementById('connecting-message');
+        if (connectingMsg) connectingMsg.style.display = 'none';
         currentSession = session;
         currentSessionId = session.id;
         
