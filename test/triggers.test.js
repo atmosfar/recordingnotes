@@ -259,4 +259,206 @@ describe('Triggers API', () => {
     const data = await res.json();
     assert.ok(data.error);
   });
+
+  // T63: Triggers add_note action (clock mode)
+  test('T63: Triggers add_note creates a note in clock mode session', async () => {
+    // Create a session (default: clock mode)
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Add Note Test' })
+    });
+    const { id } = await createRes.json();
+
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id, text: 'Trigger note' })
+    });
+
+    assert.strictEqual(res.status, 201);
+    const data = await res.json();
+    assert.ok(data.id);
+    assert.strictEqual(data.status, 'created');
+
+    // Verify in DB
+    initDb();
+    const db = getDb();
+    const note = db.prepare('SELECT * FROM notes WHERE id = ?').get(data.id);
+    assert.ok(note);
+    assert.strictEqual(note.content, 'Trigger note');
+    assert.strictEqual(note.session_id, id);
+    assert.ok(note.timestamp_ms);
+  });
+
+  // T64: Triggers add_note blocked when timer stopped
+  test('T64: Triggers add_note returns 400 when timer is stopped', async () => {
+    // Create and start a session
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Add Note Stopped' })
+    });
+    const { id } = await createRes.json();
+
+    // Start timer
+    await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'start', id })
+    });
+
+    // Stop timer
+    await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'stop', id })
+    });
+
+    // Try to add note
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id, text: 'Should fail' })
+    });
+
+    assert.strictEqual(res.status, 400);
+    const data = await res.json();
+    assert.ok(data.error);
+
+    // Verify no note was created
+    initDb();
+    const db = getDb();
+    const notes = db.prepare('SELECT COUNT(*) as count FROM notes WHERE session_id = ?').get(id);
+    assert.strictEqual(notes.count, 0);
+  });
+
+  // T65: Triggers add_note returns 400 when id is missing
+  test('T65: Triggers add_note returns 400 when id is missing', async () => {
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', text: 'No id' })
+    });
+
+    assert.strictEqual(res.status, 400);
+    const data = await res.json();
+    assert.ok(data.error);
+  });
+
+  // T66: Triggers add_note returns 400 when text is missing
+  test('T66: Triggers add_note returns 400 when text is missing', async () => {
+    // Create a session
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Add Note Missing Text' })
+    });
+    const { id } = await createRes.json();
+
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id })
+    });
+
+    assert.strictEqual(res.status, 400);
+    const data = await res.json();
+    assert.ok(data.error);
+  });
+
+  // T67: Triggers add_note returns 400 for non-existent session
+  test('T67: Triggers add_note returns 404 for non-existent session', async () => {
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id: 99999, text: 'Ghost session' })
+    });
+
+    assert.strictEqual(res.status, 404);
+    const data = await res.json();
+    assert.ok(data.error);
+  });
+
+  // T68: Triggers add_note trims text
+  test('T68: Triggers add_note trims whitespace from text', async () => {
+    // Create a session
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Trim Test' })
+    });
+    const { id } = await createRes.json();
+
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id, text: '  trimmed  ' })
+    });
+
+    assert.strictEqual(res.status, 201);
+
+    // Verify text was trimmed
+    initDb();
+    const db = getDb();
+    const note = db.prepare('SELECT content FROM notes WHERE session_id = ? ORDER BY id DESC LIMIT 1').get(id);
+    assert.strictEqual(note.content, 'trimmed');
+  });
+
+  // T69: Triggers add_note returns 400 for empty text after trim
+  test('T69: Triggers add_note returns 400 for whitespace-only text', async () => {
+    // Create a session
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Empty Text Test' })
+    });
+    const { id } = await createRes.json();
+
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id, text: '   ' })
+    });
+
+    assert.strictEqual(res.status, 400);
+    const data = await res.json();
+    assert.ok(data.error);
+  });
+
+  // T70: Triggers add_note works with timer running
+  test('T70: Triggers add_note succeeds when timer is running', async () => {
+    // Create and start a session
+    const createRes = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: 'Timer Running Note' })
+    });
+    const { id } = await createRes.json();
+
+    // Start timer
+    await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'start', id })
+    });
+
+    // Add note while timer is running
+    const res = await fetch(`${baseUrl}/api/triggers?token=${apiToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', id, text: 'While running' })
+    });
+
+    assert.strictEqual(res.status, 201);
+    const data = await res.json();
+    assert.ok(data.id);
+
+    // Verify in DB
+    initDb();
+    const db = getDb();
+    const note = db.prepare('SELECT * FROM notes WHERE id = ?').get(data.id);
+    assert.ok(note);
+    assert.strictEqual(note.content, 'While running');
+  });
 });

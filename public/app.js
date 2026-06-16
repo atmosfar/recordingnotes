@@ -57,8 +57,8 @@ const tagManager = new TagManager();
 class SocketManager {
     constructor() {
         this.ws = null;
-        this.reconnectInterval = 1000;
-        this.maxReconnectInterval = 30000;
+        this.reconnectInterval = 500;
+        this.maxReconnectInterval = 15000;
         this.listeners = new Map();
         this._readyResolve = null;
         this.ready = new Promise(resolve => { this._readyResolve = resolve; });
@@ -73,9 +73,18 @@ class SocketManager {
         }
         this.ws = new WebSocket(url);
 
+        // Connection timeout: if onopen doesn't fire within 5s, close and reconnect
+        const connectTimeout = setTimeout(() => {
+            if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+                console.warn('WebSocket connection timed out, reconnecting...');
+                this.ws.close();
+            }
+        }, 5000);
+
         this.ws.onopen = () => {
+            clearTimeout(connectTimeout);
             console.log('WebSocket connected');
-            this.reconnectInterval = 1000;
+            this.reconnectInterval = 500;
             if (this._readyResolve) {
                 this._readyResolve();
                 this._readyResolve = null;
@@ -104,6 +113,7 @@ class SocketManager {
         };
 
         this.ws.onclose = () => {
+            clearTimeout(connectTimeout);
             console.log('WebSocket disconnected. Reconnecting...');
             setTimeout(() => this.connect(), this.reconnectInterval);
             this.reconnectInterval = Math.min(this.reconnectInterval * 2, this.maxReconnectInterval);
