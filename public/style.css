@@ -379,14 +379,55 @@ button#new-session-btn:active { transform: scale(0.98); }
 }
 #sidebar-open:hover { color: var(--primary-color); }
 
+/* Note action buttons: modal-style text buttons */
 .note-actions button {
-    background: none; border: none; color: var(--secondary-color); cursor: pointer;
-    padding: 4px 6px; font-size: 1rem; border-radius: var(--radius-sm); transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.2s, transform 0.1s;
+    border: none;
+    line-height: 1.2;
 }
-.note-actions .delete-btn { font-size: 1.2rem; line-height: 1; }
-.note-actions button:hover { background-color: var(--hover-bg); color: var(--primary-color); }
-.note-actions .delete-btn:hover { color: #ff4d4d; }
+.note-actions button:active { transform: scale(0.97); }
+
+/* Edit: primary */
+.note-actions .edit-btn {
+    background-color: var(--primary-color);
+    color: var(--color-white);
+}
+.note-actions .edit-btn:hover { filter: brightness(1.1); }
+
+/* Delete: red */
+.note-actions .delete-btn {
+    background-color: var(--recording-red);
+    color: var(--color-white);
+}
+.note-actions .delete-btn:hover { filter: brightness(1.1); }
+
+/* Save: primary */
+.note-actions .save-btn {
+    background-color: var(--primary-color);
+    color: var(--color-white);
+}
+.note-actions .save-btn:hover { filter: brightness(1.1); }
+
+/* Cancel: secondary */
+.note-actions .cancel-btn {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+.note-actions .cancel-btn:hover { background: var(--hover-bg); }
+
+/* Confirm Del.: red */
+.note-actions .confirm-del-btn {
+    background-color: var(--recording-red);
+    color: var(--color-white);
+}
+.note-actions .confirm-del-btn:hover { filter: brightness(1.1); }
 
 /* Button visibility: hidden by default, shown via .editing / .delete-confirm */
 .note-actions .save-btn,
@@ -402,22 +443,7 @@ button#new-session-btn:active { transform: scale(0.98); }
 .note.delete-confirm .note-actions .delete-btn { display: none; }
 .note.delete-confirm .note-actions .confirm-del-btn { display: inline-flex; }
 
-.note-actions .save-btn { color: var(--accent-green); }
-.note-actions .save-btn:hover { color: var(--accent-green); background-color: var(--hover-bg); }
-
-.note-actions .cancel-btn { color: #ff4d4d; }
-.note-actions .cancel-btn:hover { color: #ff4d4d; background-color: var(--hover-bg); }
-
-.note-actions .confirm-del-btn {
-    font-size: 0.85rem;
-    color: #ff4d4d;
-}
-.note-actions .confirm-del-btn:hover {
-    color: #ff4d4d;
-    background-color: var(--hover-bg);
-}
-
-.session-actions button svg, .note-actions button svg {
+.session-actions button svg {
     display: block;
     pointer-events: none;
 }
