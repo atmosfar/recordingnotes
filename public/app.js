@@ -637,21 +637,34 @@ function renderNotes(notes) {
             div.appendChild(contentWrapper);
             div.appendChild(actionsDiv);
 
-            // Button handlers
-            div.querySelector('.edit-btn').onclick = () => toggleEditMode(div, true);
+            // Helper: close editing/delete-confirm on all other notes (desktop)
+            const closeOtherNotesActions = (self) => {
+                if (window.innerWidth > 768) {
+                    document.querySelectorAll('.note.editing, .note.delete-confirm').forEach(other => {
+                        if (other !== self) {
+                            if (other.classList.contains('editing')) toggleEditMode(other, false);
+                            other.classList.remove('delete-confirm');
+                        }
+                    });
+                }
+            };
+
+            div.querySelector('.edit-btn').onclick = () => { closeOtherNotesActions(div); toggleEditMode(div, true); };
             div.querySelector('.delete-btn').onclick = () => {
+                closeOtherNotesActions(div);
                 div.classList.remove('editing');
                 showDeleteConfirm(div);
             };
-            div.querySelector('.save-btn').onclick = () => saveEdit(div);
+            div.querySelector('.save-btn').onclick = () => { closeOtherNotesActions(div); saveEdit(div); };
             div.querySelector('.cancel-btn').onclick = () => {
+                closeOtherNotesActions(div);
                 if (div.classList.contains('editing')) {
                     toggleEditMode(div, false);
                 } else if (div.classList.contains('delete-confirm')) {
                     div.classList.remove('delete-confirm');
                 }
             };
-            div.querySelector('.confirm-del-btn').onclick = () => deleteNote(div);
+            div.querySelector('.confirm-del-btn').onclick = () => { closeOtherNotesActions(div); deleteNote(div); };
 
             // Long-press to enter edit mode (mobile)
             let longPressTimer = null;
