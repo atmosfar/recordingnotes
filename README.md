@@ -133,6 +133,30 @@ curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
 - Node.js >= 23.9.0 for native `node:sqlite`
 - Best used with a https server + proxy manager, eg [Caddy](https://github.com/caddyserver/caddy)
 
+## Clock Synchronization
+
+Recording Notes uses the server's system clock for timestamps and the client's clock for timer display. If the server and client devices have drifted clocks, timer start/stop times and note timestamps will be inaccurate.
+
+Enable NTP on all devices (server and clients) to keep clocks in sync.
+
+**Debian/Ubuntu:**
+```bash
+sudo apt install systemd-timesyncd
+sudo timedatectl set-ntp true
+```
+If `timedatectl` reports "NTP not supported", fall back to:
+```bash
+sudo apt install ntpdate
+sudo ntpdate -s pool.ntp.org
+```
+
+**macOS:** (enabled by default)
+```bash
+sudo sntp -S pool.ntp.org  # force immediate sync
+```
+
+Verify with `timedatectl status` — look for `System clock synchronized: yes`.
+
 ## License
 
 MIT
