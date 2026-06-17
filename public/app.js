@@ -907,7 +907,11 @@ const closeSidebarFn = () => {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        backdrop.style.display = 'none';
+        backdrop.style.opacity = '0';
+    }
 };
 
 async function init() {
@@ -1080,7 +1084,11 @@ async function init() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('bottom-sheet-backdrop');
             if (sidebar) sidebar.classList.add('open');
-            if (backdrop) backdrop.classList.add('open');
+            if (backdrop) {
+                backdrop.classList.add('open');
+                backdrop.style.display = 'block';
+                backdrop.style.opacity = '1';
+            }
         };
     }
     
