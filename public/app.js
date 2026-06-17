@@ -1400,10 +1400,9 @@ async function init() {
         currentSession = session;
         currentSessionId = session.id;
         
-        // Sync clientRunStart if timer is already running
+        // Sync clientRunStart if timer is already running (page load/reconnect)
         if (session.timestamp_mode === 'timer' && session.started_at && !session.stopped_at) {
-            const serverStart = new Date(session.started_at).getTime();
-            clientRunStart = Date.now() - (Date.now() - serverStart);
+            clientRunStart = new Date(session.started_at).getTime();
         } else {
             clientRunStart = null;
         }
@@ -1462,8 +1461,9 @@ async function init() {
                 if (updated) {
                     currentSession = updated;
                     if (updated.timestamp_mode === 'timer' && updated.started_at && !updated.stopped_at) {
-                        const serverStart = new Date(updated.started_at).getTime();
-                        clientRunStart = Date.now() - (Date.now() - serverStart);
+                        if (!clientRunStart) {
+                            clientRunStart = new Date(updated.started_at).getTime();
+                        }
                     } else {
                         clientRunStart = null;
                     }
@@ -1545,12 +1545,15 @@ async function init() {
     socket.on('SESSION_UPDATE', (data) => {
         if (data.session.id.toString() === currentSessionId?.toString()) {
             currentSession = data.session;
-            // Sync clientRunStart when timer state changes from another client
+            // Only set clientRunStart from server if we don't already have one
+            // (i.e., timer was started by another client, not us)
             if (data.session.timestamp_mode === 'timer' && data.session.started_at && !data.session.stopped_at) {
-                const elapsedMs = data.session.elapsed_ms || 0;
-                const serverStart = new Date(data.session.started_at).getTime();
-                // Set clientRunStart so display stays consistent
-                clientRunStart = Date.now() - ((Date.now() - serverStart));
+                if (!clientRunStart) {
+                    // Timer started elsewhere; approximate so display isn't wrong
+                    const serverStart = new Date(data.session.started_at).getTime();
+                    clientRunStart = serverStart;
+                }
+                // If clientRunStart is already set, keep it (we started the timer here)
             } else {
                 clientRunStart = null;
             }
