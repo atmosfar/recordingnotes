@@ -1,0 +1,121 @@
+import { Router } from 'express';
+import { getDb } from '../db.js';
+import * as sessions from '../sessions.js';
+import * as notes from '../notes.js';
+
+const router = Router();
+
+// Broadcast functions are imported from server.js (circular but safe -
+// only called at request time, not during module evaluation).
+// Will be cleaned up in Step 10 when WebSocket is extracted.
+let _broadcastToRoom, _broadcastSessionList, _broadcastNoteUpdate;
+
+async function getBroadcasts() {
+  if (!_broadcastToRoom) {
+    const server = await import('../server.js');
+    _broadcastToRoom = server.broadcastToRoom;
+    _broadcastSessionList = server.broadcastSessionList;
+    _broadcastNoteUpdate = server.broadcastNoteUpdate;
+  }
+  return { broadcastToRoom: _broadcastToRoom, broadcastSessionList: _broadcastSessionList, broadcastNoteUpdate: _broadcastNoteUpdate };
+}
+
+router.post('/:id/timer/start', async (req, res) => {
+  try {
+    const db = getDb();
+    const session = sessions.getSession(db, req.params.id);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const updates = {
+      timestamp_mode: 'timer',
+      started_at: new Date().toISOString(),
+      stopped_at: null,
+      elapsed_ms: 0,
+      status: 'active'
+    };
+    sessions.updateSession(db, req.params.id, updates);
+
+    const updated = sessions.getSession(db, req.params.id);
+    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
+    broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'active' });
+    broadcastSessionList();
+    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
+    res.json({ status: 'ok', session: updated });
+  } catch (error) {
+    console.error('POST /api/sessions/:id/timer/start error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/:id/timer/stop', async (req, res) => {
+  try {
+    const db = getDb();
+    const session = sessions.getSession(db, req.params.id);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    if (session.status !== 'active') {
+      return res.status(400).json({ error: 'Session is not active' });
+    }
+    if (!session.started_at) {
+      return res.status(400).json({ error: 'Timer not started' });
+    }
+
+    const startedAt = new Date(session.started_at).getTime();
+    const stoppedAt = Date.now();
+    const elapsedThisRun = stoppedAt - startedAt;
+    const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
+
+    sessions.updateSession(db, req.params.id, {
+      stopped_at: new Date().toISOString(),
+      status: 'completed',
+      elapsed_ms: newElapsedMs
+    });
+
+    const updated = sessions.getSession(db, req.params.id);
+    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
+    broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'completed' });
+    broadcastSessionList();
+    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
+    res.json({ status: 'ok', session: updated });
+  } catch (error) {
+    console.error('POST /api/sessions/:id/timer/stop error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/:id/timer/reset', async (req, res) => {
+  try {
+    const db = getDb();
+    const session = sessions.getSession(db, req.params.id);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Check for notes
+    const noteList = notes.listNotesBySession(db, req.params.id);
+    if (noteList.length > 0) {
+      return res.status(400).json({ error: 'Cannot reset timer — this session has notes. Delete all notes first.' });
+    }
+
+    sessions.updateSession(db, req.params.id, {
+      started_at: null,
+      stopped_at: null,
+      elapsed_ms: 0,
+      status: 'active'
+    });
+
+    const updated = sessions.getSession(db, req.params.id);
+    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
+    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
+    broadcastSessionList();
+    res.json({ status: 'ok', session: updated });
+  } catch (error) {
+    console.error('POST /api/sessions/:id/timer/reset error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;

@@ -17,6 +17,7 @@ import exportRoutes from './routes/export.js';
 import webhooksRoutes from './routes/webhooks.js';
 import triggersRoutes from './routes/triggers.js';
 import sessionsRoutes from './routes/sessions.js';
+import timerRoutes from './routes/timer.js';
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/triggers', triggersRoutes);
 app.use(checkAuth);
 app.get('/api/status', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/sessions', sessionsRoutes);
+app.use('/api/sessions', timerRoutes);
 app.use('/api/sessions', exportRoutes);
 
 // WebSocket Server Initialization
@@ -279,102 +281,6 @@ function setupWebSocket(httpServer) {
 // Health check
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
-});
-
-// Timer Control Endpoints
-app.post('/api/sessions/:id/timer/start', (req, res) => {
-  try {
-    const db = getDb();
-    const session = sessions.getSession(db, req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    const updates = {
-      timestamp_mode: 'timer',
-      started_at: new Date().toISOString(),
-      stopped_at: null,
-      elapsed_ms: 0,
-      status: 'active'
-    };
-    sessions.updateSession(db, req.params.id, updates);
-
-    const updated = sessions.getSession(db, req.params.id);
-    broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'active' });
-    broadcastSessionList();
-    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
-    res.json({ status: 'ok', session: updated });
-  } catch (error) {
-    console.error('POST /api/sessions/:id/timer/start error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/sessions/:id/timer/stop', (req, res) => {
-  try {
-    const db = getDb();
-    const session = sessions.getSession(db, req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-    if (session.status !== 'active') {
-      return res.status(400).json({ error: 'Session is not active' });
-    }
-    if (!session.started_at) {
-      return res.status(400).json({ error: 'Timer not started' });
-    }
-
-    const startedAt = new Date(session.started_at).getTime();
-    const stoppedAt = Date.now();
-    const elapsedThisRun = stoppedAt - startedAt;
-    const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
-
-    sessions.updateSession(db, req.params.id, {
-      stopped_at: new Date().toISOString(),
-      status: 'completed',
-      elapsed_ms: newElapsedMs
-    });
-
-    const updated = sessions.getSession(db, req.params.id);
-    broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'completed' });
-    broadcastSessionList();
-    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
-    res.json({ status: 'ok', session: updated });
-  } catch (error) {
-    console.error('POST /api/sessions/:id/timer/stop error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/sessions/:id/timer/reset', (req, res) => {
-  try {
-    const db = getDb();
-    const session = sessions.getSession(db, req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    // Check for notes
-    const noteList = notes.listNotesBySession(db, req.params.id);
-    if (noteList.length > 0) {
-      return res.status(400).json({ error: 'Cannot reset timer — this session has notes. Delete all notes first.' });
-    }
-
-    sessions.updateSession(db, req.params.id, {
-      started_at: null,
-      stopped_at: null,
-      elapsed_ms: 0,
-      status: 'active'
-    });
-
-    const updated = sessions.getSession(db, req.params.id);
-    broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
-    broadcastSessionList();
-    res.json({ status: 'ok', session: updated });
-  } catch (error) {
-    console.error('POST /api/sessions/:id/timer/reset error:', error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // Notes API
