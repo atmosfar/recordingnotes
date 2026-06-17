@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
-import { timeToHmsf, mapColorToResolve } from '../server.js';
+import { timeToHmsf, mapColorToResolve } from '../routes/export.js';
 
 describe('Timecode Conversion', () => {
   const FR = {
