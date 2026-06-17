@@ -18,7 +18,6 @@ router.post('/:id/timer/start', async (req, res) => {
       timestamp_mode: 'timer',
       started_at: new Date().toISOString(),
       stopped_at: null,
-      elapsed_ms: 0,
       status: 'active'
     };
     sessions.updateSession(db, req.params.id, updates);

@@ -332,7 +332,7 @@ function updateClock() {
                 if (infoEl) infoEl.textContent = `FINISHED: ${currentSession.name}`;
             } else {
                 // Timer never started
-                clockEl.textContent = '00:00:00';
+                clockEl.textContent = '00:00:00.0';
                 if (infoEl) infoEl.textContent = currentSession.name;
             }
         } else {

@@ -50,6 +50,30 @@ export function broadcastNoteUpdate(sessionId) {
 export function setupWebSocket(httpServer, sessionParser) {
   wss = new WebSocketServer({ noServer: true });
 
+  wss.on('connection', (ws, request) => {
+    ws.currentSessionId = null;
+
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message);
+        handleMessage(ws, request, data, sessionRooms, broadcastSessionList, broadcastNoteUpdate, broadcastToRoom, broadcastToAll);
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (ws.currentSessionId) {
+        const room = sessionRooms.get(ws.currentSessionId.toString());
+        if (room) {
+          room.delete(ws);
+          if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
+        }
+        broadcastSessionList();
+      }
+    });
+  });
+
   httpServer.on('upgrade', (request, socket, head) => {
     if (sessionParser) {
       sessionParser(request, {}, () => {
@@ -92,28 +116,4 @@ function handleUpgrade(request, socket, head) {
       wss.emit('connection', ws, request);
     });
   }
-
-  wss.on('connection', (ws, request) => {
-    ws.currentSessionId = null;
-
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message);
-        handleMessage(ws, request, data, sessionRooms, broadcastSessionList, broadcastNoteUpdate, broadcastToRoom, broadcastToAll);
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      if (ws.currentSessionId) {
-        const room = sessionRooms.get(ws.currentSessionId.toString());
-        if (room) {
-          room.delete(ws);
-          if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
-        }
-        broadcastSessionList();
-      }
-    });
-  });
 }
