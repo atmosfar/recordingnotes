@@ -14,6 +14,7 @@ import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 import exportRoutes from './routes/export.js';
+import webhooksRoutes from './routes/webhooks.js';
 
 const app = express();
 
@@ -58,6 +59,9 @@ app.get('/', (req, res) => {
 
 // Serve static files (publicly accessible, including from login page)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Webhook routes (before auth — they use token auth)
+app.use('/api/webhooks', webhooksRoutes);
 
 // Protect all following API routes
 app.use(checkAuth);
@@ -286,72 +290,6 @@ app.post('/api/sessions', (req, res) => {
     res.status(201).json({ id });
   } catch (error) {
     console.error('POST /api/sessions error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// SquadCast Webhooks
-app.post('/api/webhooks/squadcast/:token', apiLimiter, checkApiTokenAuth, (req, res) => {
-  console.log('--- Received SquadCast Webhook ---');
-  console.log('Event Name:', req.body.name);
-  console.log('Payload:', JSON.stringify(req.body, null, 2));
-  
-  try {
-    const db = getDb();
-    const { name, sessionID, sessionTitle } = req.body;
-    
-    if (name === 'recording_session.created' || name === 'participant.joined') {
-      const existing = sessions.getSessionByExternalId(db, sessionID);
-      if (!existing) {
-        const id = sessions.createSession(db, {
-          name: sessionTitle || 'Untitled SquadCast Session',
-          external_id: sessionID,
-          timestamp_mode: 'timer'
-        });
-        broadcastSessionList();
-        return res.status(201).json({ id, status: 'created' });
-      }
-      return res.status(200).json({ id: existing.id, status: 'already_exists' });
-    }
-
-    if (name === 'recording.started') {
-      const session = sessions.getSessionByExternalId(db, sessionID);
-      if (session) {
-        sessions.updateSession(db, session.id, { 
-          started_at: new Date().toISOString(),
-          stopped_at: null,
-          status: 'active'
-        });
-        broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'active' });
-        broadcastSessionList();
-        return res.status(200).json({ status: 'started' });
-      }
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    if (name === 'recording.stopped') {
-      const session = sessions.getSessionByExternalId(db, sessionID);
-      if (session) {
-        const startedAt = session.started_at ? new Date(session.started_at).getTime() : 0;
-        const elapsedThisRun = startedAt ? Date.now() - startedAt : 0;
-        const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
-
-        sessions.updateSession(db, session.id, { 
-          stopped_at: new Date().toISOString(),
-          status: 'completed',
-          elapsed_ms: newElapsedMs
-        });
-        broadcastToRoom(session.id, { type: 'SESSION_STATUS_UPDATE', sessionId: session.id, status: 'completed' });
-        broadcastSessionList();
-        return res.status(200).json({ status: 'stopped' });
-      }
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    // For any other events we don't handle yet, return 200 to prevent retries
-    res.status(200).json({ status: 'ignored', message: `Unsupported event: ${name}` });
-  } catch (error) {
-    console.error('SquadCast Webhook Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -770,5 +708,5 @@ if (process.env.NODE_ENV !== 'test') {
   })();
 }
 
-export { app, wss, setupWebSocket, broadcastToAll, broadcastToRoom };
+export { app, wss, setupWebSocket, broadcastToAll, broadcastToRoom, broadcastSessionList };
 export default app;
