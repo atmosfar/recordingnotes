@@ -324,6 +324,17 @@ function updateClock() {
                 // Timer running: elapsed + current run
                 const currentRunStart = new Date(currentSession.started_at).getTime();
                 const totalMs = elapsedMs + (Date.now() - currentRunStart);
+                if (!window._debugTimerLogged) {
+                    console.log('[DEBUG clock] Timer display calc:', {
+                        elapsedMs,
+                        started_at: currentSession.started_at,
+                        currentRunStart,
+                        DateNow: Date.now(),
+                        diff: Date.now() - currentRunStart,
+                        totalMs,
+                    });
+                    window._debugTimerLogged = true;
+                }
                 clockEl.textContent = formatDuration(totalMs / 1000, 1);
                 if (infoEl) infoEl.textContent = `🔴 RECORDING: ${currentSession.name}`;
             } else if (elapsedMs > 0) {
@@ -395,10 +406,22 @@ function updateSessionMenuVisibility() {
 
 async function startTimer() {
     if (!currentSessionId) return;
+    console.log('[DEBUG timer] startTimer called. Before:', {
+        timestamp_mode: currentSession.timestamp_mode,
+        elapsed_ms: currentSession.elapsed_ms,
+        started_at: currentSession.started_at,
+        stopped_at: currentSession.stopped_at,
+    });
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/start`, { method: 'POST' });
         if (res.ok) {
             const data = await res.json();
+            console.log('[DEBUG timer] startTimer response:', {
+                timestamp_mode: data.session.timestamp_mode,
+                elapsed_ms: data.session.elapsed_ms,
+                started_at: data.session.started_at,
+                stopped_at: data.session.stopped_at,
+            });
             Object.assign(currentSession, data.session);
             updateClock();
             updateTimerMenuVisibility();
@@ -1385,7 +1408,14 @@ async function init() {
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     socket.on('SESSION_DATA', (data) => {
-        console.log('Received session data via WebSocket');
+        console.log('[DEBUG session] SESSION_DATA received:', {
+            name: data.session.name,
+            timestamp_mode: data.session.timestamp_mode,
+            elapsed_ms: data.session.elapsed_ms,
+            started_at: data.session.started_at,
+            stopped_at: data.session.stopped_at,
+            status: data.session.status,
+        });
         const { session, notes } = data;
         
         document.body.classList.remove('session-not-found');
