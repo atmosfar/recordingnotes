@@ -14,16 +14,6 @@ router.post('/:id/timer/start', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    console.log('[DEBUG timer/start] Before update:', {
-      id: session.id,
-      name: session.name,
-      timestamp_mode: session.timestamp_mode,
-      elapsed_ms: session.elapsed_ms,
-      started_at: session.started_at,
-      stopped_at: session.stopped_at,
-      status: session.status,
-    });
-
     const updates = {
       timestamp_mode: 'timer',
       started_at: new Date().toISOString(),
@@ -33,14 +23,6 @@ router.post('/:id/timer/start', async (req, res) => {
     sessions.updateSession(db, req.params.id, updates);
 
     const updated = sessions.getSession(db, req.params.id);
-    console.log('[DEBUG timer/start] After update:', {
-      id: updated.id,
-      timestamp_mode: updated.timestamp_mode,
-      elapsed_ms: updated.elapsed_ms,
-      started_at: updated.started_at,
-      stopped_at: updated.stopped_at,
-      status: updated.status,
-    });
     broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'active' });
     broadcastSessionList();
     broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });

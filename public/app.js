@@ -4,6 +4,7 @@ let selectedColor = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
 let lastManualNoteContent = null;
+let clientRunStart = null;
 
 class TagManager {
     constructor() {
@@ -322,19 +323,10 @@ function updateClock() {
 
             if (currentSession.started_at && !currentSession.stopped_at) {
                 // Timer running: elapsed + current run
-                const currentRunStart = new Date(currentSession.started_at).getTime();
-                const totalMs = elapsedMs + (Date.now() - currentRunStart);
-                if (!window._debugTimerLogged) {
-                    console.log('[DEBUG clock] Timer display calc:', {
-                        elapsedMs,
-                        started_at: currentSession.started_at,
-                        currentRunStart,
-                        DateNow: Date.now(),
-                        diff: Date.now() - currentRunStart,
-                        totalMs,
-                    });
-                    window._debugTimerLogged = true;
-                }
+                // Use clientRunStart (captured at button press) for display
+                // to avoid drift from server timestamp round-trip
+                const runStart = clientRunStart || new Date(currentSession.started_at).getTime();
+                const totalMs = elapsedMs + (Date.now() - runStart);
                 clockEl.textContent = formatDuration(totalMs / 1000, 1);
                 if (infoEl) infoEl.textContent = `🔴 RECORDING: ${currentSession.name}`;
             } else if (elapsedMs > 0) {
@@ -406,22 +398,11 @@ function updateSessionMenuVisibility() {
 
 async function startTimer() {
     if (!currentSessionId) return;
-    console.log('[DEBUG timer] startTimer called. Before:', {
-        timestamp_mode: currentSession.timestamp_mode,
-        elapsed_ms: currentSession.elapsed_ms,
-        started_at: currentSession.started_at,
-        stopped_at: currentSession.stopped_at,
-    });
+    clientRunStart = Date.now();
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/start`, { method: 'POST' });
         if (res.ok) {
             const data = await res.json();
-            console.log('[DEBUG timer] startTimer response:', {
-                timestamp_mode: data.session.timestamp_mode,
-                elapsed_ms: data.session.elapsed_ms,
-                started_at: data.session.started_at,
-                stopped_at: data.session.stopped_at,
-            });
             Object.assign(currentSession, data.session);
             updateClock();
             updateTimerMenuVisibility();
@@ -433,6 +414,7 @@ async function startTimer() {
 
 async function stopTimer() {
     if (!currentSessionId) return;
+    clientRunStart = null;
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/stop`, { method: 'POST' });
         if (res.ok) {
@@ -448,6 +430,7 @@ async function stopTimer() {
 
 async function resetTimer() {
     if (!currentSessionId) return;
+    clientRunStart = null;
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/reset`, { method: 'POST' });
         if (res.ok) {
@@ -1408,14 +1391,6 @@ async function init() {
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     socket.on('SESSION_DATA', (data) => {
-        console.log('[DEBUG session] SESSION_DATA received:', {
-            name: data.session.name,
-            timestamp_mode: data.session.timestamp_mode,
-            elapsed_ms: data.session.elapsed_ms,
-            started_at: data.session.started_at,
-            stopped_at: data.session.stopped_at,
-            status: data.session.status,
-        });
         const { session, notes } = data;
         
         document.body.classList.remove('session-not-found');
@@ -1424,6 +1399,14 @@ async function init() {
         if (connectingMsg) connectingMsg.style.display = 'none';
         currentSession = session;
         currentSessionId = session.id;
+        
+        // Sync clientRunStart if timer is already running
+        if (session.timestamp_mode === 'timer' && session.started_at && !session.stopped_at) {
+            const serverStart = new Date(session.started_at).getTime();
+            clientRunStart = Date.now() - (Date.now() - serverStart);
+        } else {
+            clientRunStart = null;
+        }
         
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
@@ -1453,6 +1436,7 @@ async function init() {
             console.error('Session not found error from server');
             currentSessionId = null;
             currentSession = null;
+            clientRunStart = null;
             document.body.classList.add('session-not-found');
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
@@ -1468,7 +1452,6 @@ async function init() {
 
     // WebSocket Event Listeners
     socket.on('SESSION_LIST_UPDATE', (data) => {
-        console.log('Session list updated via WebSocket');
         if (data.sessions) {
             window.lastSessions = data.sessions;
             renderSessionList(data.sessions);
@@ -1478,9 +1461,14 @@ async function init() {
                 const updated = data.sessions.find(s => s.id.toString() === currentSessionId.toString());
                 if (updated) {
                     currentSession = updated;
+                    if (updated.timestamp_mode === 'timer' && updated.started_at && !updated.stopped_at) {
+                        const serverStart = new Date(updated.started_at).getTime();
+                        clientRunStart = Date.now() - (Date.now() - serverStart);
+                    } else {
+                        clientRunStart = null;
+                    }
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle && headerTitle.textContent !== updated.name) {
-                        console.log('Updating header title to:', updated.name);
                         headerTitle.textContent = updated.name;
                     }
                     updateClock();
@@ -1489,6 +1477,7 @@ async function init() {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
                     currentSessionId = null;
+                    clientRunStart = null;
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
                     updateSessionMenuVisibility();
@@ -1498,10 +1487,10 @@ async function init() {
     });
 
     socket.on('SESSION_DELETED', (data) => {
-        console.log('Session deleted via WebSocket:', data.sessionId);
         if (currentSessionId?.toString() === data.sessionId.toString()) {
             currentSessionId = null;
             currentSession = null;
+            clientRunStart = null;
             window.location.hash = '';
             const stream = document.getElementById('note-stream');
             if (stream) stream.innerHTML = '<div class="empty-state">This session has been deleted.</div>';
@@ -1555,8 +1544,16 @@ async function init() {
 
     socket.on('SESSION_UPDATE', (data) => {
         if (data.session.id.toString() === currentSessionId?.toString()) {
-            console.log('Session updated via WebSocket');
             currentSession = data.session;
+            // Sync clientRunStart when timer state changes from another client
+            if (data.session.timestamp_mode === 'timer' && data.session.started_at && !data.session.stopped_at) {
+                const elapsedMs = data.session.elapsed_ms || 0;
+                const serverStart = new Date(data.session.started_at).getTime();
+                // Set clientRunStart so display stays consistent
+                clientRunStart = Date.now() - ((Date.now() - serverStart));
+            } else {
+                clientRunStart = null;
+            }
             updateClock();
             updateTimerMenuVisibility();
         }
