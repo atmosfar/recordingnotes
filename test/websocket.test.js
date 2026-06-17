@@ -10,7 +10,8 @@ import http from 'http';
 import { unlinkSync, existsSync } from 'node:fs';
 import WebSocket from 'ws';
 import { resetDbInstance, initDb, getDb } from '../db.js';
-import app, { setupWebSocket, sessionParser } from '../server.js';
+import app, { sessionParser } from '../server.js';
+import { setupWebSocket } from '../websocket/index.js';
 
 describe('WebSocket API', () => {
   let server;
