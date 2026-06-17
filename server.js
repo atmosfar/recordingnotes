@@ -7,58 +7,13 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-import { getConfig } from './config.js';
+import { getPort, getApiToken, wasApiTokenExplicitlySet, getAuthCredentials, authIsRequired, getSessionSecret, getExportTimezone } from './middleware/config-accessors.js';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
 
 const app = express();
 
-// Lazy config accessors – read fresh on each call so env var changes are picked up
-function getPort() {
-  return Number(getConfig().RECNOTES_PORT) || 3000;
-}
-
-function getApiToken() {
-  const config = getConfig();
-  let token = config.RECNOTES_AUTH_API_TOKEN;
-  if (!token) {
-    const username = config.RECNOTES_AUTH_USERNAME;
-    const password = config.RECNOTES_AUTH_PASSWORD;
-    if (username && password) {
-      token = crypto
-        .createHash('sha256')
-        .update(`${username}:${password}`)
-        .digest('hex');
-    }
-  }
-  return token;
-}
-
-function wasApiTokenExplicitlySet() {
-  return !!getConfig().RECNOTES_AUTH_API_TOKEN;
-}
-
-function getAuthCredentials() {
-  const config = getConfig();
-  return {
-    username: config.RECNOTES_AUTH_USERNAME,
-    password: config.RECNOTES_AUTH_PASSWORD,
-  };
-}
-
-function authIsRequired() {
-  const config = getConfig();
-  return !!(config.RECNOTES_AUTH_USERNAME && config.RECNOTES_AUTH_PASSWORD);
-}
-
-function getSessionSecret() {
-  return getConfig().RECNOTES_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-}
-
-function getExportTimezone() {
-  return getConfig().RECNOTES_EXPORT_TIMEZONE || 'UTC';
-}
 
 app.use(express.json());
 
