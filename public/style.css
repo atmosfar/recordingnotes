@@ -291,8 +291,12 @@ body.dark-mode .user-count {
     min-width: 50px;
     justify-content: flex-end;
     margin-left: 0.5rem;
-}.session-item:hover .session-actions { display: flex; }
+}
 #sidebar.managing .session-actions { display: flex; }
+
+@media (hover: hover) {
+    .session-item:hover .session-actions { display: flex; }
+}
 
 .session-actions button {
     background: none; border: none; color: var(--secondary-color); cursor: pointer;
