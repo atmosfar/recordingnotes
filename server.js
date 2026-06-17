@@ -18,6 +18,7 @@ import webhooksRoutes from './routes/webhooks.js';
 import triggersRoutes from './routes/triggers.js';
 import sessionsRoutes from './routes/sessions.js';
 import timerRoutes from './routes/timer.js';
+import notesRoutes from './routes/notes.js';
 
 const app = express();
 
@@ -72,6 +73,7 @@ app.use(checkAuth);
 app.get('/api/status', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/sessions', timerRoutes);
+app.use('/api/sessions', notesRoutes);
 app.use('/api/sessions', exportRoutes);
 
 // WebSocket Server Initialization
@@ -281,86 +283,6 @@ function setupWebSocket(httpServer) {
 // Health check
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
-});
-
-// Notes API
-app.post('/api/sessions/:id/notes', (req, res) => {
-  try {
-    const db = getDb();
-    const { content, timestamp, color, user_id } = req.body;
-    const session_id = req.params.id;
-    if (!content || !timestamp) {
-      return res.status(400).json({ error: 'Content and timestamp are required' });
-    }
-
-    // Block note creation if timer mode and timer not running
-    const session = sessions.getSession(db, session_id);
-    if (session && session.timestamp_mode === 'timer' && !session.started_at) {
-      return res.status(400).json({ error: 'Timer is not running. Start the timer to add notes.' });
-    }
-
-    const id = notes.createNote(db, { 
-      content, 
-      timestamp, 
-      color, 
-      user_id, 
-      session_id 
-    });
-    broadcastNoteUpdate(session_id);
-    res.status(201).json({ id });
-  } catch (error) {
-    console.error('POST /api/sessions/:id/notes error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/sessions/:id/notes', (req, res) => {
-  try {
-    const db = getDb();
-    const list = notes.listNotesBySession(db, req.params.id);
-    res.json(list);
-  } catch (error) {
-    console.error('GET /api/sessions/:id/notes error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.patch('/api/sessions/:session_id/notes/:note_id', (req, res) => {
-  try {
-    const db = getDb();
-    const { content } = req.body;
-    const { note_id } = req.params;
-    
-    if (!content) {
-      return res.status(400).json({ error: 'Content is required' });
-    }
-    
-    const result = notes.updateNote(db, note_id, content);
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Note not found' });
-    }
-    
-    broadcastNoteUpdate(req.params.session_id);
-    res.json({ status: 'updated' });
-  } catch (error) {
-    console.error('PATCH /api/sessions/:session_id/notes/:note_id error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/sessions/:session_id/notes/:note_id', (req, res) => {
-  try {
-    const db = getDb();
-    const result = notes.deleteNote(db, req.params.note_id);
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Note not found' });
-    }
-    broadcastNoteUpdate(req.params.session_id);
-    res.json({ status: 'deleted' });
-  } catch (error) {
-    console.error('DELETE /api/sessions/:session_id/notes/:note_id error:', error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // Initialize the database immediately on startup so it's ready for first use
