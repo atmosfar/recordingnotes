@@ -16,6 +16,7 @@ import * as notes from './notes.js';
 import exportRoutes from './routes/export.js';
 import webhooksRoutes from './routes/webhooks.js';
 import triggersRoutes from './routes/triggers.js';
+import sessionsRoutes from './routes/sessions.js';
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/triggers', triggersRoutes);
 // Protect all following API routes
 app.use(checkAuth);
 app.get('/api/status', (req, res) => res.json({ status: 'ok' }));
+app.use('/api/sessions', sessionsRoutes);
 app.use('/api/sessions', exportRoutes);
 
 // WebSocket Server Initialization
@@ -277,102 +279,6 @@ function setupWebSocket(httpServer) {
 // Health check
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
-});
-
-// Sessions API
-app.post('/api/sessions', (req, res) => {
-  try {
-    const db = getDb();
-    const { name, timestamp_mode, external_id } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'Session name is required' });
-    }
-    const id = sessions.createSession(db, { name, timestamp_mode, external_id });
-    broadcastSessionList();
-    res.status(201).json({ id });
-  } catch (error) {
-    console.error('POST /api/sessions error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/sessions', (req, res) => {
-  try {
-    const db = getDb();
-    const list = sessions.listSessions(db);
-    res.json(list);
-  } catch (error) {
-    console.error('GET /api/sessions error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/sessions/:id', (req, res) => {
-  try {
-    const db = getDb();
-    const session = sessions.getSession(db, req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-    res.json(session);
-  } catch (error) {
-    console.error('GET /api/sessions/:id error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.patch('/api/sessions/:id', (req, res) => {
-  try {
-    const db = getDb();
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'Session name is required' });
-    }
-    const result = sessions.updateSession(db, req.params.id, { name });
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-    broadcastSessionList();
-    res.json({ status: 'updated' });
-  } catch (error) {
-    console.error('PATCH /api/sessions/:id error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/sessions/:id', (req, res) => {
-  try {
-    const db = getDb();
-    const result = sessions.deleteSession(db, req.params.id);
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-    broadcastSessionList();
-    res.json({ status: 'deleted' });
-  } catch (error) {
-    console.error('DELETE /api/sessions/:id error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/sessions/:id/guest-token', (req, res) => {
-  try {
-    const db = getDb();
-    const session = sessions.getSession(db, req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    let token = session.guest_token;
-    if (!token) {
-      token = crypto.randomUUID();
-      sessions.updateSession(db, req.params.id, { guest_token: token });
-    }
-    res.json({ token });
-  } catch (error) {
-    console.error('POST /api/sessions/:id/guest-token error:', error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // Timer Control Endpoints
