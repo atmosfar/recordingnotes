@@ -8,6 +8,7 @@ import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { getPort, getApiToken, wasApiTokenExplicitlySet, getAuthCredentials, authIsRequired, getSessionSecret, getExportTimezone } from './middleware/config-accessors.js';
+import { checkAuth, checkApiTokenAuth } from './middleware/auth.js';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
@@ -28,10 +29,6 @@ const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 // Auth is only required if both env vars are explicitly set.
 // Otherwise the app runs in open/public mode (no login needed).
 // Checked dynamically per-request so env changes are picked up.
-function authRequired() {
-  return authIsRequired();
-}
-
 // Session configuration
 const sessionParser = session({
   secret: getSessionSecret(),
@@ -47,76 +44,10 @@ const sessionParser = session({
 
 app.use(sessionParser);
 
-/**
- * Middleware to check user authentication
- */
-function checkAuth(req, res, next) {
-  // If auth is not configured, run in open/public mode — everyone is "authenticated"
-  if (!authRequired()) {
-    req.session.authenticated = true;
-    return next();
-  }
-
-  // Allow access to login page and its related API
-  if (req.path === '/login' || req.path === '/api/login') {
-    return next();
-  }
-
-  // Exempt integrations from session auth (they use token auth)
-  if (req.path.startsWith('/api/webhooks/') || req.path.startsWith('/api/triggers')) {
-    return next();
-  }
-
-  // If a token is provided in query, try to verify and "login" as guest
-  if (req.query.token) {
-    const db = getDb();
-    const session = sessions.getSessionByGuestToken(db, req.query.token);
-    if (session) {
-      req.session.guestToken = req.query.token;
-      return next();
-    }
-  }
-
-  if ((req.session && req.session.authenticated) || (req.session && req.session.guestToken)) {
-    return next();
-  }
-
-  // If it's an API call, return 401
-  if (req.path.startsWith('/api/')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  // Otherwise redirect to login
-  res.redirect(`/login?returnTo=${encodeURIComponent(req.originalUrl)}`);
-}
-
-/**
- * Middleware to check API token
- */
-function checkApiTokenAuth(req, res, next) {
-  const validToken = getApiToken();
-
-  // If no API token is configured, endpoints are public
-  if (!validToken) {
-    return next();
-  }
-
-  const token = req.params.token || req.query.token || req.headers['x-auth-token'];
-
-  if (token && token.length === validToken.length && crypto.timingSafeEqual(
-    Buffer.from(token),
-    Buffer.from(validToken)
-  )) {
-    return next();
-  }
-
-  res.status(401).json({ error: 'Unauthorized' });
-}
-
 // Auth Routes
 app.get('/login', (req, res) => {
   // If auth is not configured, redirect to the main app
-  if (!authRequired()) {
+  if (!authIsRequired()) {
     return res.redirect('/');
   }
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -150,7 +81,7 @@ app.get('/logout', (req, res) => {
 
 // Root route requires auth
 app.get('/', (req, res) => {
-  if (authRequired() && !req.session?.authenticated) {
+  if (authIsRequired() && !req.session?.authenticated) {
     return res.redirect('/login?returnTo=/');
   }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -216,14 +147,14 @@ function setupWebSocket(httpServer) {
       const isGuest = queryToken || (request.session && request.session.guestToken);
 
       // In open/public mode (no auth configured), skip the check
-      if (authRequired() && !request.session.authenticated && !isGuest) {
+      if (authIsRequired() && !request.session.authenticated && !isGuest) {
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
         socket.destroy();
         return;
       }
 
       // Auto-authenticate in open mode
-      if (!authRequired()) {
+      if (!authIsRequired()) {
         request.session.authenticated = true;
       }
 
@@ -1017,7 +948,7 @@ if (process.env.NODE_ENV !== 'test') {
       try {
         server = await startServer(port);
         console.log(`\n✓ Recording Notes running at http://localhost:${port}`);
-        if (authRequired()) {
+        if (authIsRequired()) {
           console.log('  Auth mode: Login required (RECNOTES_AUTH_USERNAME & RECNOTES_AUTH_PASSWORD set)');
         } else {
           console.warn('  Warning: No authorization configured. Do not use this setup in untrusted environments. See .env.example for details.');
