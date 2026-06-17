@@ -9,6 +9,7 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { getPort, getApiToken, wasApiTokenExplicitlySet, getAuthCredentials, authIsRequired, getSessionSecret, getExportTimezone } from './middleware/config-accessors.js';
 import { checkAuth, checkApiTokenAuth } from './middleware/auth.js';
+import authRoutes from './routes/auth.js';
 import { getDb, initDb } from './db.js';
 import * as sessions from './sessions.js';
 import * as notes from './notes.js';
@@ -23,7 +24,6 @@ app.use(express.json());
 app.set('trust proxy', 1);
 
 // Rate limiting to prevent brute-force attacks
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
 // Auth is only required if both env vars are explicitly set.
@@ -44,40 +44,8 @@ const sessionParser = session({
 
 app.use(sessionParser);
 
-// Auth Routes
-app.get('/login', (req, res) => {
-  // If auth is not configured, redirect to the main app
-  if (!authIsRequired()) {
-    return res.redirect('/');
-  }
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.post('/login', loginLimiter, (req, res) => {
-  const { username, password, rememberMe } = req.body;
-  const { username: validUser, password: validPass } = getAuthCredentials();
-
-  if (validUser && validPass && username === validUser && password === validPass) {
-    // Rotate session: destroy old session ID and create a fresh one.
-    // This invalidates any previously issued session cookie for this user,
-    // so a compromised session ID can't be reused after a legitimate login.
-    req.session.regenerate(() => {
-      req.session.authenticated = true;
-      if (rememberMe) {
-        // Extend session to 30 days when "Remember me" is checked
-        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
-      }
-      res.json({ status: 'ok' });
-    });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
-  }
-});
-
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login?cleared=1');
-});
+// Public routes
+app.use(authRoutes);
 
 // Root route requires auth
 app.get('/', (req, res) => {
