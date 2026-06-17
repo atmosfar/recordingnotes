@@ -2,23 +2,9 @@ import { Router } from 'express';
 import { getDb } from '../db.js';
 import * as sessions from '../sessions.js';
 import * as notes from '../notes.js';
+import { broadcastToRoom, broadcastSessionList } from '../websocket/index.js';
 
 const router = Router();
-
-// Broadcast functions are imported from server.js (circular but safe -
-// only called at request time, not during module evaluation).
-// Will be cleaned up in Step 10 when WebSocket is extracted.
-let _broadcastToRoom, _broadcastSessionList, _broadcastNoteUpdate;
-
-async function getBroadcasts() {
-  if (!_broadcastToRoom) {
-    const server = await import('../server.js');
-    _broadcastToRoom = server.broadcastToRoom;
-    _broadcastSessionList = server.broadcastSessionList;
-    _broadcastNoteUpdate = server.broadcastNoteUpdate;
-  }
-  return { broadcastToRoom: _broadcastToRoom, broadcastSessionList: _broadcastSessionList, broadcastNoteUpdate: _broadcastNoteUpdate };
-}
 
 router.post('/:id/timer/start', async (req, res) => {
   try {
@@ -38,7 +24,6 @@ router.post('/:id/timer/start', async (req, res) => {
     sessions.updateSession(db, req.params.id, updates);
 
     const updated = sessions.getSession(db, req.params.id);
-    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
     broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'active' });
     broadcastSessionList();
     broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
@@ -75,7 +60,6 @@ router.post('/:id/timer/stop', async (req, res) => {
     });
 
     const updated = sessions.getSession(db, req.params.id);
-    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
     broadcastToRoom(req.params.id, { type: 'SESSION_STATUS_UPDATE', sessionId: updated.id, status: 'completed' });
     broadcastSessionList();
     broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
@@ -108,7 +92,6 @@ router.post('/:id/timer/reset', async (req, res) => {
     });
 
     const updated = sessions.getSession(db, req.params.id);
-    const { broadcastToRoom, broadcastSessionList } = await getBroadcasts();
     broadcastToRoom(req.params.id, { type: 'SESSION_UPDATE', session: updated });
     broadcastSessionList();
     res.json({ status: 'ok', session: updated });

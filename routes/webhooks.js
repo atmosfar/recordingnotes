@@ -3,25 +3,12 @@ import rateLimit from 'express-rate-limit';
 import { getDb } from '../db.js';
 import * as sessions from '../sessions.js';
 import { checkApiTokenAuth } from '../middleware/auth.js';
+import { broadcastSessionList, broadcastToRoom } from '../websocket/index.js';
 
 const router = Router();
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
-// Broadcast functions are imported from server.js (circular but safe -
-// only called at request time, not during module evaluation).
-// Will be cleaned up in Step 10 when WebSocket is extracted.
-let _broadcastSessionList, _broadcastToRoom;
-
-async function getBroadcasts() {
-  if (!_broadcastSessionList) {
-    const server = await import('../server.js');
-    _broadcastSessionList = server.broadcastSessionList;
-    _broadcastToRoom = server.broadcastToRoom;
-  }
-  return { broadcastSessionList: _broadcastSessionList, broadcastToRoom: _broadcastToRoom };
-}
-
-router.post('/squadcast/:token', apiLimiter, checkApiTokenAuth, async (req, res) => {
+router.post('/squadcast/:token', apiLimiter, checkApiTokenAuth, (req, res) => {
   console.log('--- Received SquadCast Webhook ---');
   console.log('Event Name:', req.body.name);
   console.log('Payload:', JSON.stringify(req.body, null, 2));
@@ -29,7 +16,6 @@ router.post('/squadcast/:token', apiLimiter, checkApiTokenAuth, async (req, res)
   try {
     const db = getDb();
     const { name, sessionID, sessionTitle } = req.body;
-    const { broadcastSessionList, broadcastToRoom } = await getBroadcasts();
     
     if (name === 'recording_session.created' || name === 'participant.joined') {
       const existing = sessions.getSessionByExternalId(db, sessionID);

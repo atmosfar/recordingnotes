@@ -2,21 +2,9 @@ import { Router } from 'express';
 import { getDb } from '../db.js';
 import * as sessions from '../sessions.js';
 import * as notes from '../notes.js';
+import { broadcastNoteUpdate } from '../websocket/index.js';
 
 const router = Router();
-
-// Broadcast functions are imported from server.js (circular but safe -
-// only called at request time, not during module evaluation).
-// Will be cleaned up in Step 10 when WebSocket is extracted.
-let _broadcastNoteUpdate;
-
-async function getBroadcasts() {
-  if (!_broadcastNoteUpdate) {
-    const server = await import('../server.js');
-    _broadcastNoteUpdate = server.broadcastNoteUpdate;
-  }
-  return { broadcastNoteUpdate: _broadcastNoteUpdate };
-}
 
 router.post('/:id/notes', async (req, res) => {
   try {
@@ -40,7 +28,6 @@ router.post('/:id/notes', async (req, res) => {
       user_id, 
       session_id 
     });
-    const { broadcastNoteUpdate } = await getBroadcasts();
     broadcastNoteUpdate(session_id);
     res.status(201).json({ id });
   } catch (error) {
@@ -75,7 +62,6 @@ router.patch('/:session_id/notes/:note_id', async (req, res) => {
       return res.status(404).json({ error: 'Note not found' });
     }
     
-    const { broadcastNoteUpdate } = await getBroadcasts();
     broadcastNoteUpdate(req.params.session_id);
     res.json({ status: 'updated' });
   } catch (error) {
@@ -91,7 +77,6 @@ router.delete('/:session_id/notes/:note_id', async (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
-    const { broadcastNoteUpdate } = await getBroadcasts();
     broadcastNoteUpdate(req.params.session_id);
     res.json({ status: 'deleted' });
   } catch (error) {

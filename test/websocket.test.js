@@ -10,7 +10,7 @@ import http from 'http';
 import { unlinkSync, existsSync } from 'node:fs';
 import WebSocket from 'ws';
 import { resetDbInstance, initDb, getDb } from '../db.js';
-import app, { setupWebSocket } from '../server.js';
+import app, { setupWebSocket, sessionParser } from '../server.js';
 
 describe('WebSocket API', () => {
   let server;
@@ -27,7 +27,7 @@ describe('WebSocket API', () => {
 
     return new Promise((resolve) => {
       server = app.listen(0, async () => {
-        setupWebSocket(server);
+        setupWebSocket(server, sessionParser);
         const { port } = server.address();
         baseUrl = `http://localhost:${port}`;
         wssUrl = `ws://localhost:${port}`;

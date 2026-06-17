@@ -4,33 +4,18 @@ import { getDb } from '../db.js';
 import * as sessions from '../sessions.js';
 import * as notes from '../notes.js';
 import { checkApiTokenAuth } from '../middleware/auth.js';
+import { broadcastSessionList, broadcastToRoom, broadcastNoteUpdate } from '../websocket/index.js';
 
 const router = Router();
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
-// Broadcast functions are imported from server.js (circular but safe -
-// only called at request time, not during module evaluation).
-// Will be cleaned up in Step 10 when WebSocket is extracted.
-let _broadcastSessionList, _broadcastToRoom, _broadcastNoteUpdate;
-
-async function getBroadcasts() {
-  if (!_broadcastSessionList) {
-    const server = await import('../server.js');
-    _broadcastSessionList = server.broadcastSessionList;
-    _broadcastToRoom = server.broadcastToRoom;
-    _broadcastNoteUpdate = server.broadcastNoteUpdate;
-  }
-  return { broadcastSessionList: _broadcastSessionList, broadcastToRoom: _broadcastToRoom, broadcastNoteUpdate: _broadcastNoteUpdate };
-}
-
-router.post('/', apiLimiter, checkApiTokenAuth, async (req, res) => {
+router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
   console.log('--- Received Trigger Request ---');
   const { action, id, name } = req.body;
   console.log('Action:', action, 'ID:', id, 'Name:', name);
 
   try {
     const db = getDb();
-    const { broadcastSessionList, broadcastToRoom, broadcastNoteUpdate } = await getBroadcasts();
 
     if (action === 'create') {
       if (!name) {
