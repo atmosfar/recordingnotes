@@ -683,39 +683,84 @@ function renderNotes(notes) {
             div.querySelector('.confirm-del-btn').onclick = () => { closeOtherNotesActions(div); deleteNote(div); };
 
             // Long-press to enter edit mode (mobile)
-            let longPressTimer = null;
-            let longPressTriggered = false;
+            let lpTimer = null;
+            let lpStartX = 0, lpStartY = 0;
+            let lpTriggered = false;
+            let wasTouched = false;
+            const LP_MS = 600;
+            const LP_TOLERANCE = 12;
 
-            const startLongPress = (e) => {
-                if (window.innerWidth > 768) return;
-                if (div.classList.contains('editing')) return;
-                if (e.target.closest('.note-actions')) return;
-                longPressTriggered = false;
-                longPressTimer = setTimeout(() => {
-                    longPressTriggered = true;
-                    // Exit editing mode on all other notes
-                    document.querySelectorAll('.note.editing').forEach(other => {
-                        if (other !== div) toggleEditMode(other, false);
-                    });
-                    toggleEditMode(div, true);
-                }, 500);
+            const lpClear = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
+
+            const lpAction = () => {
+                lpTriggered = true;
+                document.querySelectorAll('.note.editing').forEach(other => {
+                    if (other !== div) toggleEditMode(other, false);
+                });
+                toggleEditMode(div, true);
             };
 
-            const cancelLongPress = () => {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
+            const lpGuards = (e) => {
+                if (window.innerWidth > 768) return false;
+                if (div.classList.contains('editing')) return false;
+                if (e.target.closest('.note-actions')) return false;
+                if (e.type === 'mousedown' && wasTouched) return false;
+                return true;
             };
 
-            div.addEventListener('touchstart', startLongPress, { passive: true });
-            div.addEventListener('touchend', (e) => {
-                cancelLongPress();
+            const lpStart = (x, y, e) => {
+                if (!lpGuards(e)) return;
+                lpClear();
+                lpTriggered = false;
+                lpStartX = x; lpStartY = y;
+                lpTimer = setTimeout(lpAction, LP_MS);
+            };
+
+            const lpMove = (x, y) => {
+                if (!lpTimer) return;
+                if (Math.hypot(x - lpStartX, y - lpStartY) > LP_TOLERANCE) lpClear();
+            };
+
+            const lpEnd = () => {
+                lpClear();
+                setTimeout(() => { wasTouched = false; }, 1500);
+            };
+
+            // Touch
+            div.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 1) return;
+                wasTouched = true;
+                const t = e.touches[0];
+                lpStart(t.clientX, t.clientY, e);
+            }, { passive: true });
+
+            div.addEventListener('touchmove', (e) => {
+                if (!e.touches.length) return;
+                const t = e.touches[0];
+                lpMove(t.clientX, t.clientY);
+            }, { passive: true });
+
+            div.addEventListener('touchend', lpEnd, { passive: true });
+            div.addEventListener('touchcancel', lpEnd, { passive: true });
+
+            // Mouse
+            div.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                lpStart(e.clientX, e.clientY, e);
             });
-            div.addEventListener('touchmove', cancelLongPress, { passive: true });
-            div.addEventListener('mousedown', startLongPress);
-            div.addEventListener('mouseup', (e) => {
-                if (!longPressTriggered) cancelLongPress();
+
+            document.addEventListener('mousemove', (e) => {
+                if (!lpTimer) return;
+                lpMove(e.clientX, e.clientY);
             });
-            div.addEventListener('mousemove', cancelLongPress);
+
+            document.addEventListener('mouseup', (e) => {
+                if (e.button !== 0) return;
+                lpEnd();
+            });
+
+            // Prevent native context menu
+            div.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
 
             // Find correct insertion point
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
@@ -1469,10 +1514,9 @@ async function init() {
             console.log('Session status updated via WebSocket');
             currentSession.status = data.status;
             if (data.status === 'active') {
-                currentSession.started_at = currentSession.started_at || new Date().toISOString();
                 currentSession.stopped_at = null;
             } else if (data.status === 'completed') {
-                currentSession.stopped_at = new Date().toISOString();
+                // stopped_at will be set correctly by SESSION_UPDATE
             }
             updateClock();
             updateTimerMenuVisibility();

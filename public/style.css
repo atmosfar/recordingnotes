@@ -323,6 +323,10 @@ body.dark-mode .user-count {
     align-items: center;
     background-color: var(--card-bg);
     position: relative;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 .note .timestamp { color: var(--timestamp-color); font-family: var(--font-mono); font-size: 0.85rem; padding-right: 0.5rem; }
 
