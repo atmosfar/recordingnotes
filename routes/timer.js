@@ -80,7 +80,7 @@ router.post('/:id/timer/reset', async (req, res) => {
     // Check for notes
     const noteList = notes.listNotesBySession(db, req.params.id);
     if (noteList.length > 0) {
-      return res.status(400).json({ error: 'Cannot reset timer — this session has notes. Delete all notes first.' });
+      return res.status(400).json({ error: 'Cannot reset timer - this session has notes. Delete all notes first.' });
     }
 
     sessions.updateSession(db, req.params.id, {

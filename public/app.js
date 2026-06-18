@@ -1,6 +1,7 @@
 let currentSessionId = null;
 let currentSession = null;
 let selectedColor = "";
+let sessionSearchFilter = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
 let lastManualNoteContent = null;
@@ -450,21 +451,151 @@ async function resetTimer() {
 function showTimerResetWarning(message) {
     const modal = document.getElementById('timer-warning-modal');
     const msgEl = document.getElementById('timer-warning-message');
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (!modal || !msgEl) return;
     msgEl.textContent = message;
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
+    if (backdrop) {
+        backdrop.style.display = 'block';
+        backdrop.style.opacity = '1';
+    }
     document.getElementById('timer-warning-ok').focus();
+}
+
+function renderRecentSessions(sessions) {
+    const container = document.getElementById('recent-sessions-list');
+    const emptyMsg = document.getElementById('empty-state-message');
+    const newSessionBtn = document.getElementById('new-session-btn-empty');
+    const welcomeMsg = document.getElementById('welcome-message');
+    if (!container) return;
+
+    // Hide recent sessions list, button, and welcome when a session is selected
+    if (currentSessionId) {
+        container.classList.add('hidden');
+        if (newSessionBtn) newSessionBtn.classList.add('hidden');
+        if (welcomeMsg) welcomeMsg.classList.add('hidden');
+        return;
+    }
+
+    // Only show recent sessions list and button on mobile
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && welcomeMsg) welcomeMsg.classList.remove('hidden');
+
+    // Update empty state message and button based on whether sessions exist
+    if (sessions.length === 0) {
+        if (emptyMsg) emptyMsg.textContent = 'Create a session to start taking notes.';
+        if (newSessionBtn && isMobile) {
+            newSessionBtn.classList.remove('hidden');
+        } else if (newSessionBtn) {
+            newSessionBtn.classList.add('hidden');
+        }
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    // Sessions exist
+    if (emptyMsg) emptyMsg.textContent = 'Select a session to start taking notes.';
+    if (newSessionBtn) newSessionBtn.classList.add('hidden');
+
+    // Sort: recording first, then by created_at DESC
+    const sorted = [...sessions].sort((a, b) => {
+        const aRecording = a.started_at && !a.stopped_at;
+        const bRecording = b.started_at && !b.stopped_at;
+        if (aRecording && !bRecording) return -1;
+        if (!aRecording && bRecording) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    // Limit to 10
+    const recent = sorted.slice(0, 10);
+
+    if (recent.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = '';
+
+    recent.forEach(session => {
+        const item = document.createElement('div');
+        item.className = 'recent-session-item';
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `Open session: ${session.name}`);
+        item.onclick = () => selectSession(session.id);
+
+        // Time (left)
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'recent-session-time';
+        const createdDate = new Date(session.created_at);
+        const now = new Date();
+        const isToday = createdDate.toDateString() === now.toDateString();
+        if (isToday) {
+            const hrs = createdDate.getHours();
+            const mins = createdDate.getMinutes().toString().padStart(2, '0');
+            timeSpan.textContent = `${hrs}:${mins}`;
+        } else {
+            timeSpan.textContent = createdDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+        item.appendChild(timeSpan);
+
+        // Name (center, flex-grow with ellipsis)
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'recent-session-name';
+        nameSpan.textContent = session.name;
+        item.appendChild(nameSpan);
+
+        // Indicators (right: recording dot + user count)
+        const indicators = document.createElement('div');
+        indicators.className = 'recent-session-indicators';
+
+        const isRecording = session.started_at && !session.stopped_at;
+        if (isRecording) {
+            const dot = document.createElement('span');
+            dot.className = 'recording-dot';
+            dot.setAttribute('role', 'status');
+            dot.setAttribute('aria-label', 'Recording active');
+            indicators.appendChild(dot);
+        }
+
+        if (session.active_users > 0) {
+            const userCount = document.createElement('span');
+            userCount.className = 'recent-user-count';
+            userCount.setAttribute('role', 'status');
+            userCount.setAttribute('aria-label', `${session.active_users} users connected`);
+            userCount.innerHTML = `
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                ${session.active_users}
+            `;
+            indicators.appendChild(userCount);
+        }
+
+        item.appendChild(indicators);
+        container.appendChild(item);
+    });
 }
 
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
     if (!list) return;
 
+    // Apply search filter (case-insensitive, name only)
+    let filtered = sessions;
+    if (sessionSearchFilter) {
+        const q = sessionSearchFilter.toLowerCase();
+        filtered = sessions.filter(s => s.name.toLowerCase().includes(q));
+    }
+
     // Prioritized Sorting:
     // 1. Recording (started_at && !stopped_at)
     // 2. Creation date (DESC)
-    const sortedSessions = [...sessions].sort((a, b) => {
+    const sortedSessions = [...filtered].sort((a, b) => {
         const aRecording = a.started_at && !a.stopped_at;
         const bRecording = b.started_at && !b.stopped_at;
         if (aRecording && !bRecording) return -1;
@@ -476,6 +607,15 @@ function renderSessionList(sessions) {
 
     list.setAttribute('role', 'list');
     list.innerHTML = '';
+
+    if (sortedSessions.length === 0 && sessionSearchFilter) {
+        const noResults = document.createElement('div');
+        noResults.className = 'empty-state';
+        noResults.textContent = 'No matching sessions';
+        list.appendChild(noResults);
+        return;
+    }
+
     sortedSessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'session-item';
@@ -568,6 +708,7 @@ async function deleteSession(id) {
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
         updateSessionMenuVisibility();
+        renderRecentSessions(window.lastSessions || []);
     }
 }
 
@@ -575,7 +716,8 @@ async function selectSession(id) {
     currentSessionId = id;
     window.location.hash = `#/session/${id}`;
     renderSessionList(window.lastSessions || []);
-    
+    renderRecentSessions([]); // Hide recent sessions when one is selected
+
     const stream = document.getElementById('note-stream');
     if (stream) stream.innerHTML = '';
 
@@ -583,7 +725,7 @@ async function selectSession(id) {
 
     // Join the WebSocket room for this session (this now triggers SESSION_DATA push)
     socket.send('JOIN_SESSION', { sessionId: id });
-    
+
     closeSidebarFn();
 }
 
@@ -941,6 +1083,19 @@ async function init() {
         socket.ready.then(() => selectSession(sessionMatch[1]));
     }
 
+    // Fetch sessions via REST API for immediate display (mobile recent sessions)
+    // WebSocket will update the list once connected
+    if (!window.isGuestMode) {
+        fetch('/api/sessions')
+            .then(res => res.json())
+            .then(sessions => {
+                window.lastSessions = sessions;
+                renderSessionList(sessions);
+                renderRecentSessions(sessions);
+            })
+            .catch(err => console.error('Failed to fetch sessions:', err));
+    }
+
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
     document.querySelectorAll('.sheet-color-opt').forEach(opt => opt.onclick = () => { updateColorSelection(opt.dataset.color); toggleColorPicker(false); });
 
@@ -976,6 +1131,16 @@ async function init() {
     // Esc key closes all open modals, menus, popups, and sidebar
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
+
+        // Clear search filter on Esc
+        const searchInput = document.getElementById('session-search');
+        if (searchInput && document.activeElement === searchInput && sessionSearchFilter) {
+            sessionSearchFilter = '';
+            searchInput.value = '';
+            renderSessionList(window.lastSessions || []);
+            return;
+        }
+
         // Don't intercept Esc inside inputs/textarea (e.g. edit area handles its own Esc)
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
@@ -1057,6 +1222,9 @@ async function init() {
 
     const newSessionBtnMobile = document.getElementById('new-session-btn-mobile');
     if (newSessionBtnMobile) newSessionBtnMobile.onclick = handleNewSession;
+
+    const newSessionBtnEmpty = document.getElementById('new-session-btn-empty');
+    if (newSessionBtnEmpty) newSessionBtnEmpty.onclick = handleNewSession;
     
     const sendNoteBtn = document.getElementById('send-note-btn');
     if (sendNoteBtn) sendNoteBtn.onclick = sendNote;
@@ -1102,6 +1270,14 @@ async function init() {
             const isManaging = sidebar.classList.toggle('managing');
             manageSessionsBtn.classList.toggle('active', isManaging);
             manageSessionsBtn.textContent = isManaging ? 'Done' : '✎ Edit';
+        };
+    }
+
+    const sessionSearch = document.getElementById('session-search');
+    if (sessionSearch) {
+        sessionSearch.oninput = (e) => {
+            sessionSearchFilter = e.target.value.trim();
+            renderSessionList(window.lastSessions || []);
         };
     }
 
@@ -1197,9 +1373,14 @@ async function init() {
     if (timerWarningOk) {
         timerWarningOk.onclick = () => {
             const modal = document.getElementById('timer-warning-modal');
+            const backdrop = document.getElementById('bottom-sheet-backdrop');
             if (modal) {
                 modal.style.display = 'none';
                 modal.setAttribute('aria-hidden', 'true');
+            }
+            if (backdrop) {
+                backdrop.style.display = 'none';
+                backdrop.style.opacity = '0';
             }
         };
     }
@@ -1436,6 +1617,7 @@ async function init() {
         renderNotes(notes);
         updateClock();
         updateTimerMenuVisibility();
+        renderRecentSessions([]);
     });
 
     socket.on('ERROR', (data) => {
@@ -1454,6 +1636,7 @@ async function init() {
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             updateTimerMenuVisibility();
+            renderRecentSessions(window.lastSessions || []);
         }
     });
 
@@ -1462,7 +1645,8 @@ async function init() {
         if (data.sessions) {
             window.lastSessions = data.sessions;
             renderSessionList(data.sessions);
-            
+            renderRecentSessions(data.sessions);
+
             // Sync current session metadata if active
             if (currentSessionId) {
                 const updated = data.sessions.find(s => s.id.toString() === currentSessionId.toString());
@@ -1511,6 +1695,7 @@ async function init() {
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             updateTimerMenuVisibility();
+            renderRecentSessions(window.lastSessions || []);
         }
     });
 

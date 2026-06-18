@@ -215,6 +215,42 @@ body.dark-mode .sidebar-top-actions #manage-sessions-btn {
 }
 
 #session-list { flex: 1; overflow-y: auto; }
+
+#sidebar-search-bar {
+    padding: 0.75rem 0 0;
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#sidebar-search-bar .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--text-tertiary);
+    pointer-events: none;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+}
+
+#session-search {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-family: var(--font-family);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#session-search:focus {
+    border-color: var(--primary-color);
+}
 .session-item {
     height: var(--session-item-height);
     padding: 0.75rem 1rem;
@@ -668,11 +704,13 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
 
 .desktop-only { display: flex; }
 .mobile-only { display: none; }
+.hidden { display: none !important; }
 
 @media (max-width: 768px) {
     body { flex-direction: column; height: 100%; }
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
+    .mobile-only.hidden { display: none !important; }
     
     #header-session-title { 
         display: block; 
@@ -743,6 +781,106 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
     #palette { display: none; }
     #sidebar-open { display: grid; place-items: center; }
     #note-stream { padding: 0.5rem; gap: 0.25rem; }
+
+    /* Recent Sessions List (mobile only) */
+    #recent-sessions-list {
+        padding: 0.5rem;
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        overflow-y: auto;
+        align-items: center;
+    }
+
+    .recent-session-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background-color: var(--card-bg);
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        transition: background-color 0.2s;
+        min-height: 44px;
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .recent-session-item:active {
+        background-color: var(--hover-bg);
+    }
+
+    .recent-session-time {
+        font-size: 0.75rem;
+        color: var(--secondary-color);
+        flex-shrink: 0;
+        min-width: 3ch;
+        text-align: right;
+    }
+
+    .recent-session-name {
+        flex: 1;
+        font-size: 0.9rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+
+    .recent-session-indicators {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    .recent-user-count {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        font-size: 0.7rem;
+        color: var(--secondary-color);
+        background-color: var(--hover-bg-strong);
+        padding: 2px 6px;
+        border-radius: var(--radius-pill-half);
+    }
+
+    .recent-user-count svg {
+        flex-shrink: 0;
+    }
+
+    #welcome-message {
+        display: block !important;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-align: center;
+        margin-top: 2rem;
+        margin-bottom: 0;
+    }
+
+    #new-session-btn-empty {
+        margin: 2rem auto 0;
+        padding: 0.6rem 1.2rem;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 44px;
+        transition: background-color 0.2s, transform 0.1s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #new-session-btn-empty:active {
+        transform: scale(0.98);
+    }
 }
 
 /* Quick Tags Styles */
@@ -919,6 +1057,14 @@ body.guest-mode #quick-tags-bar { display: none !important; }
 
 /* Share Link Modal */
 #share-link-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 280px;
+    max-width: 90vw;
+}
+
+#timer-warning-modal {
     bottom: 50%;
     right: 50%;
     transform: translate(50%, 50%);

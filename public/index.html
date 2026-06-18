@@ -25,6 +25,12 @@
             </div>
             <button id="new-session-btn" class="desktop-only">+ New Session</button>
             <div id="session-list"></div>
+            <div id="sidebar-search-bar">
+                <span class="search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input type="search" id="session-search" aria-label="Filter sessions">
+            </div>
         </div>
     </div>
 
@@ -129,8 +135,11 @@
             <div id="content">
                 <div id="note-stream-container">
                     <div id="note-stream" aria-live="polite">
-                        <div class="empty-state">Select a session to start taking notes.</div>
+                        <div id="welcome-message" class="mobile-only hidden">Welcome</div>
+                        <div id="empty-state-message" class="empty-state">Create a session to start taking notes.</div>
                         <div id="connecting-message" class="empty-state" style="display:none;">Connecting to server...</div>
+                        <button id="new-session-btn-empty" class="mobile-only">New Session</button>
+                        <div id="recent-sessions-list" class="mobile-only hidden"></div>
                     </div>
                     <div id="draft-timestamp-display"></div>
                 </div>
