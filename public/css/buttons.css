@@ -1,0 +1,178 @@
+/* Buttons */
+.icon-btn { 
+    background: none; border: none; color: var(--text-color); 
+    cursor: pointer; display: flex; align-items: center; justify-content: center; 
+    padding: 0.5rem; border-radius: 50%; transition: background 0.2s;
+}
+.icon-btn:hover { background: var(--hover-bg); }
+body.dark-mode .icon-btn:hover { background: var(--hover-bg); }
+
+button#new-session-btn {
+    width: 100%; height: var(--session-item-height); padding: 0.75rem 1rem; background: transparent;
+    color: var(--text-color); border: none;
+    cursor: pointer; font-family: inherit; font-size: inherit; font-weight: 700;
+    box-sizing: border-box;
+    transition: background 0.2s, transform 0.1s;
+}
+button#new-session-btn:hover { background-color: var(--hover-bg); }
+button#new-session-btn:active { transform: scale(0.98); }
+
+#sidebar-open {
+    background: none; border: none; color: var(--text-color);
+    font-size: 1.5rem; padding: 0; cursor: pointer;
+    transition: color 0.2s;
+    display: none;
+    place-items: center;
+    height: var(--header-height);
+}
+#sidebar-open:hover { color: var(--primary-color); }
+
+/* Note action buttons: modal-style text buttons */
+.note-actions button {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.2s, transform 0.1s;
+    border: none;
+    line-height: 1.2;
+}
+.note-actions button:active { transform: scale(0.97); }
+
+/* Edit: muted */
+.note-actions .edit-btn {
+    background-color: var(--surface-muted);
+    color: var(--text-color);
+}
+.note-actions .edit-btn:hover { filter: brightness(0.95); }
+
+/* Delete: muted */
+.note-actions .delete-btn {
+    background-color: var(--surface-muted);
+    color: var(--text-color);
+}
+.note-actions .delete-btn:hover { filter: brightness(0.95); }
+
+/* Save: muted */
+.note-actions .save-btn {
+    background-color: var(--surface-muted);
+    color: var(--text-color);
+}
+.note-actions .save-btn:hover { filter: brightness(0.95); }
+
+/* Cancel: muted-dark (reverse of Save/Delete) */
+.note-actions .cancel-btn {
+    background-color: var(--surface-muted-dark);
+    color: var(--color-white);
+    border: none;
+    transition: background 0.2s, transform 0.1s;
+}
+.note-actions .cancel-btn:hover { filter: brightness(0.9); }
+.note-actions .cancel-btn:active { transform: scale(0.98); }
+
+/* Confirm Del.: red */
+.note-actions .confirm-del-btn {
+    background-color: var(--recording-red);
+    color: var(--color-white);
+}
+.note-actions .confirm-del-btn:hover { filter: brightness(1.1); }
+
+/* Dark mode: swap muted ↔ muted-dark for Save/Delete vs Cancel */
+body.dark-mode .note-actions .edit-btn,
+body.dark-mode .note-actions .save-btn,
+body.dark-mode .note-actions .delete-btn {
+    background-color: var(--surface-muted-dark);
+    color: var(--color-white);
+}
+
+body.dark-mode .note-actions .cancel-btn {
+    background-color: var(--surface-muted);
+    color: var(--text-muted-dark);
+}
+
+/* Button visibility: hidden by default, shown via .editing / .delete-confirm */
+.note-actions .save-btn,
+.note-actions .cancel-btn,
+.note-actions .confirm-del-btn { display: none; }
+
+/* Edit mode: show Save + Cancel (no Delete) */
+.note.editing .note-actions .edit-btn { display: none; }
+.note.editing .note-actions .delete-btn { display: none; }
+.note.editing .note-actions .save-btn { display: inline-flex; }
+.note.editing .note-actions .cancel-btn { display: inline-flex; }
+
+/* Delete-confirm mode: show Confirm Del. + Cancel */
+.note.delete-confirm .note-actions .edit-btn { display: none; }
+.note.delete-confirm .note-actions .delete-btn { display: none; }
+.note.delete-confirm .note-actions .confirm-del-btn { display: inline-flex; }
+.note.delete-confirm .note-actions .cancel-btn { display: inline-flex; }
+
+.session-actions button svg {
+    display: block;
+    pointer-events: none;
+}
+
+.note textarea {
+    width: 100%; border: none; border-radius: 0; padding: 0;
+    font-family: inherit; font-size: inherit; line-height: 1.4;
+    background-color: transparent;
+    color: var(--text-color); resize: none; overflow: hidden;
+    box-sizing: border-box;
+    word-break: break-word; padding-left: 0.5rem;
+}
+
+/* .edit-area overrides for the overlay textarea */
+.edit-area {
+    width: 100%;
+    padding: 0;
+    padding-left: 0.5rem;
+}
+
+#input-area { padding: 1rem; border-top: 1px solid var(--border-color); background: transparent; }
+#input-row { display: flex; gap: 0.75rem; width: 100%; align-items: center; }
+
+#palette { display: flex; gap: 0.5rem; align-items: center; }
+.color-opt {
+    width: 22px; height: 22px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+    transition: transform 0.1s; flex-shrink: 0;
+}
+.color-opt.selected { border-color: var(--text-color); transform: scale(1.1); }
+.color-red { background-color: #ff4d4d; }
+.color-green { background-color: var(--accent-green); }
+.color-blue { background-color: var(--accent-blue); }
+.color-yellow { background-color: #f1c40f; }
+.color-none { background-color: var(--surface-muted); display: flex; align-items: center; justify-content: center; }
+.color-none::after { content: '×'; color: var(--text-tertiary); font-weight: bold; font-size: 14px; line-height: 0; margin-top: -1px; }
+
+#note-input {
+    flex: 1; padding: 0.75rem; border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); font-size: 16px; background-color: var(--card-bg);
+    color: var(--text-color); min-width: 0;
+}
+
+#draft-timestamp-display {
+    position: absolute; bottom: 1rem; left: 1rem; background: var(--card-bg);
+    border: 1px solid var(--border-color); border-radius: var(--radius-pill);
+    padding: 0.25rem 0.75rem; font-family: var(--font-mono); font-size: 16px;
+    color: var(--secondary-color); box-shadow: var(--shadow-md);
+    display: none; z-index: 10;
+}
+
+button#send-note-btn, button#export-btn {
+    padding: 0.6rem 0.8rem; background-color: var(--primary-color);
+    color: var(--color-white); border: none; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 0.9rem; white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+}
+button#send-note-btn:hover, button#export-btn:hover { filter: brightness(1.1); }
+button#send-note-btn:active, button#export-btn:active { transform: scale(0.98); }
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    pointer-events: none;
+}
