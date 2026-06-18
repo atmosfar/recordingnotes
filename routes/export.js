@@ -158,7 +158,7 @@ router.get('/:id/export', (req, res) => {
     }
 
     const sanitizedName = session.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/gi, '') || `session-${req.params.id}`;
-    const filename = `${sanitizedName}_${format}.${extension}`;
+    const filename = format === extension ? `${sanitizedName}.${extension}` : `${sanitizedName}_${format}.${extension}`;
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(content);
