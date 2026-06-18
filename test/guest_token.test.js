@@ -128,4 +128,40 @@ describe('Guest Token API Endpoints', () => {
     const data = await res.json();
     assert.ok(data.error);
   });
+
+  // T63: GET /?token=xxx serves index.html for valid guest token
+  test('T63: GET /?token=xxx serves index.html for valid guest token', async () => {
+    // Create a session and generate a guest token
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': authCookie },
+      body: JSON.stringify({ name: 'Guest Access Test' })
+    });
+    const { id } = await createRes.json();
+
+    const tokenRes = await fetch(`${baseUrl}/api/sessions/${id}/guest-token`, {
+      method: 'POST',
+      headers: { 'Cookie': authCookie }
+    });
+    const { token } = await tokenRes.json();
+
+    // Access root route with guest token — should serve HTML, not redirect
+    const res = await fetch(`${baseUrl}/?token=${token}`, { redirect: 'manual' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.headers.get('content-type')?.includes('html'));
+  });
+
+  // T64: GET /?token=invalid redirects to login
+  test('T64: GET /?token=invalid redirects to login', async () => {
+    const res = await fetch(`${baseUrl}/?token=invalid_token_12345`, { redirect: 'manual' });
+    assert.strictEqual(res.status, 302);
+    assert.ok(res.headers.get('location')?.startsWith('/login'));
+  });
+
+  // T65: GET / without token redirects to login when auth is required
+  test('T65: GET / without token redirects to login when auth is required', async () => {
+    const res = await fetch(`${baseUrl}/`, { redirect: 'manual' });
+    assert.strictEqual(res.status, 302);
+    assert.ok(res.headers.get('location')?.startsWith('/login'));
+  });
 });
