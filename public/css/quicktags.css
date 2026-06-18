@@ -1,0 +1,55 @@
+/* Quick Tags Styles */
+#quick-tags-bar {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    overflow: hidden;
+}
+
+#input-area.show-quicktags #quick-tags-bar {
+    display: flex;
+}
+
+#quick-tags-toggle {
+    font-size: 1.2rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+#quick-tags-list {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    flex: 1;
+    padding-bottom: 2px;
+}
+
+#quick-tags-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.tag-btn {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.tag-btn:hover {
+    background-color: var(--primary-alpha-10);
+    border-color: var(--primary-color);
+}
+
+.tag-btn:active {
+    transform: scale(0.95);
+}
