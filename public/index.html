@@ -6,10 +6,16 @@
     <title>Recording Notes</title>
     <link rel="stylesheet" href="style.css">
     <script>
-        if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-            window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
-        }
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+                // Inject critical dark-mode CSS variables on :root to prevent FOUC
+                var style = document.createElement('style');
+                style.textContent = ':root{--bg-color:#121212;--text-color:#e0e0e0;--primary-color:#6664ea;--secondary-color:#a0a0a0;--border-color:#333;--card-bg:#1a1a1a;--overlay-bg:rgba(0,0,0,0.7);--recording-red:#ff4d4d;--error-yellow:#f1c40f;--color-white:#fff;--surface-muted:#eee;--surface-muted-dark:#8c8c8c;--text-muted-dark:#121212;--accent-green:#2ecc71;--accent-blue:#3498db;--text-tertiary:#999;--primary-alpha-10:rgba(0,123,255,0.1);--purple-blue:#373664;--timestamp-color:#7b79d5;--hover-bg:rgba(255,255,255,0.05);--hover-bg-strong:rgba(255,255,255,0.1);--shadow-sm:0 2px 5px rgba(0,0,0,0.1);--shadow-md:0 2px 10px rgba(0,0,0,0.1);--shadow-lg:0 4px 15px rgba(0,0,0,0.1);--shadow-sidebar:5px 0 15px rgba(0,0,0,0.1);--radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill-half:10px;--radius-xl:12px;--radius-pill:20px;--font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-mono:monospace;--sidebar-width:300px;--header-height:60px;--session-item-height:50px;--status-bar-height:3px;--sidebar-bg:rgba(53,42,135,var(--color-intensity));--input-bg:rgba(20,129,214,var(--color-intensity))}body{background:linear-gradient(to right,var(--purple-blue),var(--bg-color)) !important}';
+                document.head.appendChild(style);
+                window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+            }
+        })();
     </script>
 </head>
 <body>
@@ -38,7 +44,7 @@
         <header style="position: relative;">
             <div class="header-left">
                 <button id="sidebar-open" aria-label="Open sidebar" aria-controls="sidebar"><svg width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-                <h1 id="header-session-title">No Session</h1>
+                <h1 id="header-session-title"></h1>
             </div>
             <div id="header-right">
                 <div id="live-clock" aria-live="polite" aria-atomic="true">00:00:00</div>
@@ -136,9 +142,9 @@
                 <div id="note-stream-container">
                     <div id="note-stream" aria-live="polite">
                         <div id="welcome-message" class="mobile-only hidden">Welcome</div>
-                        <div id="empty-state-message" class="empty-state">Create a session to start taking notes.</div>
+                        <div id="empty-state-message" class="empty-state hidden">Create a session to start taking notes.</div>
                         <div id="connecting-message" class="empty-state" style="display:none;">Connecting to server...</div>
-                        <button id="new-session-btn-empty" class="mobile-only">New Session</button>
+                        <button id="new-session-btn-empty" class="mobile-only hidden">New Session</button>
                         <div id="recent-sessions-list" class="mobile-only hidden"></div>
                     </div>
                     <div id="draft-timestamp-display"></div>
@@ -234,6 +240,6 @@
     </div>
 
     <script src="qr-creator.min.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app/index.js"></script>
 </body>
 </html>
