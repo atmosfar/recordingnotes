@@ -94,8 +94,7 @@ router.get('/:id/export', (req, res) => {
       const ts = note.timestamp_ms;
       if (session.timestamp_mode === 'timer') {
         const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
-        const elapsedMs = session.elapsed_ms || 0;
-        return (elapsedMs + (ts - sessionStartMs)) / 1000;
+        return (ts - sessionStartMs) / 1000;
       } else {
         const exportTimezone = getExportTimezone();
         const parts = new Intl.DateTimeFormat('en-GB', {
