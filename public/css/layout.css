@@ -1,0 +1,43 @@
+/* Recording Indicator / Status Bar */
+body.recording::after,
+body.session-not-found::after,
+body.timer-stopped::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: var(--status-bar-height);
+    background-color: var(--status-bar-color);
+    z-index: 1000;
+}
+
+body.session-not-found {
+    --status-bar-color: var(--error-yellow);
+}
+
+body.timer-stopped {
+    --status-bar-color: var(--error-yellow);
+}
+
+#sidebar {
+    width: var(--sidebar-width);
+    display: flex; flex-direction: column; transition: transform 0.3s ease;
+    height: 100%;
+    flex-shrink: 0;
+}
+
+#app-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+}
+
+header {
+    background: transparent;
+    padding: 0 1rem;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 100; flex-shrink: 0;
+}
