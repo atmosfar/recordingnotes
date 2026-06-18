@@ -5,7 +5,8 @@ import path from 'path';
 
 import { authIsRequired, getSessionSecret } from './middleware/config-accessors.js';
 import { checkAuth } from './middleware/auth.js';
-import { initDb } from './db.js';
+import { initDb, getDb } from './db.js';
+import * as sessions from './sessions.js';
 import { startServer } from './startup.js';
 import authRoutes from './routes/auth.js';
 import sessionsRoutes from './routes/sessions.js';
@@ -38,9 +39,24 @@ app.use(sessionParser);
 // Public routes
 app.use(authRoutes);
 
-// Root route requires auth
+// Root route requires auth (or valid guest token)
 app.get('/', (req, res) => {
-  if (authIsRequired() && !req.session?.authenticated) {
+  if (authIsRequired()) {
+    // Already authenticated or guest session active
+    if (req.session?.authenticated || req.session?.guestToken) {
+      return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+
+    // Validate guest token from query string
+    if (req.query?.token) {
+      const db = getDb();
+      const session = sessions.getSessionByGuestToken(db, req.query.token);
+      if (session) {
+        req.session.guestToken = req.query.token;
+        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+      }
+    }
+
     return res.redirect('/login?returnTo=/');
   }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
