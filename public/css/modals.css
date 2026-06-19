@@ -152,3 +152,12 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     outline: none;
     border-color: var(--primary-color);
 }
+
+/* Connection Lost Modal */
+#connection-lost-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 280px;
+    max-width: 90vw;
+}

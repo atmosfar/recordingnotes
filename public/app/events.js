@@ -3,7 +3,7 @@ import { socket } from './socket.js';
 import { renderNotes, renderQuickTags } from './notes.js';
 import { updateClock, updateTimerMenuVisibility, updateSessionMenuVisibility } from './timer.js';
 import { renderSessionList, renderRecentSessions, selectSession } from './sessions.js';
-import { toggleExportMenu, closeSidebarFn } from './ui.js';
+import { toggleExportMenu, closeSidebarFn, toggleConnectionLostModal } from './ui.js';
 
 /**
  * Register all WebSocket event handlers.
@@ -188,5 +188,9 @@ export function registerSocketListeners() {
     socket.on('SESSION_CREATED', (data) => {
         // Auto-select if we created it in this tab
         selectSession(data.id, { renderQuickTags, closeSidebarFn });
+    });
+
+    socket.on('CONNECTION_LOST', () => {
+        toggleConnectionLostModal(true);
     });
 }

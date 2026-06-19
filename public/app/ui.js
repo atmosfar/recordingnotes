@@ -135,6 +135,19 @@ export function toggleNewSessionModal(open) {
 }
 
 /**
+ * Toggle the connection lost modal.
+ */
+export function toggleConnectionLostModal(open) {
+    const modal = document.getElementById('connection-lost-modal');
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
+    if (modal) modal.classList.toggle('open', open);
+    if (backdrop) {
+        backdrop.style.display = open ? 'block' : 'none';
+        backdrop.style.opacity = open ? '1' : '0';
+    }
+}
+
+/**
  * Render the tags list inside the tags modal.
  */
 export function renderModalTags() {

@@ -14,6 +14,7 @@ import {
     toggleTagsModal,
     toggleShareLinkModal,
     toggleNewSessionModal,
+    toggleConnectionLostModal,
     renderModalTags,
     exportFn,
     themeToggleFn
@@ -47,6 +48,7 @@ export function bindDomEvents() {
             toggleTagsModal(false);
             toggleShareLinkModal(false);
             toggleNewSessionModal(false);
+            toggleConnectionLostModal(false);
         };
     }
 
@@ -80,6 +82,7 @@ export function bindDomEvents() {
         toggleTagsModal(false);
         toggleShareLinkModal(false);
         toggleNewSessionModal(false);
+        toggleConnectionLostModal(false);
         toggleOverflow(false);
         toggleExportMenu(false);
         toggleColorPicker(false);
@@ -351,6 +354,10 @@ export function bindDomEvents() {
     // Share link modal
     const closeShareModalBtn = document.getElementById('close-share-modal');
     if (closeShareModalBtn) closeShareModalBtn.onclick = () => toggleShareLinkModal(false);
+
+    // Connection lost modal
+    const reloadBtn = document.getElementById('connection-lost-reload');
+    if (reloadBtn) reloadBtn.onclick = () => location.reload();
 
     // Create session button
     const createSessionBtn = document.getElementById('create-session-btn');

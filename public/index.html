@@ -246,6 +246,16 @@
         <button id="close-share-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>
     </div>
 
+    <div id="connection-lost-modal" class="palette-popup" role="alertdialog" aria-modal="true" aria-label="Connection lost">
+        <h3 style="margin-top: 0; font-size: 1rem;">Connection Lost</h3>
+        <p id="connection-lost-message" style="font-size: 0.9rem; color: var(--secondary-color); margin: 0.5rem 0;">
+            Unable to reconnect to the server. The page may need to be reloaded.
+        </p>
+        <button id="connection-lost-reload" class="modal-primary-btn" style="width: 100%; text-align: center; margin-top: 0.5rem;">
+            Reload Page
+        </button>
+    </div>
+
     <script src="qr-creator.min.js"></script>
     <script type="module" src="app/index.js"></script>
 </body>
