@@ -33,18 +33,12 @@ pkg.zip
 *.tgz
 
 # Config variants
-config.js
 package-lock.json
 
 # NPM publish config
 .npmignore
 
-# Security docs
-SECURITY.md
-
 # Loose dev files
-debugging_plan.md
-timestamp_refactor_plan.md
 style_old.css
 reaper_to_audition_csv_converter.py
 
@@ -58,10 +52,6 @@ reaper_to_audition_csv_converter.py
 *.edl
 *.csv
 
-# Todo/dev notes
-todo.md
-aria-todo.md
-manual-timer-todo.md
-status.md
-debugging_plan.md
-plan.md
+# Markdown — ignore all except README.md
+*.md
+!README.md

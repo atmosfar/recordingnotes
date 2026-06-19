@@ -16,6 +16,7 @@
     "server.js",
     "startup.js",
     "db.js",
+    "config.js",
     "sessions.js",
     "notes.js",
     "init-db.js",
