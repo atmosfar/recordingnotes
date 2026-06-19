@@ -4,12 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Recording Notes</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/vars.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/notes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/overlays.css">
+    <link rel="stylesheet" href="css/quicktags.css">
+    <link rel="stylesheet" href="css/modals.css">
     <script>
-        if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-            window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
-        }
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+                // Inject critical dark-mode CSS variables on :root to prevent FOUC
+                var style = document.createElement('style');
+                style.textContent = ':root{--bg-color:#121212;--text-color:#e0e0e0;--primary-color:#6664ea;--secondary-color:#a0a0a0;--border-color:#333;--card-bg:#1a1a1a;--overlay-bg:rgba(0,0,0,0.7);--recording-red:#ff4d4d;--error-yellow:#f1c40f;--color-white:#fff;--surface-muted:#eee;--surface-muted-dark:#8c8c8c;--text-muted-dark:#121212;--accent-green:#2ecc71;--accent-blue:#3498db;--text-tertiary:#999;--primary-alpha-10:rgba(0,123,255,0.1);--purple-blue:#373664;--timestamp-color:#7b79d5;--hover-bg:rgba(255,255,255,0.05);--hover-bg-strong:rgba(255,255,255,0.1);--shadow-sm:0 2px 5px rgba(0,0,0,0.1);--shadow-md:0 2px 10px rgba(0,0,0,0.1);--shadow-lg:0 4px 15px rgba(0,0,0,0.1);--shadow-sidebar:5px 0 15px rgba(0,0,0,0.1);--radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill-half:10px;--radius-xl:12px;--radius-pill:20px;--font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-mono:monospace;--sidebar-width:300px;--header-height:60px;--session-item-height:50px;--status-bar-height:3px;--sidebar-bg:rgba(53,42,135,var(--color-intensity));--input-bg:rgba(20,129,214,var(--color-intensity))}body{background:linear-gradient(to right,var(--purple-blue),var(--bg-color)) !important}';
+                document.head.appendChild(style);
+                window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+            }
+        })();
     </script>
 </head>
 <body>
@@ -25,6 +38,12 @@
             </div>
             <button id="new-session-btn" class="desktop-only">+ New Session</button>
             <div id="session-list"></div>
+            <div id="sidebar-search-bar">
+                <span class="search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input type="search" id="session-search" aria-label="Filter sessions">
+            </div>
         </div>
     </div>
 
@@ -32,7 +51,7 @@
         <header style="position: relative;">
             <div class="header-left">
                 <button id="sidebar-open" aria-label="Open sidebar" aria-controls="sidebar"><svg width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-                <h1 id="header-session-title">No Session</h1>
+                <h1 id="header-session-title"></h1>
             </div>
             <div id="header-right">
                 <div id="live-clock" aria-live="polite" aria-atomic="true">00:00:00</div>
@@ -129,8 +148,11 @@
             <div id="content">
                 <div id="note-stream-container">
                     <div id="note-stream" aria-live="polite">
-                        <div class="empty-state">Select a session to start taking notes.</div>
+                        <div id="welcome-message" class="mobile-only hidden">Welcome</div>
+                        <div id="empty-state-message" class="empty-state hidden">Create a session to start taking notes.</div>
                         <div id="connecting-message" class="empty-state" style="display:none;">Connecting to server...</div>
+                        <button id="new-session-btn-empty" class="mobile-only hidden">New Session</button>
+                        <div id="recent-sessions-list" class="mobile-only hidden"></div>
                     </div>
                     <div id="draft-timestamp-display"></div>
                 </div>
@@ -224,7 +246,17 @@
         <button id="close-share-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>
     </div>
 
+    <div id="connection-lost-modal" class="palette-popup" role="alertdialog" aria-modal="true" aria-label="Connection lost">
+        <h3 style="margin-top: 0; font-size: 1rem;">Connection Lost</h3>
+        <p id="connection-lost-message" style="font-size: 0.9rem; color: var(--secondary-color); margin: 0.5rem 0;">
+            Unable to reconnect to the server. The page may need to be reloaded.
+        </p>
+        <button id="connection-lost-reload" class="modal-primary-btn" style="width: 100%; text-align: center; margin-top: 0.5rem;">
+            Reload Page
+        </button>
+    </div>
+
     <script src="qr-creator.min.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app/index.js"></script>
 </body>
 </html>

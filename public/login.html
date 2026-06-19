@@ -10,7 +10,14 @@
             window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
         }
     </script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/vars.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/notes.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/overlays.css">
+    <link rel="stylesheet" href="css/quicktags.css">
+    <link rel="stylesheet" href="css/modals.css">
     <style>
         body {
             display: flex;
@@ -79,7 +86,7 @@
         <h1>Recording Notes Login</h1>
         <form id="login-form">
             <input type="text" id="username" placeholder="Username" required aria-label="Username">
-            <input type="password" id="password" placeholder="Password" required aria-label="Password">
+            <input type="password" id="password" placeholder="Password" required autocomplete="current-password" aria-label="Password">
             <div class="remember-row">
                 <input type="checkbox" id="remember-me">
                 <label for="remember-me">Remember me</label>

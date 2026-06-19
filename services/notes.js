@@ -1,11 +1,11 @@
-export function createNote(db, { content, user_id = null, session_id, timestamp, color = null }) {
+export function createNote(db, { content, user_id = null, session_id, timestamp, timer_position_ms = null, color = null }) {
   // Accept 'timestamp' from API/WS (now UTC ms) and store as timestamp_ms
   const timestampMs = Math.round(timestamp);
   const stmt = db.prepare(`
-    INSERT INTO notes (content, user_id, session_id, timestamp_ms, color)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO notes (content, user_id, session_id, timestamp_ms, timer_position_ms, color)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(content, user_id, session_id, timestampMs, color);
+  const result = stmt.run(content, user_id, session_id, timestampMs, timer_position_ms, color);
   return result.lastInsertRowid;
 }
 
@@ -13,7 +13,7 @@ export function listNotesBySession(db, session_id) {
   const stmt = db.prepare(`
     SELECT * FROM notes 
     WHERE session_id = ? 
-    ORDER BY created_at ASC
+    ORDER BY timestamp_ms ASC
   `);
   return stmt.all(session_id);
 }

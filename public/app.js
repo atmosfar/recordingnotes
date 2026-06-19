@@ -1,9 +1,11 @@
 let currentSessionId = null;
 let currentSession = null;
 let selectedColor = "";
+let sessionSearchFilter = "";
 let activeDraftTimestamp = null;
 let draftResetTimeout = null;
 let lastManualNoteContent = null;
+let clientRunStart = null;
 
 class TagManager {
     constructor() {
@@ -322,8 +324,10 @@ function updateClock() {
 
             if (currentSession.started_at && !currentSession.stopped_at) {
                 // Timer running: elapsed + current run
-                const currentRunStart = new Date(currentSession.started_at).getTime();
-                const totalMs = elapsedMs + (Date.now() - currentRunStart);
+                // Use clientRunStart (captured at button press) for display
+                // to avoid drift from server timestamp round-trip
+                const runStart = clientRunStart || new Date(currentSession.started_at).getTime();
+                const totalMs = elapsedMs + (Date.now() - runStart);
                 clockEl.textContent = formatDuration(totalMs / 1000, 1);
                 if (infoEl) infoEl.textContent = `🔴 RECORDING: ${currentSession.name}`;
             } else if (elapsedMs > 0) {
@@ -332,7 +336,7 @@ function updateClock() {
                 if (infoEl) infoEl.textContent = `FINISHED: ${currentSession.name}`;
             } else {
                 // Timer never started
-                clockEl.textContent = '00:00:00';
+                clockEl.textContent = '00:00:00.0';
                 if (infoEl) infoEl.textContent = currentSession.name;
             }
         } else {
@@ -395,6 +399,7 @@ function updateSessionMenuVisibility() {
 
 async function startTimer() {
     if (!currentSessionId) return;
+    clientRunStart = Date.now();
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/start`, { method: 'POST' });
         if (res.ok) {
@@ -410,6 +415,7 @@ async function startTimer() {
 
 async function stopTimer() {
     if (!currentSessionId) return;
+    clientRunStart = null;
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/stop`, { method: 'POST' });
         if (res.ok) {
@@ -425,6 +431,7 @@ async function stopTimer() {
 
 async function resetTimer() {
     if (!currentSessionId) return;
+    clientRunStart = null;
     try {
         const res = await fetch(`/api/sessions/${currentSessionId}/timer/reset`, { method: 'POST' });
         if (res.ok) {
@@ -444,21 +451,151 @@ async function resetTimer() {
 function showTimerResetWarning(message) {
     const modal = document.getElementById('timer-warning-modal');
     const msgEl = document.getElementById('timer-warning-message');
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (!modal || !msgEl) return;
     msgEl.textContent = message;
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
+    if (backdrop) {
+        backdrop.style.display = 'block';
+        backdrop.style.opacity = '1';
+    }
     document.getElementById('timer-warning-ok').focus();
+}
+
+function renderRecentSessions(sessions) {
+    const container = document.getElementById('recent-sessions-list');
+    const emptyMsg = document.getElementById('empty-state-message');
+    const newSessionBtn = document.getElementById('new-session-btn-empty');
+    const welcomeMsg = document.getElementById('welcome-message');
+    if (!container) return;
+
+    // Hide recent sessions list, button, and welcome when a session is selected
+    if (currentSessionId) {
+        container.classList.add('hidden');
+        if (newSessionBtn) newSessionBtn.classList.add('hidden');
+        if (welcomeMsg) welcomeMsg.classList.add('hidden');
+        return;
+    }
+
+    // Only show recent sessions list and button on mobile
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && welcomeMsg) welcomeMsg.classList.remove('hidden');
+
+    // Update empty state message and button based on whether sessions exist
+    if (sessions.length === 0) {
+        if (emptyMsg) emptyMsg.textContent = 'Create a session to start taking notes.';
+        if (newSessionBtn && isMobile) {
+            newSessionBtn.classList.remove('hidden');
+        } else if (newSessionBtn) {
+            newSessionBtn.classList.add('hidden');
+        }
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    // Sessions exist
+    if (emptyMsg) emptyMsg.textContent = 'Select a session to start taking notes.';
+    if (newSessionBtn) newSessionBtn.classList.add('hidden');
+
+    // Sort: recording first, then by created_at DESC
+    const sorted = [...sessions].sort((a, b) => {
+        const aRecording = a.started_at && !a.stopped_at;
+        const bRecording = b.started_at && !b.stopped_at;
+        if (aRecording && !bRecording) return -1;
+        if (!aRecording && bRecording) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    // Limit to 10
+    const recent = sorted.slice(0, 10);
+
+    if (recent.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = '';
+
+    recent.forEach(session => {
+        const item = document.createElement('div');
+        item.className = 'recent-session-item';
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `Open session: ${session.name}`);
+        item.onclick = () => selectSession(session.id);
+
+        // Time (left)
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'recent-session-time';
+        const createdDate = new Date(session.created_at);
+        const now = new Date();
+        const isToday = createdDate.toDateString() === now.toDateString();
+        if (isToday) {
+            const hrs = createdDate.getHours();
+            const mins = createdDate.getMinutes().toString().padStart(2, '0');
+            timeSpan.textContent = `${hrs}:${mins}`;
+        } else {
+            timeSpan.textContent = createdDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+        item.appendChild(timeSpan);
+
+        // Name (center, flex-grow with ellipsis)
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'recent-session-name';
+        nameSpan.textContent = session.name;
+        item.appendChild(nameSpan);
+
+        // Indicators (right: recording dot + user count)
+        const indicators = document.createElement('div');
+        indicators.className = 'recent-session-indicators';
+
+        const isRecording = session.started_at && !session.stopped_at;
+        if (isRecording) {
+            const dot = document.createElement('span');
+            dot.className = 'recording-dot';
+            dot.setAttribute('role', 'status');
+            dot.setAttribute('aria-label', 'Recording active');
+            indicators.appendChild(dot);
+        }
+
+        if (session.active_users > 0) {
+            const userCount = document.createElement('span');
+            userCount.className = 'recent-user-count';
+            userCount.setAttribute('role', 'status');
+            userCount.setAttribute('aria-label', `${session.active_users} users connected`);
+            userCount.innerHTML = `
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                ${session.active_users}
+            `;
+            indicators.appendChild(userCount);
+        }
+
+        item.appendChild(indicators);
+        container.appendChild(item);
+    });
 }
 
 function renderSessionList(sessions) {
     const list = document.getElementById('session-list');
     if (!list) return;
 
+    // Apply search filter (case-insensitive, name only)
+    let filtered = sessions;
+    if (sessionSearchFilter) {
+        const q = sessionSearchFilter.toLowerCase();
+        filtered = sessions.filter(s => s.name.toLowerCase().includes(q));
+    }
+
     // Prioritized Sorting:
     // 1. Recording (started_at && !stopped_at)
     // 2. Creation date (DESC)
-    const sortedSessions = [...sessions].sort((a, b) => {
+    const sortedSessions = [...filtered].sort((a, b) => {
         const aRecording = a.started_at && !a.stopped_at;
         const bRecording = b.started_at && !b.stopped_at;
         if (aRecording && !bRecording) return -1;
@@ -470,6 +607,15 @@ function renderSessionList(sessions) {
 
     list.setAttribute('role', 'list');
     list.innerHTML = '';
+
+    if (sortedSessions.length === 0 && sessionSearchFilter) {
+        const noResults = document.createElement('div');
+        noResults.className = 'empty-state';
+        noResults.textContent = 'No matching sessions';
+        list.appendChild(noResults);
+        return;
+    }
+
     sortedSessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'session-item';
@@ -562,6 +708,7 @@ async function deleteSession(id) {
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
         updateSessionMenuVisibility();
+        renderRecentSessions(window.lastSessions || []);
     }
 }
 
@@ -569,7 +716,8 @@ async function selectSession(id) {
     currentSessionId = id;
     window.location.hash = `#/session/${id}`;
     renderSessionList(window.lastSessions || []);
-    
+    renderRecentSessions([]); // Hide recent sessions when one is selected
+
     const stream = document.getElementById('note-stream');
     if (stream) stream.innerHTML = '';
 
@@ -577,7 +725,7 @@ async function selectSession(id) {
 
     // Join the WebSocket room for this session (this now triggers SESSION_DATA push)
     socket.send('JOIN_SESSION', { sessionId: id });
-    
+
     closeSidebarFn();
 }
 
@@ -683,39 +831,84 @@ function renderNotes(notes) {
             div.querySelector('.confirm-del-btn').onclick = () => { closeOtherNotesActions(div); deleteNote(div); };
 
             // Long-press to enter edit mode (mobile)
-            let longPressTimer = null;
-            let longPressTriggered = false;
+            let lpTimer = null;
+            let lpStartX = 0, lpStartY = 0;
+            let lpTriggered = false;
+            let wasTouched = false;
+            const LP_MS = 600;
+            const LP_TOLERANCE = 12;
 
-            const startLongPress = (e) => {
-                if (window.innerWidth > 768) return;
-                if (div.classList.contains('editing')) return;
-                if (e.target.closest('.note-actions')) return;
-                longPressTriggered = false;
-                longPressTimer = setTimeout(() => {
-                    longPressTriggered = true;
-                    // Exit editing mode on all other notes
-                    document.querySelectorAll('.note.editing').forEach(other => {
-                        if (other !== div) toggleEditMode(other, false);
-                    });
-                    toggleEditMode(div, true);
-                }, 500);
+            const lpClear = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
+
+            const lpAction = () => {
+                lpTriggered = true;
+                document.querySelectorAll('.note.editing').forEach(other => {
+                    if (other !== div) toggleEditMode(other, false);
+                });
+                toggleEditMode(div, true);
             };
 
-            const cancelLongPress = () => {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
+            const lpGuards = (e) => {
+                if (window.innerWidth > 768) return false;
+                if (div.classList.contains('editing')) return false;
+                if (e.target.closest('.note-actions')) return false;
+                if (e.type === 'mousedown' && wasTouched) return false;
+                return true;
             };
 
-            div.addEventListener('touchstart', startLongPress, { passive: true });
-            div.addEventListener('touchend', (e) => {
-                cancelLongPress();
+            const lpStart = (x, y, e) => {
+                if (!lpGuards(e)) return;
+                lpClear();
+                lpTriggered = false;
+                lpStartX = x; lpStartY = y;
+                lpTimer = setTimeout(lpAction, LP_MS);
+            };
+
+            const lpMove = (x, y) => {
+                if (!lpTimer) return;
+                if (Math.hypot(x - lpStartX, y - lpStartY) > LP_TOLERANCE) lpClear();
+            };
+
+            const lpEnd = () => {
+                lpClear();
+                setTimeout(() => { wasTouched = false; }, 1500);
+            };
+
+            // Touch
+            div.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 1) return;
+                wasTouched = true;
+                const t = e.touches[0];
+                lpStart(t.clientX, t.clientY, e);
+            }, { passive: true });
+
+            div.addEventListener('touchmove', (e) => {
+                if (!e.touches.length) return;
+                const t = e.touches[0];
+                lpMove(t.clientX, t.clientY);
+            }, { passive: true });
+
+            div.addEventListener('touchend', lpEnd, { passive: true });
+            div.addEventListener('touchcancel', lpEnd, { passive: true });
+
+            // Mouse
+            div.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                lpStart(e.clientX, e.clientY, e);
             });
-            div.addEventListener('touchmove', cancelLongPress, { passive: true });
-            div.addEventListener('mousedown', startLongPress);
-            div.addEventListener('mouseup', (e) => {
-                if (!longPressTriggered) cancelLongPress();
+
+            document.addEventListener('mousemove', (e) => {
+                if (!lpTimer) return;
+                lpMove(e.clientX, e.clientY);
             });
-            div.addEventListener('mousemove', cancelLongPress);
+
+            document.addEventListener('mouseup', (e) => {
+                if (e.button !== 0) return;
+                lpEnd();
+            });
+
+            // Prevent native context menu
+            div.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
 
             // Find correct insertion point
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
@@ -856,7 +1049,11 @@ const closeSidebarFn = () => {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('bottom-sheet-backdrop');
     if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        backdrop.style.display = 'none';
+        backdrop.style.opacity = '0';
+    }
 };
 
 async function init() {
@@ -884,6 +1081,19 @@ async function init() {
         if (connectingMsg) connectingMsg.style.display = 'block';
         // Wait for WebSocket to be ready before joining to avoid dropped messages
         socket.ready.then(() => selectSession(sessionMatch[1]));
+    }
+
+    // Fetch sessions via REST API for immediate display (mobile recent sessions)
+    // WebSocket will update the list once connected
+    if (!window.isGuestMode) {
+        fetch('/api/sessions')
+            .then(res => res.json())
+            .then(sessions => {
+                window.lastSessions = sessions;
+                renderSessionList(sessions);
+                renderRecentSessions(sessions);
+            })
+            .catch(err => console.error('Failed to fetch sessions:', err));
     }
 
     document.querySelectorAll('.color-opt').forEach(opt => opt.onclick = () => updateColorSelection(opt.dataset.color));
@@ -921,6 +1131,16 @@ async function init() {
     // Esc key closes all open modals, menus, popups, and sidebar
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
+
+        // Clear search filter on Esc
+        const searchInput = document.getElementById('session-search');
+        if (searchInput && document.activeElement === searchInput && sessionSearchFilter) {
+            sessionSearchFilter = '';
+            searchInput.value = '';
+            renderSessionList(window.lastSessions || []);
+            return;
+        }
+
         // Don't intercept Esc inside inputs/textarea (e.g. edit area handles its own Esc)
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
@@ -1002,6 +1222,9 @@ async function init() {
 
     const newSessionBtnMobile = document.getElementById('new-session-btn-mobile');
     if (newSessionBtnMobile) newSessionBtnMobile.onclick = handleNewSession;
+
+    const newSessionBtnEmpty = document.getElementById('new-session-btn-empty');
+    if (newSessionBtnEmpty) newSessionBtnEmpty.onclick = handleNewSession;
     
     const sendNoteBtn = document.getElementById('send-note-btn');
     if (sendNoteBtn) sendNoteBtn.onclick = sendNote;
@@ -1029,7 +1252,11 @@ async function init() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('bottom-sheet-backdrop');
             if (sidebar) sidebar.classList.add('open');
-            if (backdrop) backdrop.classList.add('open');
+            if (backdrop) {
+                backdrop.classList.add('open');
+                backdrop.style.display = 'block';
+                backdrop.style.opacity = '1';
+            }
         };
     }
     
@@ -1043,6 +1270,14 @@ async function init() {
             const isManaging = sidebar.classList.toggle('managing');
             manageSessionsBtn.classList.toggle('active', isManaging);
             manageSessionsBtn.textContent = isManaging ? 'Done' : '✎ Edit';
+        };
+    }
+
+    const sessionSearch = document.getElementById('session-search');
+    if (sessionSearch) {
+        sessionSearch.oninput = (e) => {
+            sessionSearchFilter = e.target.value.trim();
+            renderSessionList(window.lastSessions || []);
         };
     }
 
@@ -1138,9 +1373,14 @@ async function init() {
     if (timerWarningOk) {
         timerWarningOk.onclick = () => {
             const modal = document.getElementById('timer-warning-modal');
+            const backdrop = document.getElementById('bottom-sheet-backdrop');
             if (modal) {
                 modal.style.display = 'none';
                 modal.setAttribute('aria-hidden', 'true');
+            }
+            if (backdrop) {
+                backdrop.style.display = 'none';
+                backdrop.style.opacity = '0';
             }
         };
     }
@@ -1340,7 +1580,6 @@ async function init() {
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     socket.on('SESSION_DATA', (data) => {
-        console.log('Received session data via WebSocket');
         const { session, notes } = data;
         
         document.body.classList.remove('session-not-found');
@@ -1349,6 +1588,13 @@ async function init() {
         if (connectingMsg) connectingMsg.style.display = 'none';
         currentSession = session;
         currentSessionId = session.id;
+        
+        // Sync clientRunStart if timer is already running (page load/reconnect)
+        if (session.timestamp_mode === 'timer' && session.started_at && !session.stopped_at) {
+            clientRunStart = new Date(session.started_at).getTime();
+        } else {
+            clientRunStart = null;
+        }
         
         const headerTitle = document.getElementById('header-session-title');
         if (headerTitle && headerTitle.textContent !== currentSession.name) headerTitle.textContent = currentSession.name;
@@ -1371,6 +1617,7 @@ async function init() {
         renderNotes(notes);
         updateClock();
         updateTimerMenuVisibility();
+        renderRecentSessions([]);
     });
 
     socket.on('ERROR', (data) => {
@@ -1378,6 +1625,7 @@ async function init() {
             console.error('Session not found error from server');
             currentSessionId = null;
             currentSession = null;
+            clientRunStart = null;
             document.body.classList.add('session-not-found');
             document.body.classList.add('recording');
             document.getElementById('note-stream').innerHTML = '<div class="empty-state">Session not found.</div>';
@@ -1388,24 +1636,31 @@ async function init() {
             const infoEl = document.getElementById('session-info');
             if (infoEl) infoEl.textContent = "No Session";
             updateTimerMenuVisibility();
+            renderRecentSessions(window.lastSessions || []);
         }
     });
 
     // WebSocket Event Listeners
     socket.on('SESSION_LIST_UPDATE', (data) => {
-        console.log('Session list updated via WebSocket');
         if (data.sessions) {
             window.lastSessions = data.sessions;
             renderSessionList(data.sessions);
-            
+            renderRecentSessions(data.sessions);
+
             // Sync current session metadata if active
             if (currentSessionId) {
                 const updated = data.sessions.find(s => s.id.toString() === currentSessionId.toString());
                 if (updated) {
                     currentSession = updated;
+                    if (updated.timestamp_mode === 'timer' && updated.started_at && !updated.stopped_at) {
+                        if (!clientRunStart) {
+                            clientRunStart = new Date(updated.started_at).getTime();
+                        }
+                    } else {
+                        clientRunStart = null;
+                    }
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle && headerTitle.textContent !== updated.name) {
-                        console.log('Updating header title to:', updated.name);
                         headerTitle.textContent = updated.name;
                     }
                     updateClock();
@@ -1414,6 +1669,7 @@ async function init() {
                     // It was deleted (should be handled by SESSION_DELETED but as a fallback)
                     currentSession = null;
                     currentSessionId = null;
+                    clientRunStart = null;
                     const headerTitle = document.getElementById('header-session-title');
                     if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
                     updateSessionMenuVisibility();
@@ -1423,10 +1679,10 @@ async function init() {
     });
 
     socket.on('SESSION_DELETED', (data) => {
-        console.log('Session deleted via WebSocket:', data.sessionId);
         if (currentSessionId?.toString() === data.sessionId.toString()) {
             currentSessionId = null;
             currentSession = null;
+            clientRunStart = null;
             window.location.hash = '';
             const stream = document.getElementById('note-stream');
             if (stream) stream.innerHTML = '<div class="empty-state">This session has been deleted.</div>';
@@ -1439,6 +1695,7 @@ async function init() {
             const headerTitle = document.getElementById('header-session-title');
             if (headerTitle && headerTitle.textContent !== "") headerTitle.textContent = "";
             updateTimerMenuVisibility();
+            renderRecentSessions(window.lastSessions || []);
         }
     });
 
@@ -1469,10 +1726,9 @@ async function init() {
             console.log('Session status updated via WebSocket');
             currentSession.status = data.status;
             if (data.status === 'active') {
-                currentSession.started_at = currentSession.started_at || new Date().toISOString();
                 currentSession.stopped_at = null;
             } else if (data.status === 'completed') {
-                currentSession.stopped_at = new Date().toISOString();
+                // stopped_at will be set correctly by SESSION_UPDATE
             }
             updateClock();
             updateTimerMenuVisibility();
@@ -1481,8 +1737,19 @@ async function init() {
 
     socket.on('SESSION_UPDATE', (data) => {
         if (data.session.id.toString() === currentSessionId?.toString()) {
-            console.log('Session updated via WebSocket');
             currentSession = data.session;
+            // Only set clientRunStart from server if we don't already have one
+            // (i.e., timer was started by another client, not us)
+            if (data.session.timestamp_mode === 'timer' && data.session.started_at && !data.session.stopped_at) {
+                if (!clientRunStart) {
+                    // Timer started elsewhere; approximate so display isn't wrong
+                    const serverStart = new Date(data.session.started_at).getTime();
+                    clientRunStart = serverStart;
+                }
+                // If clientRunStart is already set, keep it (we started the timer here)
+            } else {
+                clientRunStart = null;
+            }
             updateClock();
             updateTimerMenuVisibility();
         }

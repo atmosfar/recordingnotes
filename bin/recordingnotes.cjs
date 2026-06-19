@@ -27,7 +27,7 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
   const dbPath = process.env.RECNOTES_DB_PATH || path.join(process.cwd(), 'dev.db');
   if (!fs.existsSync(dbPath)) {
     try {
-      const initDbPath = path.join(__dirname, '..', 'init-db.js');
+      const initDbPath = path.join(__dirname, 'init-db.js');
       execSync(`node ${initDbPath}`, { stdio: 'inherit' });
     } catch (e) {
       console.error('Failed to initialize database. Please check your DB_PATH.');
@@ -69,7 +69,7 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
     });
   }
 } else if (cmd === 'init-db') {
-  const initDbPath = path.join(__dirname, '..', 'init-db.js');
+  const initDbPath = path.join(__dirname, 'init-db.js');
   execSync(`node ${initDbPath}`, { stdio: 'inherit' });
 } else {
   console.error(`Unknown command: ${cmd}`);
