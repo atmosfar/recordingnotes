@@ -1,6 +1,6 @@
 {
   "name": "recordingnotes",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Minimalist podcast note-taking system with real-time collaboration",
   "main": "server.js",
   "type": "module",
@@ -9,18 +9,13 @@
   },
   "files": [
     "bin/",
+    "services/",
     "public/",
     "middleware/",
     "routes/",
     "websocket/",
     "server.js",
     "startup.js",
-    "db.js",
-    "config.js",
-    "sessions.js",
-    "notes.js",
-    "init-db.js",
-    "reset-db.js",
     ".env.example",
     "README.md",
     "LICENSE"
