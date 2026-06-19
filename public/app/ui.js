@@ -159,11 +159,16 @@ export function renderModalTags() {
         const item = document.createElement('div');
         item.className = 'modal-tag-item';
         item.setAttribute('role', 'listitem');
-        item.innerHTML = `
-            <span>${tag}</span>
-            <button class="delete-tag-btn" title="Delete tag" aria-label="Delete tag: ${tag}">×</button>
-        `;
-        item.querySelector('.delete-tag-btn').onclick = () => {
+        const span = document.createElement('span');
+        span.textContent = tag;
+        item.appendChild(span);
+
+        const btn = document.createElement('button');
+        btn.className = 'delete-tag-btn';
+        btn.title = 'Delete tag';
+        btn.setAttribute('aria-label', `Delete tag: ${tag}`);
+        btn.textContent = '×';
+        btn.onclick = () => {
             tagManager.removeTag(tag);
             renderModalTags();
             renderQuickTags();
