@@ -151,25 +151,25 @@ export function renderNotes(notes) {
                 setTimeout(() => { wasTouched = false; }, 1500);
             };
 
-            // Touch
-            div.addEventListener('touchstart', (e) => {
+            // Touch — only on .content (not timestamp, not editing textarea)
+            contentSpan.addEventListener('touchstart', (e) => {
                 if (e.touches.length > 1) return;
                 wasTouched = true;
                 const t = e.touches[0];
                 lpStart(t.clientX, t.clientY, e);
             }, { passive: true });
 
-            div.addEventListener('touchmove', (e) => {
+            contentSpan.addEventListener('touchmove', (e) => {
                 if (!e.touches.length) return;
                 const t = e.touches[0];
                 lpMove(t.clientX, t.clientY);
             }, { passive: true });
 
-            div.addEventListener('touchend', lpEnd, { passive: true });
-            div.addEventListener('touchcancel', lpEnd, { passive: true });
+            contentSpan.addEventListener('touchend', lpEnd, { passive: true });
+            contentSpan.addEventListener('touchcancel', lpEnd, { passive: true });
 
             // Mouse
-            div.addEventListener('mousedown', (e) => {
+            contentSpan.addEventListener('mousedown', (e) => {
                 if (e.button !== 0) return;
                 lpStart(e.clientX, e.clientY, e);
             });
@@ -184,8 +184,8 @@ export function renderNotes(notes) {
                 lpEnd();
             });
 
-            // Prevent native context menu
-            div.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
+            // Prevent native context menu — only on note text, not timestamp
+            contentSpan.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
 
             // Find correct insertion point
             const currentNotes = Array.from(stream.querySelectorAll('.note'));
