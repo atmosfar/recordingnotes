@@ -37,6 +37,9 @@ async function init() {
         window.isGuestMode = true;
         window.guestToken = effectiveGuestToken;
         document.body.classList.add('guest-mode');
+        // Hide welcome message immediately — it has no place in guest mode
+        const welcomeMsg = document.getElementById('welcome-message');
+        if (welcomeMsg) welcomeMsg.remove();
         // Show connecting message while waiting for WebSocket
         const connectingMsg = document.getElementById('connecting-message');
         if (connectingMsg) connectingMsg.style.display = 'block';

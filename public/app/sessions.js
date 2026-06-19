@@ -21,9 +21,14 @@ export function renderRecentSessions(sessions) {
         return;
     }
 
+    // Never show the welcome message in guest mode
+    if (window.isGuestMode) {
+        if (welcomeMsg) welcomeMsg.classList.add('hidden');
+    }
+
     // Only show recent sessions list and button on mobile
     const isMobile = window.innerWidth <= 768;
-    if (isMobile && welcomeMsg) welcomeMsg.classList.remove('hidden');
+    if (isMobile && welcomeMsg && !window.isGuestMode) welcomeMsg.classList.remove('hidden');
 
     // Update empty state message and button based on whether sessions exist
     if (sessions.length === 0) {
