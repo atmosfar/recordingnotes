@@ -11,8 +11,9 @@ const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
 router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
   console.log('--- Received Trigger Request ---');
-  const { action, id, name } = req.body;
-  console.log('Action:', action, 'ID:', id, 'Name:', name);
+  const { action, id, instant } = req.body;
+  let name = req.body.name;
+  console.log('Action:', action, 'ID:', id, 'Name:', name, 'Instant:', instant);
 
   try {
     const db = getDb();
@@ -27,6 +28,31 @@ router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
     }
 
     if (action === 'start') {
+      // Instant mode: create and start a session in one call
+      if (instant === true) {
+        if (!name) {
+          const now = new Date();
+          const dd = String(now.getDate()).padStart(2, '0');
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const yy = String(now.getFullYear()).slice(-2);
+          const hh = String(now.getHours()).padStart(2, '0');
+          const ss = String(now.getMinutes()).padStart(2, '0');
+          name = `${dd}/${mm}/${yy} ${hh}:${ss} - Instant Session `;
+        }
+        const newId = sessions.createSession(db, { name });
+        sessions.updateSession(db, newId, {
+          timestamp_mode: 'timer',
+          started_at: new Date().toISOString(),
+          stopped_at: null,
+          status: 'active',
+          elapsed_ms: 0,
+          last_run_ms: 0
+        });
+        broadcastToRoom(newId, { type: 'SESSION_STATUS_UPDATE', sessionId: newId, status: 'active' });
+        broadcastSessionList();
+        return res.status(201).json({ status: 'started', id: newId });
+      }
+
       if (!id) {
         return res.status(400).json({ error: 'Session ID is required for start action' });
       }
