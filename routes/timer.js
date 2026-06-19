@@ -14,11 +14,15 @@ router.post('/:id/timer/start', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
+    const prevElapsed = session.elapsed_ms || 0;
+    const lastRun = session.last_run_ms || 0;
     const updates = {
       timestamp_mode: 'timer',
       started_at: new Date().toISOString(),
       stopped_at: null,
-      status: 'active'
+      status: 'active',
+      elapsed_ms: prevElapsed + lastRun,
+      last_run_ms: 0
     };
     sessions.updateSession(db, req.params.id, updates);
 
@@ -50,12 +54,11 @@ router.post('/:id/timer/stop', async (req, res) => {
     const startedAt = new Date(session.started_at).getTime();
     const stoppedAt = Date.now();
     const elapsedThisRun = stoppedAt - startedAt;
-    const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
 
     sessions.updateSession(db, req.params.id, {
       stopped_at: new Date().toISOString(),
       status: 'completed',
-      elapsed_ms: newElapsedMs
+      last_run_ms: elapsedThisRun
     });
 
     const updated = sessions.getSession(db, req.params.id);
@@ -87,6 +90,7 @@ router.post('/:id/timer/reset', async (req, res) => {
       started_at: null,
       stopped_at: null,
       elapsed_ms: 0,
+      last_run_ms: 0,
       status: 'active'
     });
 

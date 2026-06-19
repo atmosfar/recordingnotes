@@ -314,11 +314,12 @@ export async function sendNote() {
     const timestamp = state.activeDraftTimestamp !== null ? state.activeDraftTimestamp : Date.now();
 
     socket.send('CREATE_NOTE', {
-        payload: { content, timestamp, color: state.selectedColor }
+        payload: { content, timestamp, color: state.selectedColor, timer_position_ms: state.activeDraftTimerPositionMs }
     });
 
     input.value = '';
     state.activeDraftTimestamp = null;
+    state.activeDraftTimerPositionMs = null;
     if (state.draftResetTimeout) { clearTimeout(state.draftResetTimeout); state.draftResetTimeout = null; }
     updateDraftDisplay();
 }
@@ -332,12 +333,18 @@ export function captureDraftTimestamp() {
     if (state.currentSession && state.currentSession.timestamp_mode === 'timer' && (!state.currentSession.started_at || state.currentSession.stopped_at)) {
         return;
     }
-    if (state.currentSession && state.currentSession.started_at) {
-        // Timer mode: store as sessionStartMs + elapsed ms
-        state.activeDraftTimestamp = Date.now();
+    state.activeDraftTimestamp = Date.now();
+
+    // Freeze the timer position at the moment the draft is captured.
+    // This is critical for multi-run sessions: the position is locked to
+    // the run that was active when the user started typing, not the run
+    // that happens when they eventually hit Enter.
+    if (state.currentSession && state.currentSession.timestamp_mode === 'timer' && state.currentSession.started_at) {
+        const sessionStartMs = new Date(state.currentSession.started_at).getTime();
+        const elapsedMs = state.currentSession.elapsed_ms || 0;
+        state.activeDraftTimerPositionMs = elapsedMs + (Date.now() - sessionStartMs);
     } else {
-        // Clock mode: store as Date.now() (UTC ms)
-        state.activeDraftTimestamp = Date.now();
+        state.activeDraftTimerPositionMs = null;
     }
     updateDraftDisplay();
 }
@@ -349,8 +356,13 @@ export function updateDraftDisplay() {
     const displayEl = document.getElementById('draft-timestamp-display');
     if (!displayEl) return;
     if (state.activeDraftTimestamp !== null) {
-        // Create a pseudo-note object for displayTimestamp
-        const pseudoNote = { timestamp_ms: state.activeDraftTimestamp };
+        // Create a pseudo-note object for displayTimestamp.
+        // Include the frozen timer position so displayTimestamp uses it
+        // directly — correct regardless of session state changes (stop/start).
+        const pseudoNote = {
+            timestamp_ms: state.activeDraftTimestamp,
+            timer_position_ms: state.activeDraftTimerPositionMs
+        };
         displayEl.textContent = displayTimestamp(pseudoNote, state.currentSession);
         displayEl.style.display = 'block';
     } else {

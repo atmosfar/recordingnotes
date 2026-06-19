@@ -19,6 +19,7 @@
     "sessions.js",
     "notes.js",
     "init-db.js",
+    "reset-db.js",
     ".env.example",
     "README.md",
     "LICENSE"
@@ -28,7 +29,7 @@
     "dev": "nodemon server.js",
     "test": "NODE_ENV=test RECNOTES_DB_PATH=test.db node --test test/*.test.js",
     "init-db": "node init-db.js",
-    "db:reset": "rm -f $RECNOTES_DB_PATH && node init-db.js"
+    "db:reset": "node reset-db.js"
   },
   "engines": {
     "node": ">=23.9.0"

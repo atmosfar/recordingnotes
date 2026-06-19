@@ -32,11 +32,15 @@ router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
       }
       const session = sessions.getSession(db, id);
       if (session) {
-        sessions.updateSession(db, id, { 
+        const prevElapsed = session.elapsed_ms || 0;
+        const lastRun = session.last_run_ms || 0;
+        sessions.updateSession(db, id, {
           timestamp_mode: 'timer',
           started_at: new Date().toISOString(),
           stopped_at: null,
-          status: 'active'
+          status: 'active',
+          elapsed_ms: prevElapsed + lastRun,
+          last_run_ms: 0
         });
         broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'active' });
         broadcastSessionList();
@@ -56,13 +60,12 @@ router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
         }
         const startedAt = session.started_at ? new Date(session.started_at).getTime() : 0;
         const elapsedThisRun = startedAt ? Date.now() - startedAt : 0;
-        const newElapsedMs = (session.elapsed_ms || 0) + elapsedThisRun;
 
-        sessions.updateSession(db, id, { 
+        sessions.updateSession(db, id, {
           timestamp_mode: 'timer',
           stopped_at: new Date().toISOString(),
           status: 'completed',
-          elapsed_ms: newElapsedMs
+          last_run_ms: elapsedThisRun
         });
         broadcastToRoom(id, { type: 'SESSION_STATUS_UPDATE', sessionId: id, status: 'completed' });
         broadcastSessionList();
@@ -94,7 +97,14 @@ router.post('/', apiLimiter, checkApiTokenAuth, (req, res) => {
       }
       // Use current time as timestamp (UTC ms)
       const timestamp = Date.now();
-      const noteId = notes.createNote(db, { content, timestamp, session_id: id });
+      // Calculate timer position for timer-mode sessions
+      let timerPositionMs = null;
+      if (session.timestamp_mode === 'timer' && session.started_at) {
+        const sessionStartMs = new Date(session.started_at).getTime();
+        const elapsedMs = session.elapsed_ms || 0;
+        timerPositionMs = elapsedMs + (timestamp - sessionStartMs);
+      }
+      const noteId = notes.createNote(db, { content, timestamp, session_id: id, timer_position_ms: timerPositionMs });
       broadcastNoteUpdate(id);
       return res.status(201).json({ id: noteId, status: 'created' });
     }

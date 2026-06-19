@@ -8,6 +8,7 @@ export const state = {
     selectedColor: "",
     sessionSearchFilter: "",
     activeDraftTimestamp: null,
+    activeDraftTimerPositionMs: null,
     draftResetTimeout: null,
     lastManualNoteContent: null,
     clientRunStart: null,

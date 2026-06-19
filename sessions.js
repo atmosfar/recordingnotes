@@ -25,7 +25,7 @@ export function listSessions(db) {
 }
 
 export function updateSession(db, id, updates) {
-  const ALLOWED_FIELDS = ['name', 'timestamp_mode', 'external_id', 'status', 'started_at', 'stopped_at', 'elapsed_ms', 'guest_token'];
+  const ALLOWED_FIELDS = ['name', 'timestamp_mode', 'external_id', 'status', 'started_at', 'stopped_at', 'elapsed_ms', 'last_run_ms', 'guest_token'];
   const filteredEntries = Object.entries(updates).filter(([key]) => ALLOWED_FIELDS.includes(key));
 
   if (filteredEntries.length === 0) return;

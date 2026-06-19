@@ -58,6 +58,7 @@ export function initDb() {
       started_at DATETIME,
       stopped_at DATETIME,
       elapsed_ms INTEGER DEFAULT 0,
+      last_run_ms INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -67,12 +68,23 @@ export function initDb() {
       user_id INTEGER,
       session_id INTEGER NOT NULL,
       timestamp_ms INTEGER NOT NULL DEFAULT 0,
+      timer_position_ms INTEGER,
       color TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id),
       FOREIGN KEY (session_id) REFERENCES sessions (id)
     );
   `);
+
+  // Migration: add timer_position_ms column if it doesn't exist
+  try {
+    db.exec('ALTER TABLE notes ADD COLUMN timer_position_ms INTEGER DEFAULT NULL');
+  } catch (e) { /* column already exists */ }
+
+  // Migration: add last_run_ms column if it doesn't exist
+  try {
+    db.exec('ALTER TABLE sessions ADD COLUMN last_run_ms INTEGER DEFAULT 0');
+  } catch (e) { /* column already exists */ }
 
   initializedPaths.add(dbPath);
   console.log('Database initialized at', dbPath);

@@ -111,14 +111,14 @@ describe('Timer Control API Endpoints', () => {
     assert.strictEqual(res.status, 200);
     const data = await res.json();
     assert.strictEqual(data.status, 'ok');
-    assert.ok(data.session.elapsed_ms > 0);
+    assert.ok((data.session.last_run_ms || 0) > 0);
     assert.ok(data.session.stopped_at);
     assert.strictEqual(data.session.status, 'completed');
 
-    // Verify elapsed_ms accumulated in DB
+    // Verify last_run_ms is set in DB (elapsed_ms only rolls forward on next start)
     const db = getDb();
     const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id);
-    assert.ok(session.elapsed_ms > 0);
+    assert.ok((session.last_run_ms || 0) > 0);
   });
 
   // T22: POST /api/sessions/:id/timer/reset (including notes-guard 400)

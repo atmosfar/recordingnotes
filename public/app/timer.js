@@ -64,9 +64,10 @@ export function updateClock() {
                 const totalMs = elapsedMs + (Date.now() - runStart);
                 clockEl.textContent = formatDuration(totalMs / 1000, 1);
                 if (infoEl) infoEl.textContent = `🔴 RECORDING: ${state.currentSession.name}`;
-            } else if (elapsedMs > 0) {
-                // Timer stopped: show accumulated time
-                clockEl.textContent = formatDuration(elapsedMs / 1000, 1);
+            } else if (elapsedMs > 0 || (state.currentSession.last_run_ms || 0) > 0) {
+                // Timer stopped: show accumulated time (elapsed_ms + last_run_ms)
+                const totalMs = elapsedMs + (state.currentSession.last_run_ms || 0);
+                clockEl.textContent = formatDuration(totalMs / 1000, 1);
                 if (infoEl) infoEl.textContent = `FINISHED: ${state.currentSession.name}`;
             } else {
                 // Timer never started

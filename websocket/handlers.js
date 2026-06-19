@@ -89,7 +89,15 @@ export function handleMessage(ws, request, data, sessionRooms, broadcastSessionL
       if (session && session.timestamp_mode === 'timer' && !session.started_at) {
         return ws.send(JSON.stringify({ type: 'ERROR', message: 'Timer is not running. Start the timer to add notes.' }));
       }
-      notes.createNote(db, { ...payload, session_id: ws.currentSessionId });
+      // Use client-provided timer_position_ms if available (frozen at draft capture time).
+      // Fall back to server-side calculation for non-draft notes.
+      let timerPositionMs = payload.timer_position_ms ?? null;
+      if (timerPositionMs == null && session && session.timestamp_mode === 'timer' && session.started_at) {
+        const sessionStartMs = new Date(session.started_at).getTime();
+        const elapsedMs = session.elapsed_ms || 0;
+        timerPositionMs = elapsedMs + (payload.timestamp - sessionStartMs);
+      }
+      notes.createNote(db, { ...payload, session_id: ws.currentSessionId, timer_position_ms: timerPositionMs });
       broadcastNoteUpdate(ws.currentSessionId);
     }
   } else if (data.type === 'UPDATE_NOTE') {

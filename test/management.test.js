@@ -32,6 +32,7 @@ describe('Session and Note Management Operations', () => {
         user_id INTEGER,
         session_id INTEGER NOT NULL,
         timestamp_ms INTEGER NOT NULL DEFAULT 0,
+        timer_position_ms INTEGER,
         color TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (session_id) REFERENCES sessions (id)

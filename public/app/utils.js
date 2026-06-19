@@ -35,6 +35,11 @@ export function displayTimestamp(note, session) {
     if (!session) return formatDuration(ts / 1000, 1);
 
     if (session.timestamp_mode === 'timer') {
+        // If the note has a stored timer position, use it directly
+        // (correct regardless of current session state / multiple runs)
+        if (note.timer_position_ms != null) {
+            return formatDuration(note.timer_position_ms / 1000, 1);
+        }
         const elapsedMs = session.elapsed_ms || 0;
         const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
         if (!sessionStartMs) {

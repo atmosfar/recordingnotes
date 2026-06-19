@@ -96,8 +96,8 @@ describe('Timer Mode Export', () => {
     });
     assert.strictEqual(stopRes.status, 200);
     const stopData = await stopRes.json();
-    // elapsed_ms should be ~200-300ms
-    assert.ok(stopData.session.elapsed_ms > 100, `elapsed_ms should be > 100ms, got ${stopData.session.elapsed_ms}`);
+    // last_run_ms should be ~200-300ms (elapsed_ms only rolls forward on next start)
+    assert.ok((stopData.session.last_run_ms || 0) > 100, `last_run_ms should be > 100ms, got ${stopData.session.last_run_ms}`);
 
     // Export as REAPER CSV
     const exportRes = await fetch(`${baseUrl}/api/sessions/${id}/export?format=reaper`, {

@@ -93,6 +93,10 @@ router.get('/:id/export', (req, res) => {
     function timestampToSeconds(note) {
       const ts = note.timestamp_ms;
       if (session.timestamp_mode === 'timer') {
+        // Use stored timer position if available (correct for multi-run sessions)
+        if (note.timer_position_ms != null) {
+          return note.timer_position_ms / 1000;
+        }
         const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
         return (ts - sessionStartMs) / 1000;
       } else {

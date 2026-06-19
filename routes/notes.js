@@ -21,12 +21,21 @@ router.post('/:id/notes', async (req, res) => {
       return res.status(400).json({ error: 'Timer is not running. Start the timer to add notes.' });
     }
 
-    const id = notes.createNote(db, { 
-      content, 
-      timestamp, 
-      color, 
-      user_id, 
-      session_id 
+    // Use client-provided timer_position_ms if available (frozen at draft capture time).
+    // Fall back to server-side calculation for non-draft notes (e.g. API calls).
+    let timerPositionMs = req.body.timer_position_ms ?? null;
+    if (timerPositionMs == null && session && session.timestamp_mode === 'timer' && session.started_at) {
+      const sessionStartMs = new Date(session.started_at).getTime();
+      const elapsedMs = session.elapsed_ms || 0;
+      timerPositionMs = elapsedMs + (timestamp - sessionStartMs);
+    }
+    const id = notes.createNote(db, {
+      content,
+      timestamp,
+      color,
+      user_id,
+      session_id,
+      timer_position_ms: timerPositionMs
     });
     broadcastNoteUpdate(session_id);
     res.status(201).json({ id });

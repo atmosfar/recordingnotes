@@ -175,11 +175,11 @@ describe('Triggers API', () => {
     assert.strictEqual(data.status, 'stopped');
     assert.strictEqual(data.id, id);
 
-    // Verify elapsed_ms accumulated
+    // Verify last_run_ms is set (elapsed_ms only rolls forward on next start)
     initDb();
     const db = getDb();
     const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id);
-    assert.ok(session.elapsed_ms > 0);
+    assert.ok((session.last_run_ms || 0) > 0);
     assert.ok(session.stopped_at);
     assert.strictEqual(session.status, 'completed');
   });
