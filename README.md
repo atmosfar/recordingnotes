@@ -90,6 +90,7 @@ Control sessions directly from any HTTP client (Bitfocus Companion, scripts, etc
 |---|---|---|
 | `create` | `name` (required) | Create a new session |
 | `start` | `id` (required) | Mark an existing session as active |
+| `start` | `instant: true`, `name` (optional) | Create and start a session in one call |
 | `stop` | `id` (required) | Mark an existing session as completed |
 | `add_note` | `id` (required), `text` (required) | Add a timestamped note to an existing session |
 
@@ -103,7 +104,14 @@ curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
 # Successful response
 {"id":1}
 
-# Start the session (use returned id)
+# Instant session (create + start in one call)
+curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"start","instant":true,"name":"My Session"}'
+# Successful response
+{"status":"started","id":2}
+
+# Start an existing session (use returned id)
 curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"action":"start","id":1}'
