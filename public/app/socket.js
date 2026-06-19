@@ -5,7 +5,7 @@ class SocketManager {
         this.ws = null;
         this.reconnectInterval = 500;
         this.maxReconnectInterval = 15000;
-        this.maxReconnectAttempts = 5;
+        this.maxReconnectAttempts = 4;
         this.reconnectAttempts = 0;
         this.listeners = new Map();
         this._readyResolve = null;
@@ -64,7 +64,7 @@ class SocketManager {
         this.ws.onclose = () => {
             clearTimeout(connectTimeout);
             this.reconnectAttempts++;
-            if (this.reconnectAttempts > this.maxReconnectAttempts) {
+            if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                 console.error(`WebSocket reconnection failed after ${this.maxReconnectAttempts} attempts.`);
                 this.emit('CONNECTION_LOST', { attempts: this.reconnectAttempts });
                 return;
