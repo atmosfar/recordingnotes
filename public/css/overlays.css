@@ -151,6 +151,7 @@ body.dark-mode .menu-item:hover { background: var(--hover-bg); }
         background: var(--bg-color);
     }
     #sidebar.open { transform: translateX(0); }
+    .sidebar-content { border-right: none; }
     
     #app-body { width: 100%; }
     
