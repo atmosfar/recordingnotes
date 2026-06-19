@@ -1,4 +1,4 @@
-import { initDb } from './db.js';
+import { initDb } from '../services/db.js';
 
 try {
   initDb();

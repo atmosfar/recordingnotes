@@ -1,5 +1,5 @@
-import { resetDbInstance, initDb } from './db.js';
-import { getConfig, SETTINGS_DIR } from './config.js';
+import { resetDbInstance, initDb } from '../services/db.js';
+import { getConfig, SETTINGS_DIR } from '../services/config.js';
 import { unlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
