@@ -17,26 +17,57 @@ const FRAMERATES = {
 
 /**
  * Converts seconds to SMPTE timecode (HH:MM:SS:FF or HH:MM:SS;FF)
+ *
+ * Algorithm: wall-clock seconds → integer frame count → decompose into H:M:S;F
+ * Drop-frame uses 10-minute blocks (17982 frames) where minute 0 has no drop
+ * and minutes 1-9 each skip 2 frame numbers (displayed ;02-;29 instead of ;00-;27).
  */
 export function timeToHmsf(totalSeconds, frameRate, isDfMode) {
-  const nominalFps = Math.floor(frameRate + 0.5);
+  const nominalFps = Math.round(frameRate);
   let hh, mm, ss, ff;
 
   if (isDfMode) {
-    let totalFrames = Math.floor(totalSeconds * nominalFps);
-    const dropFrames = (2 * Math.floor((totalFrames % 17982) / 1798.2)) + (18 * Math.floor(totalFrames / 17982));
-    totalFrames += dropFrames;
-    
-    ff = totalFrames % 30;
-    ss = Math.floor(totalFrames / 30) % 60;
-    mm = Math.floor(totalFrames / 1800) % 60;
-    hh = Math.floor(totalFrames / 108000) % 24;
+    // Drop-frame: convert frame count to DF timecode
+    // 10-minute block = 17982 frames (1800 + 9*1798)
+    const totalFrames = Math.round(totalSeconds * frameRate);
+    const blocks = Math.floor(totalFrames / 17982);
+    const remainder = totalFrames % 17982;
+
+    let offM, offsetInMin;
+    if (remainder < 1800) {
+      // Minute 0 within block (no drop)
+      offM = 0;
+      offsetInMin = remainder;
+    } else {
+      // Minutes 1-9 (each has 1798 frames, 2 dropped)
+      offM = 1 + Math.floor((remainder - 1800) / 1798);
+      offsetInMin = (remainder - 1800) % 1798;
+    }
+
+    if (offM % 10 === 0) {
+      ss = Math.floor(offsetInMin / nominalFps);
+      ff = offsetInMin % nominalFps;
+    } else {
+      ss = Math.floor(offsetInMin / nominalFps);
+      ff = (offsetInMin % nominalFps) + 2;
+      // Handle overflow: frame 28+2=30 carries to next second
+      if (ff >= nominalFps) {
+        ss += 1;
+        ff -= nominalFps;
+      }
+    }
+
+    const totalM = blocks * 10 + offM;
+    hh = Math.floor(totalM / 60) % 24;
+    mm = totalM % 60;
   } else {
-    const totalFrames = Math.floor(totalSeconds * frameRate + 0.0001);
+    // Non-drop-frame: straightforward decomposition using nominal fps
+    const totalFrames = Math.round(totalSeconds * frameRate);
+    const totalSecs = Math.floor(totalFrames / nominalFps);
     ff = totalFrames % nominalFps;
-    ss = Math.floor(totalFrames / nominalFps) % 60;
-    mm = Math.floor(totalFrames / (nominalFps * 60)) % 60;
-    hh = Math.floor(totalFrames / (nominalFps * 3600)) % 24;
+    ss = totalSecs % 60;
+    mm = Math.floor(totalSecs / 60) % 60;
+    hh = Math.floor(totalSecs / 3600) % 24;
   }
 
   const separator = isDfMode ? ';' : ':';
