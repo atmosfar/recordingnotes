@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "bin": {
-    "recordingnotes": "./bin/recordingnotes.cjs"
+    "recordingnotes": "bin/recordingnotes.cjs"
   },
   "files": [
     "bin/",
@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/atmosfar/recordingnotes.git"
+    "url": "git+https://github.com/atmosfar/recordingnotes.git"
   },
   "keywords": [
     "podcast",
