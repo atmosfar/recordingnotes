@@ -7,7 +7,7 @@ process.env.RECNOTES_SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
-import { resetDbInstance } from '../db.js';
+import { resetDbInstance } from '../services/db.js';
 import app from '../server.js';
 
 describe('Guest Token API Endpoints', () => {

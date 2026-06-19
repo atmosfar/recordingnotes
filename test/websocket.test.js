@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import http from 'http';
 import { unlinkSync, existsSync } from 'node:fs';
 import WebSocket from 'ws';
-import { resetDbInstance, initDb, getDb } from '../db.js';
+import { resetDbInstance, initDb, getDb } from '../services/db.js';
 import app, { sessionParser } from '../server.js';
 import { setupWebSocket } from '../websocket/index.js';
 

@@ -1,6 +1,6 @@
-import { getDb } from '../db.js';
-import * as sessions from '../sessions.js';
-import * as notes from '../notes.js';
+import { getDb } from '../services/db.js';
+import * as sessions from '../services/sessions.js';
+import * as notes from '../services/notes.js';
 import { authIsRequired } from '../middleware/config-accessors.js';
 
 export function handleMessage(ws, request, data, sessionRooms, broadcastSessionList, broadcastNoteUpdate, broadcastToRoom, broadcastToAll) {

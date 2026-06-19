@@ -3,8 +3,8 @@ import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { createSession, getSession, deleteSession } from '../sessions.js';
-import { createNote, listNotesBySession, deleteNote, getNote } from '../notes.js';
+import { createSession, getSession, deleteSession } from '../services/sessions.js';
+import { createNote, listNotesBySession, deleteNote, getNote } from '../services/notes.js';
 
 const testDbPath = join(process.cwd(), 'test-management.db');
 

@@ -11,7 +11,7 @@ import {
   deleteSession,
   getSessionByExternalId,
   getSessionByGuestToken
-} from '../sessions.js';
+} from '../services/sessions.js';
 
 const testDbPath = join(process.cwd(), 'test-sessions.db');
 

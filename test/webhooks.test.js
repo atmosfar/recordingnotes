@@ -1,7 +1,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
-import { getDb, resetDbInstance, initDb } from '../db.js';
+import { getDb, resetDbInstance, initDb } from '../services/db.js';
 
 const testDbPath = 'test-webhooks.db';
 const apiToken = 'test_api_token';

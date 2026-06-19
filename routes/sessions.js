@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { getDb } from '../db.js';
-import * as sessions from '../sessions.js';
+import { getDb } from '../services/db.js';
+import * as sessions from '../services/sessions.js';
 import { broadcastSessionList } from '../websocket/index.js';
 
 const router = Router();

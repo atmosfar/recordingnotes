@@ -7,7 +7,7 @@ process.env.RECNOTES_SESSION_SECRET = 'test_secret_key_long_enough_32_chars';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
-import { getDb, resetDbInstance } from '../db.js';
+import { getDb, resetDbInstance } from '../services/db.js';
 import app from '../server.js';
 
 describe('Timer Control API Endpoints', () => {

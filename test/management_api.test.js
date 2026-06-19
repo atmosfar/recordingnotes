@@ -1,7 +1,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import app from '../server.js';
-import { initDb, getDb } from '../db.js';
+import { initDb, getDb } from '../services/db.js';
 
 describe('Management API Endpoints', () => {
   let server;

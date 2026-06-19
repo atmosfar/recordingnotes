@@ -11,7 +11,7 @@ import {
   loadSettingsFile,
   SETTINGS_FILE,
   DEFAULTS,
-} from '../config.js';
+} from '../services/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // Temp directory for test config files (inside project, writable)

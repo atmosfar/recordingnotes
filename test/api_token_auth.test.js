@@ -1,6 +1,6 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import { resetDbInstance } from '../db.js';
+import { resetDbInstance } from '../services/db.js';
 
 describe('API Token Authentication', () => {
   let server;

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getConfig } from '../config.js';
+import { getConfig } from '../services/config.js';
 
 export function getPort() {
   return Number(getConfig().RECNOTES_PORT) || 3000;

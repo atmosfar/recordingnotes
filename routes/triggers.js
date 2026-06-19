@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { getDb } from '../db.js';
-import * as sessions from '../sessions.js';
-import * as notes from '../notes.js';
+import { getDb } from '../services/db.js';
+import * as sessions from '../services/sessions.js';
+import * as notes from '../services/notes.js';
 import { checkApiTokenAuth } from '../middleware/auth.js';
 import { broadcastSessionList, broadcastToRoom, broadcastNoteUpdate } from '../websocket/index.js';
 

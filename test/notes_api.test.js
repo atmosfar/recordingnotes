@@ -2,7 +2,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
 import app from '../server.js';
-import { getDb, resetDbInstance } from '../db.js';
+import { getDb, resetDbInstance } from '../services/db.js';
 
 const testDbPath = 'test-notes-api.db';
 

@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { createNote, updateNote, getNote } from '../notes.js';
+import { createNote, updateNote, getNote } from '../services/notes.js';
 
 const testDbPath = join(process.cwd(), 'test-notes-update.db');
 

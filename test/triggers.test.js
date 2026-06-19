@@ -1,6 +1,6 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import { getDb, initDb } from '../db.js';
+import { getDb, initDb } from '../services/db.js';
 
 const apiToken = 'test_triggers_token';
 

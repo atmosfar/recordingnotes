@@ -8,7 +8,7 @@ process.env.RECNOTES_EXPORT_TIMEZONE = 'UTC';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { unlinkSync, existsSync } from 'node:fs';
-import { getDb, resetDbInstance } from '../db.js';
+import { getDb, resetDbInstance } from '../services/db.js';
 import app from '../server.js';
 
 describe('Timer Mode Export', () => {
