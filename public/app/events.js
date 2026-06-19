@@ -36,7 +36,7 @@ export function registerSocketListeners() {
 
         const menuEditTags = document.getElementById('menu-edit-tags');
         if (menuEditTags) {
-            menuEditTags.style.display = window.isGuestMode ? 'none' : 'flex';
+            menuEditTags.style.display = 'flex';
         }
 
         const menuLogout = document.getElementById('menu-logout');

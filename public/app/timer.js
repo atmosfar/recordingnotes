@@ -107,7 +107,7 @@ export function updateTimerMenuVisibility() {
 
     if (!startBtn || !stopBtn || !resetBtn) return;
 
-    if (!state.currentSession || window.isGuestMode) {
+    if (!state.currentSession) {
         startBtn.style.display = 'none';
         stopBtn.style.display = 'none';
         resetBtn.style.display = 'none';
@@ -129,8 +129,13 @@ export function updateTimerMenuVisibility() {
  * Show/hide session-dependent menu items (share, export).
  */
 export function updateSessionMenuVisibility() {
-    const items = ['menu-share-link', 'menu-export-reaper', 'menu-export-audition', 'menu-export-edl'];
-    const show = !!(state.currentSessionId && !window.isGuestMode);
+    const shareLink = document.getElementById('menu-share-link');
+    if (shareLink) {
+        shareLink.style.display = state.currentSessionId && !window.isGuestMode ? 'flex' : 'none';
+    }
+
+    const items = ['menu-export-reaper', 'menu-export-audition', 'menu-export-edl'];
+    const show = !!state.currentSessionId;
     items.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = show ? 'flex' : 'none';
