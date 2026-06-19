@@ -5,8 +5,8 @@ import path from 'path';
 
 import { authIsRequired, getSessionSecret } from './middleware/config-accessors.js';
 import { checkAuth } from './middleware/auth.js';
-import { initDb, getDb } from './db.js';
-import * as sessions from './sessions.js';
+import { initDb, getDb } from './services/db.js';
+import * as sessions from './services/sessions.js';
 import { startServer } from './startup.js';
 import authRoutes from './routes/auth.js';
 import sessionsRoutes from './routes/sessions.js';
