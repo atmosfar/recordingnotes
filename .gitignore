@@ -16,12 +16,6 @@ build/
 *.db
 *.db-journal
 
-# Archived code (old TS/React prototype)
-archived/
-
-# Conductor project management files
-conductor/
-
 # Dev/test files
 test/
 scripts/
@@ -32,15 +26,8 @@ pkg/
 pkg.zip
 *.tgz
 
-# Config variants
+# Config
 package-lock.json
-
-# NPM publish config
-.npmignore
-
-# Loose dev files
-style_old.css
-reaper_to_audition_csv_converter.py
 
 # Media/screenshots
 *.png
