@@ -1,11 +1,11 @@
 {
   "name": "recordingnotes",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Minimalist podcast note-taking system with real-time collaboration",
   "main": "server.js",
   "type": "module",
   "bin": {
-    "recordingnotes": "./bin/recordingnotes.cjs"
+    "recordingnotes": "bin/recordingnotes.cjs"
   },
   "files": [
     "bin/",
@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/atmosfar/recordingnotes.git"
+    "url": "git+https://github.com/atmosfar/recordingnotes.git"
   },
   "keywords": [
     "podcast",

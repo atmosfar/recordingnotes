@@ -5,7 +5,7 @@ import path from 'path';
 
 import { authIsRequired, getSessionSecret } from './middleware/config-accessors.js';
 import { checkAuth } from './middleware/auth.js';
-import { initDb, getDb } from './services/db.js';
+import { getDb } from './services/db.js';
 import * as sessions from './services/sessions.js';
 import { startServer } from './startup.js';
 import authRoutes from './routes/auth.js';
@@ -75,8 +75,6 @@ app.use('/api/sessions', sessionsRoutes);
 app.use('/api/sessions', timerRoutes);
 app.use('/api/sessions', notesRoutes);
 app.use('/api/sessions', exportRoutes);
-
-initDb();
 
 if (process.env.NODE_ENV !== 'test') {
   startServer(app, sessionParser);
