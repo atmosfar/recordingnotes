@@ -193,7 +193,6 @@ export function renderSessionList(sessions) {
         nameSpan.setAttribute('role', 'button');
         nameSpan.setAttribute('tabindex', '0');
         nameSpan.setAttribute('aria-label', `Open session: ${session.name}`);
-        nameSpan.onclick = () => selectSession(session.id);
         item.appendChild(nameSpan);
 
         const indicators = document.createElement('div');
@@ -243,6 +242,52 @@ export function renderSessionList(sessions) {
         };
 
         item.appendChild(actions);
+
+        // Longpress to enter managing mode (mobile only)
+        let longpressTimer = null;
+        let longpressFired = false;
+        item.addEventListener('touchstart', (e) => {
+            longpressFired = false;
+            longpressTimer = setTimeout(() => {
+                longpressFired = true;
+                item.classList.remove('longpress');
+                const sidebar = document.getElementById('sidebar');
+                const manageBtn = document.getElementById('manage-sessions-btn');
+                if (!sidebar.classList.contains('managing')) {
+                    sidebar.classList.add('managing');
+                    if (manageBtn) {
+                        manageBtn.classList.add('active');
+                        manageBtn.innerHTML = 'Done';
+                    }
+                }
+            }, 500);
+            item.classList.add('longpress');
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+            if (longpressFired) {
+                // Prevent the click handler from firing
+                item.onclick = null;
+                setTimeout(() => { item.onclick = () => selectSession(session.id); }, 100);
+            }
+        }, { passive: true });
+
+        item.addEventListener('touchcancel', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+        }, { passive: true });
+
+        // Prevent longpress during scroll
+        item.addEventListener('touchmove', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+        }, { passive: true });
+
+        // Click handler for selecting session (also on the name span)
+        item.onclick = () => selectSession(session.id);
+
         list.appendChild(item);
     });
 }

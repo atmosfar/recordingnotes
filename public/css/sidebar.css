@@ -188,6 +188,12 @@ body.dark-mode .user-count {
 }
 #sidebar.managing .session-actions { display: flex; }
 
+/* Longpress visual feedback */
+.session-item.longpress {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+}
+
 @media (hover: hover) {
     .session-item:hover .session-actions { display: flex; }
 }
