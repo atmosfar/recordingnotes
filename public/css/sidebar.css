@@ -57,6 +57,9 @@ main { flex: 1; display: flex; overflow: hidden; position: relative; }
     color: var(--text-muted-dark);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 body.dark-mode .sidebar-top-actions #manage-sessions-btn {

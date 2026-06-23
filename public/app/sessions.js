@@ -218,7 +218,12 @@ export function renderSessionList(sessions) {
         const actions = document.createElement('div');
         actions.className = 'session-actions';
         actions.innerHTML = `
-            <button class="sess-edit-btn" title="Rename" aria-label="Rename session">✎</button>
+            <button class="sess-edit-btn" title="Rename" aria-label="Rename session">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                </svg>
+            </button>
             <button class="sess-delete-btn" title="Delete" aria-label="Delete session">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 3 19 3 21 6"></polyline>
