@@ -51,6 +51,35 @@ export function checkAuth(req, res, next) {
 }
 
 /**
+ * Middleware to ensure guests can only access the session their token belongs to.
+ * Authenticated users bypass this check.
+ */
+export function requireSessionAccess(req, res, next) {
+  // Authenticated users have full access
+  if (req.session.authenticated) return next();
+
+  // No guest token — already handled by checkAuth
+  if (!req.session.guestToken) return next();
+
+  const db = getDb();
+  const guestSession = sessions.getSessionByGuestToken(db, req.session.guestToken);
+  if (!guestSession) {
+    return res.status(401).json({ error: 'Invalid guest token' });
+  }
+
+  // Extract session ID from the URL path
+  // Routes: /api/sessions/:id/... or /api/sessions/:id/sub/:subId/...
+  const parts = req.path.split('/');
+  const requestedSessionId = parts[1] ? parts[1].toString() : null;
+
+  if (requestedSessionId && requestedSessionId !== guestSession.id.toString()) {
+    return res.status(403).json({ error: 'Guest access limited to invited session' });
+  }
+
+  next();
+}
+
+/**
  * Middleware to check API token
  */
 export function checkApiTokenAuth(req, res, next) {
