@@ -57,6 +57,9 @@ main { flex: 1; display: flex; overflow: hidden; position: relative; }
     color: var(--text-muted-dark);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 body.dark-mode .sidebar-top-actions #manage-sessions-btn {
@@ -184,6 +187,12 @@ body.dark-mode .user-count {
     margin-left: 0.5rem;
 }
 #sidebar.managing .session-actions { display: flex; }
+
+/* Longpress visual feedback */
+.session-item.longpress {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+}
 
 @media (hover: hover) {
     .session-item:hover .session-actions { display: flex; }

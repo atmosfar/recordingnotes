@@ -46,12 +46,12 @@ describe('Static File Serving', () => {
     assert.ok(body.includes('<title>Recording Notes</title>'));
   });
 
-  test('should serve app.js', async () => {
-    const response = await fetch(`${baseUrl}/app.js`, {
+  test('should serve app/index.js', async () => {
+    const response = await fetch(`${baseUrl}/app/index.js`, {
       headers: { 'Cookie': authCookie }
     });
     const body = await response.text();
-    
+
     assert.strictEqual(response.status, 200);
     assert.ok(body.includes('currentSessionId'));
   });

@@ -50,8 +50,37 @@ export function broadcastNoteUpdate(sessionId) {
 export function setupWebSocket(httpServer, sessionParser) {
   wss = new WebSocketServer({ noServer: true });
 
+  // Heartbeat: ping all clients every 30s, close those that don't respond (skip in tests)
+  let heartbeatInterval;
+  if (process.env.NODE_ENV !== 'test') {
+    heartbeatInterval = setInterval(() => {
+      wss.clients.forEach(ws => {
+        if (ws.isAlive === false) {
+          // Client didn't respond to ping — treat as close
+          if (ws.currentSessionId) {
+            const room = sessionRooms.get(ws.currentSessionId.toString());
+            if (room) {
+              room.delete(ws);
+              if (room.size === 0) sessionRooms.delete(ws.currentSessionId.toString());
+            }
+            broadcastSessionList();
+          }
+          ws.terminate();
+          return;
+        }
+        ws.isAlive = true;
+        ws.ping();
+      });
+    }, 30000);
+  }
+
   wss.on('connection', (ws, request) => {
     ws.currentSessionId = null;
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
 
     ws.on('message', (message) => {
       try {

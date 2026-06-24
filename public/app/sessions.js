@@ -193,7 +193,6 @@ export function renderSessionList(sessions) {
         nameSpan.setAttribute('role', 'button');
         nameSpan.setAttribute('tabindex', '0');
         nameSpan.setAttribute('aria-label', `Open session: ${session.name}`);
-        nameSpan.onclick = () => selectSession(session.id);
         item.appendChild(nameSpan);
 
         const indicators = document.createElement('div');
@@ -218,7 +217,12 @@ export function renderSessionList(sessions) {
         const actions = document.createElement('div');
         actions.className = 'session-actions';
         actions.innerHTML = `
-            <button class="sess-edit-btn" title="Rename" aria-label="Rename session">✎</button>
+            <button class="sess-edit-btn" title="Rename" aria-label="Rename session">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                </svg>
+            </button>
             <button class="sess-delete-btn" title="Delete" aria-label="Delete session">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 3 19 3 21 6"></polyline>
@@ -238,6 +242,52 @@ export function renderSessionList(sessions) {
         };
 
         item.appendChild(actions);
+
+        // Longpress to enter managing mode (mobile only)
+        let longpressTimer = null;
+        let longpressFired = false;
+        item.addEventListener('touchstart', (e) => {
+            longpressFired = false;
+            longpressTimer = setTimeout(() => {
+                longpressFired = true;
+                item.classList.remove('longpress');
+                const sidebar = document.getElementById('sidebar');
+                const manageBtn = document.getElementById('manage-sessions-btn');
+                if (!sidebar.classList.contains('managing')) {
+                    sidebar.classList.add('managing');
+                    if (manageBtn) {
+                        manageBtn.classList.add('active');
+                        manageBtn.innerHTML = 'Done';
+                    }
+                }
+            }, 500);
+            item.classList.add('longpress');
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+            if (longpressFired) {
+                // Prevent the click handler from firing
+                item.onclick = null;
+                setTimeout(() => { item.onclick = () => selectSession(session.id); }, 100);
+            }
+        }, { passive: true });
+
+        item.addEventListener('touchcancel', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+        }, { passive: true });
+
+        // Prevent longpress during scroll
+        item.addEventListener('touchmove', () => {
+            clearTimeout(longpressTimer);
+            item.classList.remove('longpress');
+        }, { passive: true });
+
+        // Click handler for selecting session (also on the name span)
+        item.onclick = () => selectSession(session.id);
+
         list.appendChild(item);
     });
 }

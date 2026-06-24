@@ -198,6 +198,8 @@ export function themeToggleFn(isDark) {
     document.documentElement.classList.toggle('dark-mode', isDark);
     document.body.classList.toggle('dark-mode', isDark);
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const criticalStyle = document.getElementById('dark-mode-critical');
+    if (criticalStyle) criticalStyle.disabled = !isDark;
     const path = isDark ? sunPath : moonPath;
     const desktopIcon = document.getElementById('theme-icon');
     const mobileIcon = document.getElementById('mobile-theme-icon');

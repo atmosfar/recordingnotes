@@ -23,19 +23,7 @@ Usage:
 const cmd = process.argv[2];
 
 if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'start') {
-  // Ensure the DB exists before starting (sync is fine for setup)
-  const dbPath = process.env.RECNOTES_DB_PATH || path.join(process.cwd(), 'dev.db');
-  if (!fs.existsSync(dbPath)) {
-    try {
-      const initDbPath = path.join(__dirname, 'init-db.js');
-      execSync(`node ${initDbPath}`, { stdio: 'inherit' });
-    } catch (e) {
-      console.error('Failed to initialize database. Please check your DB_PATH.');
-      process.exit(1);
-    }
-  }
-
-  // Start the server as a spawned child process
+  // DB initialization is handled by server.js via getDb()
   if (cmd === '--help' || cmd === '-h') {
     usage();
     process.exit(0);

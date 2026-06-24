@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import { authIsRequired, getSessionSecret } from './middleware/config-accessors.js';
-import { checkAuth } from './middleware/auth.js';
+import { checkAuth, requireSessionAccess } from './middleware/auth.js';
 import { getDb } from './services/db.js';
 import * as sessions from './services/sessions.js';
 import { startServer } from './startup.js';
@@ -71,6 +71,7 @@ app.use('/api/triggers', triggersRoutes);
 // Protected API routes
 app.use(checkAuth);
 app.get('/api/status', (req, res) => res.json({ status: 'ok' }));
+app.use('/api/sessions', requireSessionAccess);
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/sessions', timerRoutes);
 app.use('/api/sessions', notesRoutes);

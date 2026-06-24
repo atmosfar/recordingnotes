@@ -1,6 +1,6 @@
 {
   "name": "recordingnotes",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Minimalist podcast note-taking system with real-time collaboration",
   "main": "server.js",
   "type": "module",
