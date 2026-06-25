@@ -2,13 +2,17 @@
 
 ## Getting Started
 
-Open `http://localhost:3000` in your browser. If authentication is configured, you'll be prompted to log in.
+Open `http://localhost:3000` in your browser. [If authentication is configured](configuration.md), you'll be prompted to log in.
 
-![Desktop main UI - sidebar with sessions, notes panel, header with clock](images/desktop-main-ui.png)
+### Main view
 
-**Mobile home screen (no session selected):**
+![Desktop main UI - sidebar with sessions, notes panel, header with clock](images/thumbs-desktop/desktop-main-ui.png)
 
-![Mobile home - Welcome message, New Session button, recent sessions list](images/mobile-home.png)
+
+### Mobile home screen
+
+[![Mobile home - Welcome message, New Session button, recent sessions list](images/thumbs/mobile-home.png)](images/mobile-home.png)
+
 
 ## Sessions
 
@@ -19,9 +23,9 @@ A notes session relates to a recording. From the sidebar you can:
 - **Edit** session names by clicking the hover button or long pressing on mobile
 - **Delete** sessions (removes all included notes)
 
-![Mobile sidebar - slide-out with session list, New button, Edit toggle, search bar](images/mobile-sidebar.png)
+[![Mobile sidebar - slide-out with session list, New button, Edit toggle, search bar](images/thumbs/mobile-sidebar.png)](images/mobile-sidebar.png)
 
-Sessions can be in one two timestamp modes:
+Sessions can be in one of two timestamp modes:
 
 - **Clock mode** - notes use the current time-of-day (HH:MM:SS)
 - **Timer mode** - notes use time relative to when the timer started. Supports multi-run timers (pause/resume across multiple takes).
@@ -37,19 +41,17 @@ Notes can be:
 - **Edited or Deleted** by clicking on the hover button or long pressing on mobile
 - **Color-coded** using the color picker
 
-![Mobile active session - header, notes, input with color toggle dot](images/mobile-active-session.png)
-
-![Mobile note editing - inline delete action visible](images/mobile-note-editing.png)
+[![Mobile note editing - inline delete action visible](images/thumbs/mobile-note-editing.png)](images/mobile-note-editing.png)
 
 Quick Tags are customizable shortcuts for commonly used notes like "Cut" or "Retake", and can be changed in the overflow menu (⋮).
 
-![Mobile Manage Quick Tags - tag list with add field](images/mobile-quick-tags.png)
+[![Mobile Manage Quick Tags - tag list with add field](images/thumbs/mobile-quick-tags.png)](images/mobile-quick-tags.png)
 
 ## Guest Access
 
 A shareable guest link can be generated for a session from the overflow menu (⋮). The link is automatically copied to the clipboard, and a QR code and URL are displayed:
 
-![Share Guest Link modal - QR code and copyable URL](images/mobile-share-link.png)
+[![Share Guest Link modal - QR code and copyable URL](images/thumbs/mobile-share-link.png)](images/mobile-share-link.png)
 
 Guests can:
 
@@ -63,12 +65,16 @@ Guests cannot access other sessions.
 
 Once finished recording, the recording notes can be exported for use in editing software. Open the overflow menu (⋮) in the header to access export options:
 
-![Overflow menu - share, tags, theme, timer controls, export options](images/desktop-session-menu.png)
+
+![Overflow menu - share, tags, theme, timer controls, export options](images/thumbs-desktop/desktop-session-menu.png)
+
 
 - **REAPER** - CSV with timeline markers
 - **Audition** - CSV with timeline markers
 - **Resolve** - CMX3600 EDL format (select framerate from modal)
 
-![Select EDL Framerate - 23.976, 24, 25, 29.97 DF, 29.97 NDF, 30](images/desktop-edl-framerate.png)
+
+![Select EDL Framerate - 23.976, 24, 25, 29.97 DF, 29.97 NDF, 30](images/thumbs-desktop/desktop-edl-framerate.png)
+
 
 Exported timestamps use the timezone configured in `RECNOTES_EXPORT_TIMEZONE` (default: `UTC`).

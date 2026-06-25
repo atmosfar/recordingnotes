@@ -12,7 +12,9 @@ All integration requests must include the `RECNOTES_AUTH_API_TOKEN` (set in `set
 
 Handles recording session events. Set this URL in your [SquadCast developer settings](https://app.squadcast.fm/account/developers).
 
-![SquadCast developer settings - webhook URL field configured for Recording Notes](images/squadcast-webhook-settings.png)
+
+![SquadCast developer settings - webhook URL field configured for Recording Notes](images/thumbs-desktop/squadcast-webhook-settings.png)
+
 
 | Event | Action |
 |---|---|

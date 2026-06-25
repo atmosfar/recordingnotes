@@ -2,7 +2,8 @@
 
 A web application for taking edit notes during podcast, music, or video recording, with real-time collaboration. Export notes to REAPER, Audition, or Resolve to speed up post-production. Integrates with [SquadCast](https://squadcast.fm), [Bitfocus Companion](https://companion.bitfocus.io), or your own tools to keep your recording clock in sync with the note timestamps.
 
-![Application overview - main desktop view with sidebar, notes panel, and header](docs/images/desktop-main-ui.png)
+![Application overview - main desktop view with sidebar, notes panel, and header](docs/images/thumbs-desktop/desktop-main-ui.png)
+
 
 ## Quick Start
 

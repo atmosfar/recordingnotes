@@ -34,6 +34,8 @@ package-lock.json
 *.jpeg
 *.gif
 !docs/images/*.png
+!docs/images/thumbs/*.png
+!docs/images/thumbs-desktop/*.png
 
 # EDL/CSV exports
 *.edl
