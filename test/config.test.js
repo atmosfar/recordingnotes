@@ -12,6 +12,7 @@ import {
   SETTINGS_FILE,
   DEFAULTS,
 } from '../services/config.js';
+import { validateTimezone } from '../middleware/config-accessors.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // Temp directory for test config files (inside project, writable)
@@ -168,5 +169,22 @@ describe('DEFAULTS', () => {
 
   test('RECNOTES_EXPORT_TIMEZONE defaults to UTC', () => {
     assert.strictEqual(DEFAULTS.RECNOTES_EXPORT_TIMEZONE, 'UTC');
+  });
+});
+
+describe('validateTimezone', () => {
+  test('accepts valid IANA timezone names', () => {
+    assert.doesNotThrow(() => validateTimezone('UTC'));
+    assert.doesNotThrow(() => validateTimezone('America/New_York'));
+    assert.doesNotThrow(() => validateTimezone('Europe/London'));
+    assert.doesNotThrow(() => validateTimezone('Asia/Tokyo'));
+  });
+
+  test('rejects invalid timezone names', () => {
+    assert.throws(() => validateTimezone('Invalid/Timezone'), RangeError);
+    assert.throws(() => validateTimezone('US/Eastern'), RangeError); // deprecated alias
+    assert.throws(() => validateTimezone(''), RangeError);
+    assert.throws(() => validateTimezone(null), RangeError);
+    assert.throws(() => validateTimezone(123), RangeError);
   });
 });

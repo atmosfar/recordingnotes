@@ -84,4 +84,14 @@ describe('Server Basic Functionality', () => {
     const data = await response.json();
     assert.strictEqual(data.status, 'ok');
   });
+
+  // T70: /api/config endpoint exposes export timezone
+  test('T70: GET /api/config returns export timezone', async () => {
+    const response = await fetch(`${baseUrl}/api/config`);
+    const data = await response.json();
+
+    assert.strictEqual(response.status, 200);
+    assert.ok(data.exportTimezone);
+    assert.strictEqual(typeof data.exportTimezone, 'string');
+  });
 });

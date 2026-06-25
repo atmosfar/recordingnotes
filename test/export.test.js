@@ -199,6 +199,117 @@ describe('CSV Export Endpoint', () => {
     assert.ok(body.includes('M1,"TZ Note"'));
   });
 
+  // T45: ?timezone query param overrides server config
+  test('T45: ?timezone query param overrides server config', async () => {
+    // Create a clock-mode session
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'T45 Timezone Param Test' })
+    });
+    const tzParamSessionId = (await createRes.json()).id;
+
+    // Add a note with a specific timestamp (12:00:00 UTC)
+    await fetch(`${baseUrl}/api/sessions/${tzParamSessionId}/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ content: 'TZ Param Note', timestamp: utcSecondsToMs(43200) })
+    });
+
+    // Export with explicit timezone=America/New_York
+    const response = await fetch(`${baseUrl}/api/sessions/${tzParamSessionId}/export?format=reaper&timezone=America/New_York`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const body = await response.text();
+
+    assert.strictEqual(response.status, 200);
+    // 12:00 UTC = 07:00 EST (or 08:00 EDT depending on date)
+    // The key is that the timezone param is accepted and doesn't error
+    assert.ok(body.includes('M1,"TZ Param Note"'));
+  });
+
+  // T46: ?timezone=local with clientTimezone param
+  test('T46: ?timezone=local with clientTimezone param', async () => {
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'T46 Local Timezone Test' })
+    });
+    const localSessionId = (await createRes.json()).id;
+
+    await fetch(`${baseUrl}/api/sessions/${localSessionId}/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ content: 'Local Note', timestamp: utcSecondsToMs(43200) })
+    });
+
+    // Export with timezone=local and explicit client timezone
+    const response = await fetch(`${baseUrl}/api/sessions/${localSessionId}/export?format=reaper&timezone=local&clientTimezone=Europe/London`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const body = await response.text();
+
+    assert.strictEqual(response.status, 200);
+    assert.ok(body.includes('M1,"Local Note"'));
+  });
+
+  // T47: invalid timezone returns 400
+  test('T47: Invalid timezone returns 400', async () => {
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'T47 Validation Test' })
+    });
+    const valSessionId = (await createRes.json()).id;
+
+    // Export with invalid timezone
+    const response = await fetch(`${baseUrl}/api/sessions/${valSessionId}/export?format=reaper&timezone=Invalid/Timezone`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const data = await response.json();
+
+    assert.strictEqual(response.status, 400);
+    assert.ok(data.error);
+    assert.ok(data.error.includes('Invalid timezone'));
+  });
+
+  // T48: invalid clientTimezone returns 400
+  test('T48: Invalid clientTimezone with timezone=local returns 400', async () => {
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': authCookie
+      },
+      body: JSON.stringify({ name: 'T48 ClientTZ Test' })
+    });
+    const clientTzSessionId = (await createRes.json()).id;
+
+    const response = await fetch(`${baseUrl}/api/sessions/${clientTzSessionId}/export?format=reaper&timezone=local&clientTimezone=NotA/Timezone`, {
+      headers: { 'Cookie': authCookie }
+    });
+    const data = await response.json();
+
+    assert.strictEqual(response.status, 400);
+    assert.ok(data.error);
+    assert.ok(data.error.includes('Invalid timezone'));
+  });
+
   // T44: export filename sanitization (special chars)
   test('T44: Export filename sanitizes special characters', async () => {
     // Create a session with special characters in the name

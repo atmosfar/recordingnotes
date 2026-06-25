@@ -52,6 +52,20 @@ async function init() {
         socket.ready.then(() => selectSession(sessionMatch[1], { renderQuickTags, closeSidebarFn }));
     }
 
+    // Fetch server config (export timezone, etc.)
+    fetch('/api/config')
+        .then(res => res.json())
+        .then(config => {
+            state.exportTimezone = config.exportTimezone || 'UTC';
+            // Update the server timezone label in the timezone modal
+            const label = document.getElementById('server-timezone-label');
+            if (label) label.textContent = `Server (${state.exportTimezone})`;
+        })
+        .catch(err => {
+            console.error('Failed to fetch config:', err);
+            state.exportTimezone = 'UTC';
+        });
+
     // Fetch sessions via REST API for immediate display (mobile recent sessions)
     // WebSocket will update the list once connected
     if (!window.isGuestMode) {

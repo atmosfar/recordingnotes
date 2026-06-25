@@ -192,6 +192,9 @@
                 </div>
             </div>
         </main>
+        <footer id="page-footer">
+            <a href="https://github.com/atmosfar/recordingnotes" target="_blank" rel="noopener noreferrer" id="source-code-link">source code</a>
+        </footer>
     </div>
 
     <div id="bottom-sheet-backdrop" aria-hidden="true"></div>
@@ -207,6 +210,25 @@
             <button class="fps-opt" data-fps="30">30</button>
         </div>
         <button id="cancel-fps" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem;">Cancel</button>
+    </div>
+
+    <div id="timezone-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Select export timezone">
+        <h3 style="margin-top: 0; font-size: 1rem;">Export Timezone</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1rem;">Choose the timezone for note timestamps in the export.</p>
+        <div class="timezone-options">
+            <label class="timezone-option">
+                <input type="radio" name="export-timezone" value="local" />
+                <span class="timezone-label" id="local-timezone-label">Local timezone</span>
+            </label>
+            <label class="timezone-option">
+                <input type="radio" name="export-timezone" value="server" />
+                <span class="timezone-label" id="server-timezone-label">Server timezone</span>
+            </label>
+        </div>
+        <div class="modal-input-row">
+            <button id="confirm-timezone-btn" class="modal-primary-btn" style="flex: 1;">Export</button>
+            <button id="cancel-timezone-btn" class="modal-secondary-btn secondary-button" style="flex: 1;">Cancel</button>
+        </div>
     </div>
 
     <div id="color-picker-popup" class="palette-popup" role="dialog" aria-modal="true" aria-label="Color picker">
@@ -235,7 +257,7 @@
             <input type="text" id="new-tag-input" placeholder="New tag text..." aria-label="New tag text">
             <button id="add-tag-btn" class="fps-opt selected" aria-label="Add tag">Add</button>
         </div>
-        <button id="close-tags-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>
+        <button id="close-tags-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Close</button>
     </div>
 
     <div id="tag-color-picker" class="palette-popup" role="dialog" aria-modal="true" aria-label="Select tag color">
@@ -257,7 +279,7 @@
 
     <div id="share-link-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Share guest link">
         <h3 style="margin-top: 0; font-size: 1rem;">Share Guest Link</h3>
-        <p id="share-link-message" style="font-size: 0.85rem; color: var(--secondary-color); margin: 0.5rem 0;"></p>
+        <p id="share-link-message"></p>
         <div id="qr-code-container" style="display: flex; justify-content: center; padding: 1rem;"></div>
         <input type="text" id="share-link-url" readonly aria-label="Guest link URL" title="Click to copy">
         <button id="close-share-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>

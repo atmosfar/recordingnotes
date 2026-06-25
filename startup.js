@@ -1,8 +1,18 @@
-import { getPort, authIsRequired, getApiToken, wasApiTokenExplicitlySet } from './middleware/config-accessors.js';
+import { getPort, authIsRequired, getApiToken, wasApiTokenExplicitlySet, getExportTimezone, validateTimezone } from './middleware/config-accessors.js';
 import { setupWebSocket } from './websocket/index.js';
 
 export function startServer(app, sessionParser) {
   const desiredPort = getPort();
+
+  // Validate export timezone at startup
+  const exportTimezone = getExportTimezone();
+  try {
+    validateTimezone(exportTimezone);
+  } catch (err) {
+    console.error(`  Error: ${err.message}`);
+    console.error('  Set RECNOTES_EXPORT_TIMEZONE to a valid IANA timezone name.');
+    process.exit(1);
+  }
 
   function startServerOnPort(port) {
     return new Promise((resolve, reject) => {
@@ -25,6 +35,7 @@ export function startServer(app, sessionParser) {
         } else {
           console.warn('  Warning: No authorization configured. Do not use this setup in untrusted environments. See .env.example for details.');
         }
+        console.log(`  Export timezone: ${getExportTimezone()}`);
         const token = getApiToken();
         if (token) {
           if (wasApiTokenExplicitlySet()) {

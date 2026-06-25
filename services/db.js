@@ -87,7 +87,7 @@ export function initDb() {
   } catch (e) { /* column already exists */ }
 
   initializedPaths.add(dbPath);
-  console.log('Database initialized at', dbPath);
+  console.log('  Database initialized at', dbPath);
 }
 
 export default getDb;

@@ -66,7 +66,7 @@ body.dark-mode .secondary-button {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-height: 200px;
+    max-height: 280px;
     overflow-y: auto;
     margin-bottom: 1rem;
     padding-right: 0.5rem;
@@ -90,6 +90,35 @@ body.dark-mode .secondary-button {
     font-size: 1.2rem;
     line-height: 1;
     padding: 0 4px;
+}
+
+.tag-reorder-btns {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+}
+
+.reorder-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 6px 8px;
+    min-width: 24px;
+    min-height: 24px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.reorder-btn:hover:not(:disabled) {
+    opacity: 1;
+}
+
+.reorder-btn:disabled {
+    opacity: 0.2;
+    cursor: default;
 }
 
 .modal-input-row {
@@ -121,6 +150,18 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     transform: translate(50%, 50%);
     width: 280px;
     max-width: 90vw;
+}
+
+#share-link-message {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-lg);
+    margin: 0.5rem 0;
+    color: var(--primary-color);
+    background-color: var(--primary-alpha-10);
+    min-height: 1.2em;
 }
 
 #timer-warning-modal {
@@ -160,4 +201,46 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     transform: translate(50%, 50%);
     width: 280px;
     max-width: 90vw;
+}
+
+/* Timezone Modal */
+#timezone-modal {
+    bottom: 50%;
+    right: 50%;
+    transform: translate(50%, 50%);
+    width: 280px;
+    max-width: 90vw;
+}
+
+.timezone-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.timezone-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.timezone-option:hover {
+    background: var(--hover-bg);
+}
+
+.timezone-option input[type="radio"] {
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.timezone-label {
+    font-size: 0.9rem;
+    color: var(--text-color);
 }

@@ -3,7 +3,7 @@ import session from 'express-session';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import { authIsRequired, getSessionSecret } from './middleware/config-accessors.js';
+import { authIsRequired, getSessionSecret, getExportTimezone } from './middleware/config-accessors.js';
 import { checkAuth, requireSessionAccess } from './middleware/auth.js';
 import { getDb } from './services/db.js';
 import * as sessions from './services/sessions.js';
@@ -67,6 +67,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Webhook routes (before auth — they use token auth)
 app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/triggers', triggersRoutes);
+
+// Public config endpoint (timezone info for frontend export)
+app.get('/api/config', (req, res) => res.json({ exportTimezone: getExportTimezone() }));
 
 // Protected API routes
 app.use(checkAuth);

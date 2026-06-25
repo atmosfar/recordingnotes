@@ -45,3 +45,21 @@ export function getSessionSecret() {
 export function getExportTimezone() {
   return getConfig().RECNOTES_EXPORT_TIMEZONE || 'UTC';
 }
+
+/**
+ * Validate that a timezone string is a valid IANA timezone name.
+ * Returns true if valid, throws RangeError if not.
+ * Note: 'UTC' is accepted as a special case (works with Intl.DateTimeFormat but not in Intl.supportedValuesOf).
+ */
+export function validateTimezone(tz) {
+  if (!tz || typeof tz !== 'string') {
+    throw new RangeError(`Invalid timezone: ${JSON.stringify(tz)}`);
+  }
+  // 'UTC' is valid for Intl.DateTimeFormat but not in Intl.supportedValuesOf('timeZone')
+  if (tz === 'UTC') return true;
+  const valid = Intl.supportedValuesOf('timeZone');
+  if (!valid.includes(tz)) {
+    throw new RangeError(`Invalid timezone '${tz}'. Must be a valid IANA timezone name (e.g. UTC, America/New_York, Europe/London).`);
+  }
+  return true;
+}

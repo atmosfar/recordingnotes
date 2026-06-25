@@ -52,6 +52,14 @@ class TagManager {
         return false;
     }
 
+    moveTag(fromIndex, toIndex) {
+        if (toIndex < 0 || toIndex >= this.tags.length) return false;
+        const [tag] = this.tags.splice(fromIndex, 1);
+        this.tags.splice(toIndex, 0, tag);
+        this.saveTags();
+        return true;
+    }
+
     updateTagColor(text, color) {
         const tag = this.tags.find(t => t.text === text);
         if (tag) {

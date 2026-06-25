@@ -12,4 +12,7 @@ export const state = {
     draftResetTimeout: null,
     lastManualNoteContent: null,
     clientRunStart: null,
+    exportTimezone: 'UTC',
+    pendingExportFormat: null,
+    pendingExportFps: null,
 };

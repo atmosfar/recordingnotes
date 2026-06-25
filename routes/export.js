@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getDb } from '../services/db.js';
 import * as sessions from '../services/sessions.js';
 import * as notes from '../services/notes.js';
-import { getExportTimezone } from '../middleware/config-accessors.js';
+import { getExportTimezone, validateTimezone } from '../middleware/config-accessors.js';
 
 const router = Router();
 
@@ -120,7 +120,26 @@ router.get('/:id/export', (req, res) => {
     let contentType = 'text/csv';
     let extension = 'csv';
 
-    // Helper: convert timestamp_ms to seconds-since-midnight in the configured export timezone
+    // Resolve export timezone: query param overrides server config
+    // - 'local' means use the client timezone passed via clientTimezone param
+    // - an IANA timezone name uses that directly
+    // - absent/empty falls back to server config (RECNOTES_EXPORT_TIMEZONE)
+    const serverTimezone = getExportTimezone();
+    const requestedTimezone = req.query.timezone;
+    let exportTimezone;
+    if (requestedTimezone === 'local') {
+      exportTimezone = req.query.clientTimezone || serverTimezone;
+    } else {
+      exportTimezone = requestedTimezone || serverTimezone;
+    }
+    // Validate the resolved timezone
+    try {
+      validateTimezone(exportTimezone);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // Helper: convert timestamp_ms to seconds-since-midnight in the resolved export timezone
     function timestampToSeconds(note) {
       const ts = note.timestamp_ms;
       if (session.timestamp_mode === 'timer') {
@@ -131,7 +150,6 @@ router.get('/:id/export', (req, res) => {
         const sessionStartMs = session.started_at ? new Date(session.started_at).getTime() : 0;
         return (ts - sessionStartMs) / 1000;
       } else {
-        const exportTimezone = getExportTimezone();
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: exportTimezone,
           hour: 'numeric', hour12: false,

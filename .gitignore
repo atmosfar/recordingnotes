@@ -17,7 +17,6 @@ build/
 *.db-journal
 
 # Dev/test files
-test/
 scripts/
 
 # Package artifacts

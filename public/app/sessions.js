@@ -12,14 +12,20 @@ export function renderRecentSessions(sessions) {
     const welcomeMsg = document.getElementById('welcome-message');
     if (!container) return;
 
-    // Hide recent sessions list, button, and welcome when a session is selected
+    // Hide recent sessions list, button, welcome, and footer when a session is selected
     if (state.currentSessionId) {
         container.classList.add('hidden');
         if (emptyMsg) emptyMsg.classList.add('hidden');
         if (newSessionBtn) newSessionBtn.classList.add('hidden');
         if (welcomeMsg) welcomeMsg.classList.add('hidden');
+        const footer = document.getElementById('page-footer');
+        if (footer) footer.classList.add('hidden');
         return;
     }
+
+    // Show footer when no session is active
+    const footer = document.getElementById('page-footer');
+    if (footer) footer.classList.remove('hidden');
 
     // Never show the welcome message in guest mode
     if (window.isGuestMode) {
@@ -87,7 +93,9 @@ export function renderRecentSessions(sessions) {
         // Time (left)
         const timeSpan = document.createElement('span');
         timeSpan.className = 'recent-session-time';
-        const createdDate = new Date(session.created_at);
+        // created_at is stored as UTC on the server, parse it as such
+        const createdUTC = session.created_at.replace(' ', 'T') + 'Z';
+        const createdDate = new Date(createdUTC);
         const now = new Date();
         const isToday = createdDate.toDateString() === now.toDateString();
         if (isToday) {

@@ -17,8 +17,10 @@ import {
     toggleShareLinkModal,
     toggleNewSessionModal,
     toggleConnectionLostModal,
+    toggleTimezoneModal,
     renderModalTags,
     exportFn,
+    startExport,
     themeToggleFn
 } from './ui.js';
 
@@ -51,6 +53,7 @@ export function bindDomEvents() {
             toggleShareLinkModal(false);
             toggleNewSessionModal(false);
             toggleConnectionLostModal(false);
+            toggleTimezoneModal(false);
         };
     }
 
@@ -85,6 +88,7 @@ export function bindDomEvents() {
         toggleShareLinkModal(false);
         toggleNewSessionModal(false);
         toggleConnectionLostModal(false);
+        toggleTimezoneModal(false);
         toggleOverflow(false);
         toggleExportMenu(false);
         toggleColorPicker(false);
@@ -246,12 +250,12 @@ export function bindDomEvents() {
     // Export menu items (in overflow menu)
     const menuExportReaper = document.getElementById('menu-export-reaper');
     if (menuExportReaper) {
-        menuExportReaper.onclick = () => { exportFn('reaper'); toggleOverflow(false); };
+        menuExportReaper.onclick = () => { startExport('reaper'); toggleOverflow(false); };
     }
 
     const menuExportAudition = document.getElementById('menu-export-audition');
     if (menuExportAudition) {
-        menuExportAudition.onclick = () => { exportFn('audition'); toggleOverflow(false); };
+        menuExportAudition.onclick = () => { startExport('audition'); toggleOverflow(false); };
     }
 
     const menuExportEdl = document.getElementById('menu-export-edl');
@@ -332,7 +336,7 @@ export function bindDomEvents() {
             if (format === 'edl') {
                 toggleFpsModal(true);
             } else {
-                exportFn(format);
+                startExport(format);
             }
             toggleExportMenu(false);
         };
@@ -343,14 +347,37 @@ export function bindDomEvents() {
         btn.onclick = () => {
             const fps = btn.dataset.fps;
             localStorage.setItem('last_edl_fps', fps);
-            exportFn('edl', fps);
             toggleFpsModal(false);
+            startExport('edl', fps);
         };
     });
 
     // Cancel FPS
     const cancelFps = document.getElementById('cancel-fps');
     if (cancelFps) cancelFps.onclick = () => toggleFpsModal(false);
+
+    // Timezone modal buttons
+    const confirmTimezoneBtn = document.getElementById('confirm-timezone-btn');
+    if (confirmTimezoneBtn) {
+        confirmTimezoneBtn.onclick = () => {
+            const selected = document.querySelector('#timezone-modal input[name="export-timezone"]:checked');
+            const timezone = selected ? selected.value : 'server';
+            // Save preference
+            localStorage.setItem('last_export_timezone', timezone);
+            toggleTimezoneModal(false);
+            // Perform the export with the selected timezone
+            exportFn(state.pendingExportFormat, state.pendingExportFps || '', timezone);
+            state.pendingExportFps = null;
+            state.pendingExportFormat = null;
+        };
+    }
+
+    const cancelTimezoneBtn = document.getElementById('cancel-timezone-btn');
+    if (cancelTimezoneBtn) cancelTimezoneBtn.onclick = () => {
+        toggleTimezoneModal(false);
+        state.pendingExportFps = null;
+        state.pendingExportFormat = null;
+    };
 
     // Tags modal buttons
     const menuEditTags = document.getElementById('menu-edit-tags');

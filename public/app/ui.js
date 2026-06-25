@@ -74,6 +74,44 @@ export function toggleFpsModal(open) {
 }
 
 /**
+ * Toggle the timezone selection modal (for clock-mode export).
+ * @param {boolean} open
+ * @param {string} format - export format (reaper/audition/edl)
+ */
+export function toggleTimezoneModal(open, format) {
+    const modal = document.getElementById('timezone-modal');
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
+    if (modal) modal.classList.toggle('open', open);
+    if (backdrop) {
+        backdrop.style.display = open ? 'block' : 'none';
+        backdrop.style.opacity = open ? '1' : '0';
+    }
+
+    if (open) {
+        state.pendingExportFormat = format;
+        // Set timezone labels with actual timezone names
+        const localLabel = document.getElementById('local-timezone-label');
+        const serverLabel = document.getElementById('server-timezone-label');
+        try {
+            const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (localLabel) localLabel.textContent = `Local (${clientTz})`;
+        } catch {
+            if (localLabel) localLabel.textContent = 'Local timezone';
+        }
+        if (serverLabel) serverLabel.textContent = `Server (${state.exportTimezone})`;
+        // Restore last chosen timezone
+        const lastTz = localStorage.getItem('last_export_timezone');
+        const radios = document.querySelectorAll('#timezone-modal input[name="export-timezone"]');
+        if (lastTz) {
+            radios.forEach(r => r.checked = r.value === lastTz);
+        } else {
+            // Default to server timezone
+            radios.forEach(r => r.checked = r.value === 'server');
+        }
+    }
+}
+
+/**
  * Toggle the tags editing modal.
  */
 export function toggleTagsModal(open) {
@@ -158,7 +196,7 @@ export function renderModalTags() {
     if (!list) return;
     list.setAttribute('role', 'list');
     list.innerHTML = '';
-    tagManager.getTags().forEach(tagObj => {
+    tagManager.getTags().forEach((tagObj, index) => {
         const tag = tagObj.text;
         const color = tagObj.color || '';
         const item = document.createElement('div');
@@ -172,6 +210,37 @@ export function renderModalTags() {
             span.style.paddingLeft = '8px';
         }
         item.appendChild(span);
+
+        // Reorder buttons (up/down arrows)
+        const reorderGroup = document.createElement('div');
+        reorderGroup.className = 'tag-reorder-btns';
+
+        const upBtn = document.createElement('button');
+        upBtn.className = 'reorder-btn';
+        upBtn.title = 'Move up';
+        upBtn.setAttribute('aria-label', `Move ${tag} up`);
+        upBtn.textContent = '↑';
+        if (index === 0) upBtn.disabled = true;
+        upBtn.onclick = () => {
+            tagManager.moveTag(index, index - 1);
+            renderModalTags();
+            renderQuickTags();
+        };
+        reorderGroup.appendChild(upBtn);
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'reorder-btn';
+        downBtn.title = 'Move down';
+        downBtn.setAttribute('aria-label', `Move ${tag} down`);
+        downBtn.textContent = '↓';
+        if (index === tagManager.getTags().length - 1) downBtn.disabled = true;
+        downBtn.onclick = () => {
+            tagManager.moveTag(index, index + 1);
+            renderModalTags();
+            renderQuickTags();
+        };
+        reorderGroup.appendChild(downBtn);
+        item.appendChild(reorderGroup);
 
         // Color picker button
         const colorBtn = document.createElement('button');
@@ -243,13 +312,51 @@ export function setTagColor(color) {
 
 /**
  * Trigger export download for the current session.
+ * @param {string} format - export format (reaper/audition/edl)
+ * @param {string} [fps=''] - framerate for EDL
+ * @param {string} [timezone=''] - 'local', 'server', or IANA timezone name
  */
-export function exportFn(format = 'reaper', fps = '') {
+export function exportFn(format = 'reaper', fps = '', timezone = '') {
     if (!state.currentSessionId) return;
     let url = `/api/sessions/${state.currentSessionId}/export?format=${format}`;
     if (fps) url += `&fps=${fps}`;
+    if (timezone === 'local') {
+        url += '&timezone=local';
+        // Pass the client's IANA timezone
+        try {
+            const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            url += `&clientTimezone=${encodeURIComponent(clientTz)}`;
+        } catch {
+            url += '&clientTimezone=UTC';
+        }
+    } else if (timezone === 'server') {
+        url += `&timezone=${encodeURIComponent(state.exportTimezone)}`;
+    } else if (timezone) {
+        url += `&timezone=${encodeURIComponent(timezone)}`;
+    }
     if (window.guestToken) url += `&token=${window.guestToken}`;
     window.location.href = url;
+}
+
+/**
+ * Start the export flow: if clock mode, show timezone modal; otherwise export directly.
+ * @param {string} format - export format
+ * @param {string} [fps=''] - framerate for EDL
+ */
+export function startExport(format, fps = '') {
+    if (!state.currentSessionId) return;
+    const session = state.currentSession;
+    const isClockMode = session && session.timestamp_mode === 'clock';
+
+    if (isClockMode) {
+        // Store fps for later use (EDL flow: FPS modal -> timezone modal)
+        if (fps) state.pendingExportFps = fps;
+        toggleTimezoneModal(true, format);
+    } else {
+        // Timer mode: export directly, no timezone needed
+        exportFn(format, fps);
+        toggleFpsModal(false);
+    }
 }
 
 /**
