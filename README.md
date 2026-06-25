@@ -20,6 +20,9 @@ recordingnotes start
 
 Open `http://localhost:3000` in your browser. `node v24` or higher is required.
 
+### Demo
+A demo version is available at [recordingnotes.onrender.com](https://recordingnotes.onrender.com/). It resets itself after 15 minutes without activity.
+
 ## Features
 
 - **Real-time note-taking** - multiple users can annotate the same session simultaneously
