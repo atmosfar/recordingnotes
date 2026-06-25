@@ -53,3 +53,43 @@
 .tag-btn:active {
     transform: scale(0.95);
 }
+
+/* Modal tag list styles */
+.modal-tag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.5rem;
+}
+
+.modal-tag-item span {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+.tag-color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.tag-color-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+}
+
+.tag-color-btn svg {
+    width: 12px;
+    height: 12px;
+}

@@ -12,6 +12,8 @@ import {
     toggleExportMenu,
     toggleFpsModal,
     toggleTagsModal,
+    toggleTagColorModal,
+    setTagColor,
     toggleShareLinkModal,
     toggleNewSessionModal,
     toggleConnectionLostModal,
@@ -121,7 +123,8 @@ export function bindDomEvents() {
 
         const tagsModal = document.getElementById('tags-modal');
         const menuEditTags = document.getElementById('menu-edit-tags');
-        if (tagsModal && tagsModal.classList.contains('open') && !tagsModal.contains(e.target) && !menuEditTags.contains(e.target)) {
+        const tagColorPicker = document.getElementById('tag-color-picker');
+        if (tagsModal && tagsModal.classList.contains('open') && !tagsModal.contains(e.target) && !menuEditTags.contains(e.target) && !(tagColorPicker && tagColorPicker.classList.contains('open') && tagColorPicker.contains(e.target))) {
             toggleTagsModal(false);
         }
     });
@@ -181,6 +184,16 @@ export function bindDomEvents() {
     // Close sidebar button
     const closeSidebarBtn = document.getElementById('close-sidebar');
     if (closeSidebarBtn) closeSidebarBtn.onclick = closeSidebarFn;
+
+    // Branding header — navigate to root homepage
+    const branding = document.querySelector('.branding');
+    if (branding) {
+        branding.style.cursor = 'pointer';
+        branding.onclick = () => {
+            window.location.hash = '';
+            if (closeSidebarFn) closeSidebarFn();
+        };
+    }
 
     // Manage sessions toggle
     const manageSessionsBtn = document.getElementById('manage-sessions-btn');
@@ -258,7 +271,7 @@ export function bindDomEvents() {
                 toggleOverflow(false);
                 const res = await fetch(`/api/sessions/${state.currentSessionId}/guest-token`, { method: 'POST' });
                 const { token } = await res.json();
-                const guestUrl = `${window.location.origin}/?token=${token}#\/guest\/${token}`;
+                const guestUrl = `${window.location.origin}/#/guest/${token}`;
                 await navigator.clipboard.writeText(guestUrl);
                 toggleShareLinkModal(true, guestUrl);
             } catch (e) {
@@ -350,6 +363,20 @@ export function bindDomEvents() {
 
     const closeTagsModalBtn = document.getElementById('close-tags-modal');
     if (closeTagsModalBtn) closeTagsModalBtn.onclick = () => toggleTagsModal(false);
+
+    // Tag color picker modal
+    const closeTagColorModalBtn = document.getElementById('close-tag-color-modal');
+    if (closeTagColorModalBtn) closeTagColorModalBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleTagColorModal(false);
+    };
+
+    document.querySelectorAll('#tag-color-options .sheet-color-opt').forEach(opt => {
+        opt.onclick = (e) => {
+            e.stopPropagation();
+            setTagColor(opt.dataset.color);
+        };
+    });
 
     // Share link modal
     const closeShareModalBtn = document.getElementById('close-share-modal');

@@ -1,6 +1,13 @@
+const TAG_COLORS = ['', '#ff4d4d', '#2ecc71', '#3498db', '#f1c40f'];
+
 class TagManager {
     constructor() {
-        this.defaultTags = ['x Cut', '! Important', '< Retake', '? Question'];
+        this.defaultTags = [
+            { text: 'x Cut', color: '#ff4d4d' },
+            { text: '! Important', color: '#f1c40f' },
+            { text: '< Retake', color: '#3498db' },
+            { text: '? Question', color: '#2ecc71' },
+        ];
         this.tags = this.loadTags();
     }
 
@@ -8,7 +15,12 @@ class TagManager {
         const stored = localStorage.getItem('quick_tags');
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                // Migrate old string format to new object format
+                if (parsed.length > 0 && typeof parsed[0] === 'string') {
+                    return parsed.map(text => ({ text, color: '' }));
+                }
+                return parsed;
             } catch (e) {
                 return this.defaultTags;
             }
@@ -20,10 +32,10 @@ class TagManager {
         localStorage.setItem('quick_tags', JSON.stringify(this.tags));
     }
 
-    addTag(text) {
+    addTag(text, color = '') {
         const trimmed = text.trim();
-        if (trimmed && !this.tags.includes(trimmed)) {
-            this.tags.push(trimmed);
+        if (trimmed && !this.tags.find(t => t.text === trimmed)) {
+            this.tags.push({ text: trimmed, color });
             this.saveTags();
             return true;
         }
@@ -31,7 +43,7 @@ class TagManager {
     }
 
     removeTag(text) {
-        const index = this.tags.indexOf(text);
+        const index = this.tags.findIndex(t => t.text === text);
         if (index !== -1) {
             this.tags.splice(index, 1);
             this.saveTags();
@@ -40,8 +52,21 @@ class TagManager {
         return false;
     }
 
+    updateTagColor(text, color) {
+        const tag = this.tags.find(t => t.text === text);
+        if (tag) {
+            tag.color = color;
+            this.saveTags();
+        }
+    }
+
     getTags() {
         return this.tags;
+    }
+
+    getTagColor(text) {
+        const tag = this.tags.find(t => t.text === text);
+        return tag ? tag.color : '';
     }
 }
 

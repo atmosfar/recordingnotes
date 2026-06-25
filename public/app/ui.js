@@ -147,6 +147,9 @@ export function toggleConnectionLostModal(open) {
     }
 }
 
+// Track which tag is being colored
+let pendingTagText = null;
+
 /**
  * Render the tags list inside the tags modal.
  */
@@ -155,26 +158,87 @@ export function renderModalTags() {
     if (!list) return;
     list.setAttribute('role', 'list');
     list.innerHTML = '';
-    tagManager.getTags().forEach(tag => {
+    tagManager.getTags().forEach(tagObj => {
+        const tag = tagObj.text;
+        const color = tagObj.color || '';
         const item = document.createElement('div');
         item.className = 'modal-tag-item';
         item.setAttribute('role', 'listitem');
+
         const span = document.createElement('span');
         span.textContent = tag;
+        if (color) {
+            span.style.borderLeft = `3px solid ${color}`;
+            span.style.paddingLeft = '8px';
+        }
         item.appendChild(span);
 
-        const btn = document.createElement('button');
-        btn.className = 'delete-tag-btn';
-        btn.title = 'Delete tag';
-        btn.setAttribute('aria-label', `Delete tag: ${tag}`);
-        btn.textContent = '×';
-        btn.onclick = () => {
+        // Color picker button
+        const colorBtn = document.createElement('button');
+        colorBtn.className = 'tag-color-btn';
+        colorBtn.title = 'Change color';
+        colorBtn.setAttribute('aria-label', `Change color for tag: ${tag}`);
+        if (color) {
+            colorBtn.style.backgroundColor = color;
+        } else {
+            colorBtn.textContent = '×';
+            colorBtn.style.fontSize = '14px';
+            colorBtn.style.lineHeight = '1';
+        }
+        colorBtn.onclick = (e) => {
+            e.stopPropagation();
+            pendingTagText = tag;
+            toggleTagColorModal(true);
+        };
+        item.appendChild(colorBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-tag-btn';
+        deleteBtn.title = 'Delete tag';
+        deleteBtn.setAttribute('aria-label', `Delete tag: ${tag}`);
+        deleteBtn.textContent = '×';
+        deleteBtn.onclick = () => {
             tagManager.removeTag(tag);
             renderModalTags();
             renderQuickTags();
         };
+        item.appendChild(deleteBtn);
         list.appendChild(item);
     });
+}
+
+/**
+ * Toggle the tag color picker modal.
+ */
+export function toggleTagColorModal(open) {
+    const modal = document.getElementById('tag-color-picker');
+    const backdrop = document.getElementById('bottom-sheet-backdrop');
+    if (modal) modal.classList.toggle('open', open);
+    if (backdrop) {
+        backdrop.style.display = open ? 'block' : 'none';
+        backdrop.style.opacity = open ? '1' : '0';
+    }
+    if (open) {
+        // Highlight current color
+        const currentTag = tagManager.getTags().find(t => t.text === pendingTagText);
+        const currentColor = currentTag ? (currentTag.color || '') : '';
+        document.querySelectorAll('#tag-color-options .sheet-color-opt').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.color === currentColor);
+        });
+    }
+}
+
+/**
+ * Set the color for a pending tag.
+ */
+export function setTagColor(color) {
+    if (pendingTagText) {
+        tagManager.updateTagColor(pendingTagText, color);
+        renderModalTags();
+        renderQuickTags();
+    }
+    toggleTagColorModal(false);
+    pendingTagText = null;
 }
 
 /**

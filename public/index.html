@@ -238,6 +238,18 @@
         <button id="close-tags-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>
     </div>
 
+    <div id="tag-color-picker" class="palette-popup" role="dialog" aria-modal="true" aria-label="Select tag color">
+        <h3 style="margin-top: 0; font-size: 1rem;">Tag Color</h3>
+        <div id="tag-color-options" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; padding: 1rem 0;">
+            <div class="sheet-color-opt color-none" data-color="" title="No color" role="button" tabindex="0" aria-label="No color"></div>
+            <div class="sheet-color-opt color-red" data-color="#ff4d4d" title="Red" role="button" tabindex="0" aria-label="Red"></div>
+            <div class="sheet-color-opt color-green" data-color="#2ecc71" title="Green" role="button" tabindex="0" aria-label="Green"></div>
+            <div class="sheet-color-opt color-blue" data-color="#3498db" title="Blue" role="button" tabindex="0" aria-label="Blue"></div>
+            <div class="sheet-color-opt color-yellow" data-color="#f1c40f" title="Yellow" role="button" tabindex="0" aria-label="Yellow"></div>
+        </div>
+        <button id="close-tag-color-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 0.5rem;">Cancel</button>
+    </div>
+
     <div id="timer-warning-modal" class="palette-popup" role="alertdialog" aria-modal="true" aria-label="Timer reset warning" style="display:none;">
         <p id="timer-warning-message" style="margin-top:0; font-size:0.9rem;"></p>
         <button id="timer-warning-ok" class="icon-btn" style="width:100%; border-radius:8px; background:var(--primary-color); color:white; font-size:0.9rem;" aria-label="Dismiss warning">OK</button>

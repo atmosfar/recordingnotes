@@ -377,11 +377,17 @@ export function renderQuickTags() {
     const list = document.getElementById('quick-tags-list');
     if (!list) return;
     list.innerHTML = '';
-    tagManager.getTags().forEach(tag => {
+    tagManager.getTags().forEach(tagObj => {
+        const tag = tagObj.text;
+        const color = tagObj.color || '';
         const btn = document.createElement('button');
         btn.className = 'tag-btn';
         btn.textContent = tag;
         btn.setAttribute('aria-label', `Quick tag: ${tag}`);
+        if (color) {
+            btn.style.borderLeft = `3px solid ${color}`;
+            btn.style.paddingLeft = '8px';
+        }
         btn.onclick = () => {
             // Block note creation if timer mode and timer not running
             if (state.currentSession && state.currentSession.timestamp_mode === 'timer' && (!state.currentSession.started_at || state.currentSession.stopped_at)) {

@@ -19,7 +19,6 @@ build/
 # Dev/test files
 test/
 scripts/
-docs/
 
 # Package artifacts
 pkg/
@@ -34,11 +33,13 @@ package-lock.json
 *.jpg
 *.jpeg
 *.gif
+!docs/images/*.png
 
 # EDL/CSV exports
 *.edl
 *.csv
 
-# Markdown — ignore all except README.md
+# Markdown — ignore all except README.md and docs/*.md
 *.md
 !README.md
+!docs/*.md

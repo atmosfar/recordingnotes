@@ -65,7 +65,7 @@ export function renderRecentSessions(sessions) {
     });
 
     // Limit to 10
-    const recent = sorted.slice(0, 10);
+    const recent = sorted.slice(0, 5);
 
     if (recent.length === 0) {
         container.classList.add('hidden');

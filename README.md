@@ -1,9 +1,10 @@
-
 # Recording Notes
 
-A web application for taking timestamped notes during a podcast, music or video recording, with real-time collaboration. These notes can be imported into your editing software (REAPER, Audition, Resolve) to speed up post-production editing decisions. The service also integrates with SquadCast and Bitfocus Companion to automate management of note-taking sessions.
+A web application for taking edit notes during podcast, music, or video recording, with real-time collaboration. Export notes to REAPER, Audition, or Resolve to speed up post-production. Integrates with [SquadCast](https://squadcast.fm), [Bitfocus Companion](https://companion.bitfocus.io), or your own tools to keep your recording clock in sync with the note timestamps.
 
-## Setup
+![Application overview - main desktop view with sidebar, notes panel, and header](docs/images/desktop-main-ui.png)
+
+## Quick Start
 
 ```bash
 npx recordingnotes start
@@ -16,159 +17,27 @@ npm install -g recordingnotes
 recordingnotes start
 ```
 
-Open `http://localhost:3000` in your browser to start taking notes.
-
-## Configuration
-
-Configure via `~/.recordingnotes/settings.conf` or environment variables:
-
-```bash
-# Server port
-RECNOTES_PORT=3000
-
-# Database (npm native sqlite)
-RECNOTES_DB_PATH=./dev.db
-
-# Authentication (optional — public access when unset)
-RECNOTES_AUTH_USERNAME=admin
-RECNOTES_AUTH_PASSWORD=CHANGE_ME_TO_A_STRONG_PASSWORD
-
-# Session secret (for cookie signing)
-RECNOTES_SESSION_SECRET=your_secret_here
-
-# API token (auto-generated from AUTH credentials if not set)
-RECNOTES_AUTH_API_TOKEN=your_api_token
-```
+Open `http://localhost:3000` in your browser. `node v24` or higher is required.
 
 ## Features
 
-- **Real-time note-taking** - multiple users can annotate the same session simultaneously via WebSocket sync
+- **Real-time note-taking** - multiple users can annotate the same session simultaneously
 - **Timestamps** - supports relative timestamps for automated sessions or time-of-day for manual sessions
 - **Session management** - create, edit, and delete recording sessions
 - **Export** - download notes as timeline markers in formatted CSV (REAPER, Audition) and CMX3600 EDL (Resolve) files
-- **Integrations** - automated session management via SquadCast webhooks and the triggers API
+- **Integrations** - automated session management via webhooks and the triggers API
 - **Guest access** - generate shareable guest links for single-session collaborations (`/?token=xxx`)
 
-## Integrations
+## Documentation
 
-You can automate session creation and the running state of the session timer by sending HTTP POST requests to Recording Notes. Endpoints require token authentication.
-
-### Authentication
-
-All integration requests must include the `RECNOTES_AUTH_API_TOKEN` (set in `settings.conf` or environment variables). If `RECNOTES_AUTH_API_TOKEN` is not explicitly set, it is auto-generated from your `RECNOTES_AUTH_USERNAME` and `RECNOTES_AUTH_PASSWORD`. The token is printed to the console during startup of the server.
-
-### SquadCast
-
-**Endpoint:** `POST /api/webhooks/squadcast/<token>`
-
-Handles recording session events. Set this URL in your [SquadCast developer settings](https://app.squadcast.fm/account/developers).
-
-| Event | Action |
-|---|---|
-| `recording_session.created` | Creates a new session|
-| `participant.joined` | Creates a new session (fallback in case the "created" event was missed) |
-| `recording.started` | Marks session as `active`, sets `started_at`, begins the clock timer in the session |
-| `recording.stopped` | Marks session as `completed`, sets `stopped_at`, stops the clock timer in the session |
-
-Example payload (`recording_session.created`):
-
-```json
-{
-  "name": "recording_session.created",
-  "sessionID": "sq-1234567890",
-  "sessionTitle": "My Podcast Episode 42"
-}
-```
-
-### Triggers API
-
-**Endpoint:** `POST /api/triggers`
-
-Control sessions directly from any HTTP client (Bitfocus Companion, scripts, etc.).
-
-| Action | Body Fields | Description |
-|---|---|---|
-| `create` | `name` (required) | Create a new session |
-| `start` | `id` (required) | Mark an existing session as active |
-| `start` | `instant: true`, `name` (optional) | Create and start a session in one call |
-| `stop` | `id` (required) | Mark an existing session as completed |
-| `add_note` | `id` (required), `text` (required) | Add a timestamped note to an existing session |
-
-Example curl:
-
-```bash
-# Create a session
-curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"create","name":"My Session"}'
-# Successful response
-{"id":1}
-
-# Instant session (create + start in one call)
-curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"start","instant":true,"name":"My Session"}'
-# Successful response
-{"status":"started","id":2}
-
-# Start an existing session (use returned id)
-curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"start","id":1}'
-  
-# Successful response
-{"status":"started","id":"1"}
-
-# Stop the session
-curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"stop","id":1}'
-
-# Successful response
-{"status":"stopped","id":"1"}
-
-# Add a note to the session
-curl -X POST "http://localhost:3000/api/triggers?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"add_note","id":1,"text":"Great point about latency"}'
-
-# Successful response
-{"id":1,"status":"created"}
-```
-
-## Requirements
-
-- Node.js >= 23.9.0 for native `node:sqlite`
-- Best used with a https server + proxy manager, eg [Caddy](https://github.com/caddyserver/caddy)
-
-## Clock Synchronization
-
-Recording Notes uses the server's system clock for timestamps and the client's clock for timer display. If the server and client devices have drifted clocks, timer start/stop times and note timestamps will be inaccurate.
-
-Enable NTP on all devices (server and clients) to keep clocks in sync.
-
-**Debian/Ubuntu:**
-```bash
-sudo apt install systemd-timesyncd
-sudo timedatectl set-ntp true
-```
-If `timedatectl` reports "NTP not supported", fall back to:
-```bash
-sudo apt install ntpdate
-sudo ntpdate -s pool.ntp.org
-```
-
-**macOS:** (enabled by default)
-```bash
-sudo sntp -S pool.ntp.org  # force immediate sync
-```
-
-Verify with `timedatectl status` — look for `System clock synchronized: yes`.
+- **[User Guide](docs/userguide.md)** - sessions, notes, collaboration, export
+- **[Configuration](docs/configuration.md)** - settings, environment variables, requirements, clock sync
+- **[Integrations](docs/integrations.md)** - webhook configuration and triggers API 
 
 ## License
 
 MIT
 
 ## Authorship
-\>90% of code generated by large language models. Proceed with caution!
 
+\>90% of code generated by large language models. Proceed with caution!
