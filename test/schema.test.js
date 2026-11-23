@@ -26,7 +26,7 @@ describe('Database Schema Updates', () => {
     process.env.RECNOTES_DB_PATH = testDbPath;
     
     // Dynamically import initDb so it respects DB_PATH
-    const { initDb, resetDbInstance } = await import(`../db.js?update=${Date.now()}`);
+    const { initDb, resetDbInstance } = await import(`../services/db.js?update=${Date.now()}`);
     resetDbInstance();
     initDb();
 
@@ -42,7 +42,7 @@ describe('Database Schema Updates', () => {
 
   test('should have INTEGER timestamp_ms column in notes table', async () => {
     process.env.RECNOTES_DB_PATH = testDbPath;
-    const { initDb, resetDbInstance } = await import(`../db.js?notes=${Date.now()}`);
+    const { initDb, resetDbInstance } = await import(`../services/db.js?notes=${Date.now()}`);
     resetDbInstance();
     initDb();
 

@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Recording Notes</title>
-    <link rel="stylesheet" href="css/vars.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/sidebar.css">
-    <link rel="stylesheet" href="css/notes.css">
-    <link rel="stylesheet" href="css/buttons.css">
-    <link rel="stylesheet" href="css/overlays.css">
-    <link rel="stylesheet" href="css/quicktags.css">
-    <link rel="stylesheet" href="css/modals.css">
+    <!-- Root-absolute paths: this page is served at both / and /guest/:token -->
+    <link rel="stylesheet" href="/css/vars.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/notes.css">
+    <link rel="stylesheet" href="/css/buttons.css">
+    <link rel="stylesheet" href="/css/overlays.css">
+    <link rel="stylesheet" href="/css/quicktags.css">
+    <link rel="stylesheet" href="/css/modals.css">
     <script>
         (function() {
             if (localStorage.getItem('theme') === 'dark') {
@@ -279,9 +280,19 @@
 
     <div id="share-link-modal" class="palette-popup" role="dialog" aria-modal="true" aria-label="Share guest link">
         <h3 style="margin-top: 0; font-size: 1rem;">Share Guest Link</h3>
-        <p id="share-link-message"></p>
         <div id="qr-code-container" style="display: flex; justify-content: center; padding: 1rem;"></div>
-        <input type="text" id="share-link-url" readonly aria-label="Guest link URL" title="Click to copy">
+        <div class="share-link-row">
+            <input type="text" id="share-link-url" readonly aria-label="Guest link URL">
+            <button id="copy-share-link" class="icon-btn" aria-label="Copy link to clipboard" title="Copy to clipboard">
+                <svg class="icon-copy" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <svg class="icon-check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+        </div>
         <button id="close-share-modal" class="icon-btn secondary-button" style="width: 100%; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem;">Cancel</button>
     </div>
 
@@ -295,7 +306,7 @@
         </button>
     </div>
 
-    <script src="qr-creator.min.js"></script>
-    <script type="module" src="app/index.js"></script>
+    <script src="/qr-creator.min.js"></script>
+    <script type="module" src="/app/index.js"></script>
 </body>
 </html>

@@ -62,6 +62,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Guest share link: validate token, set guest session cookie, serve the app.
+// No redirect — the URL stays /guest/:token and the client detects guest
+// mode from the pathname.
+app.get('/guest/:token', (req, res) => {
+  const db = getDb();
+  const session = sessions.getSessionByGuestToken(db, req.params.token);
+  if (!session) {
+    return res.status(404).send('Invalid or expired guest link');
+  }
+  req.session.guestToken = req.params.token;
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Serve static files (publicly accessible, including from login page)
 app.use(express.static(path.join(__dirname, 'public')));
 // Webhook routes (before auth — they use token auth)

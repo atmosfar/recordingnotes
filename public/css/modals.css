@@ -152,18 +152,6 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     max-width: 90vw;
 }
 
-#share-link-message {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-lg);
-    margin: 0.5rem 0;
-    color: var(--primary-color);
-    background-color: var(--primary-alpha-10);
-    min-height: 1.2em;
-}
-
 #timer-warning-modal {
     bottom: 50%;
     right: 50%;
@@ -172,11 +160,18 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     max-width: 90vw;
 }
 
+.share-link-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
 #share-link-url {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     box-sizing: border-box;
     padding: 0.5rem;
-    margin-top: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background-color: var(--bg-color);
@@ -186,12 +181,34 @@ body.guest-mode #quick-tags-bar { display: none !important; }
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    cursor: pointer;
 }
 
 #share-link-url:focus {
     outline: none;
     border-color: var(--primary-color);
+}
+
+#copy-share-link {
+    flex-shrink: 0;
+    width: 2.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+/* Copy feedback: icon flips to a checkmark, reverts after ~1.5s (see ui.js) */
+#copy-share-link .icon-check { display: none; }
+
+#copy-share-link.copied {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+#copy-share-link.copied .icon-copy { display: none; }
+#copy-share-link.copied .icon-check { display: block; }
+
+#copy-share-link.failed {
+    color: var(--recording-red);
+    border-color: var(--recording-red);
 }
 
 /* Connection Lost Modal */

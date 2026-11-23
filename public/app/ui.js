@@ -128,10 +128,11 @@ export function toggleTagsModal(open) {
 /**
  * Toggle the share link modal.
  */
+let copyFeedbackTimer = null;
+
 export function toggleShareLinkModal(open, url) {
     const modal = document.getElementById('share-link-modal');
     const backdrop = document.getElementById('bottom-sheet-backdrop');
-    const messageEl = document.getElementById('share-link-message');
     const urlInput = document.getElementById('share-link-url');
     const qrContainer = document.getElementById('qr-code-container');
     if (modal) modal.classList.toggle('open', open);
@@ -140,8 +141,9 @@ export function toggleShareLinkModal(open, url) {
         backdrop.style.opacity = open ? '1' : '0';
     }
     if (open && url) {
-        messageEl.textContent = 'Link copied to clipboard!';
         urlInput.value = url;
+        // Reset the copy button state from any previous open
+        resetCopyButton();
         qrContainer.innerHTML = '';
         QrCreator.render({
             text: url,
@@ -152,6 +154,39 @@ export function toggleShareLinkModal(open, url) {
             size: 200
         }, qrContainer);
     }
+}
+
+/**
+ * Copy the guest link to the clipboard (explicit user action only).
+ * Feedback is on the button itself: the icon flips to a checkmark
+ * (or the button turns red on failure) and reverts after ~1.5s.
+ */
+export function copyShareLink() {
+    const urlInput = document.getElementById('share-link-url');
+    const copyBtn = document.getElementById('copy-share-link');
+    if (!urlInput || !urlInput.value) return;
+    navigator.clipboard.writeText(urlInput.value)
+        .then(() => showCopyFeedback(copyBtn, true))
+        .catch(() => showCopyFeedback(copyBtn, false));
+}
+
+function showCopyFeedback(copyBtn, success) {
+    if (!copyBtn) return;
+    clearTimeout(copyFeedbackTimer);
+    copyBtn.classList.toggle('copied', success);
+    copyBtn.classList.toggle('failed', !success);
+    copyBtn.setAttribute('aria-label', success ? 'Copied!' : 'Copy failed');
+    copyBtn.title = success ? 'Copied!' : 'Copy failed — select the text and copy manually';
+    copyFeedbackTimer = setTimeout(() => resetCopyButton(), 1500);
+}
+
+function resetCopyButton() {
+    clearTimeout(copyFeedbackTimer);
+    const copyBtn = document.getElementById('copy-share-link');
+    if (!copyBtn) return;
+    copyBtn.classList.remove('copied', 'failed');
+    copyBtn.setAttribute('aria-label', 'Copy link to clipboard');
+    copyBtn.title = 'Copy to clipboard';
 }
 
 /**

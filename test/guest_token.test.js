@@ -164,4 +164,68 @@ describe('Guest Token API Endpoints', () => {
     assert.strictEqual(res.status, 302);
     assert.ok(res.headers.get('location')?.startsWith('/login'));
   });
+
+  // T66: GET /guest/:token serves index.html and sets guest session cookie
+  test('T66: GET /guest/:token serves index.html for valid token', async () => {
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': authCookie },
+      body: JSON.stringify({ name: 'Guest Path Route Test' })
+    });
+    const { id } = await createRes.json();
+
+    const tokenRes = await fetch(`${baseUrl}/api/sessions/${id}/guest-token`, {
+      method: 'POST',
+      headers: { 'Cookie': authCookie }
+    });
+    const { token } = await tokenRes.json();
+
+    const res = await fetch(`${baseUrl}/guest/${token}`, { redirect: 'manual' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.headers.get('content-type')?.includes('html'));
+    // Guest session cookie must be set for subsequent scoped requests
+    const setCookie = res.headers.get('set-cookie');
+    assert.ok(setCookie && setCookie.includes('connect.sid'));
+  });
+
+  // T67: GET /guest/:invalid-token returns 404
+  test('T67: GET /guest/:token returns 404 for invalid token', async () => {
+    const res = await fetch(`${baseUrl}/guest/not-a-real-token`, { redirect: 'manual' });
+    assert.strictEqual(res.status, 404);
+  });
+
+  // T68: guest cookie from /guest/:token scopes REST access to that session
+  test('T68: guest session cookie scopes API access to the shared session', async () => {
+    // Two sessions; guest token only for the first
+    const createA = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': authCookie },
+      body: JSON.stringify({ name: 'Scope A' })
+    });
+    const { id: idA } = await createA.json();
+    const createB = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': authCookie },
+      body: JSON.stringify({ name: 'Scope B' })
+    });
+    const { id: idB } = await createB.json();
+
+    const tokenRes = await fetch(`${baseUrl}/api/sessions/${idA}/guest-token`, {
+      method: 'POST',
+      headers: { 'Cookie': authCookie }
+    });
+    const { token } = await tokenRes.json();
+
+    // Open the guest link — capture the guest session cookie
+    const guestRes = await fetch(`${baseUrl}/guest/${token}`, { redirect: 'manual' });
+    const guestCookie = guestRes.headers.get('set-cookie').split(';')[0];
+
+    // Can access the shared session
+    const ownRes = await fetch(`${baseUrl}/api/sessions/${idA}`, { headers: { Cookie: guestCookie } });
+    assert.strictEqual(ownRes.status, 200);
+
+    // Cannot access another session
+    const otherRes = await fetch(`${baseUrl}/api/sessions/${idB}`, { headers: { Cookie: guestCookie } });
+    assert.strictEqual(otherRes.status, 403);
+  });
 });

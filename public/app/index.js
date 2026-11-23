@@ -26,12 +26,12 @@ import { bindDomEvents } from './dom.js';
  * Replaces the monolithic `app.js`.
  */
 async function init() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const queryToken = urlParams.get('token');
-    const guestMatch = window.location.hash.match(/#\/guest\/([a-zA-Z0-9-]+)/);
+    // Guest mode is path-based: /guest/:token (validated by the server
+    // route, which issues the guest session cookie).
+    const guestMatch = window.location.pathname.match(/^\/guest\/([a-zA-Z0-9-]+)/);
     const sessionMatch = window.location.hash.match(/#\/session\/(\d+)/);
 
-    const effectiveGuestToken = guestMatch ? guestMatch[1] : queryToken;
+    const effectiveGuestToken = guestMatch ? guestMatch[1] : null;
 
     if (effectiveGuestToken) {
         window.isGuestMode = true;

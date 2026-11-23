@@ -15,6 +15,7 @@ import {
     toggleTagColorModal,
     setTagColor,
     toggleShareLinkModal,
+    copyShareLink,
     toggleNewSessionModal,
     toggleConnectionLostModal,
     toggleTimezoneModal,
@@ -275,8 +276,7 @@ export function bindDomEvents() {
                 toggleOverflow(false);
                 const res = await fetch(`/api/sessions/${state.currentSessionId}/guest-token`, { method: 'POST' });
                 const { token } = await res.json();
-                const guestUrl = `${window.location.origin}/#/guest/${token}`;
-                await navigator.clipboard.writeText(guestUrl);
+                const guestUrl = `${window.location.origin}/guest/${token}`;
                 toggleShareLinkModal(true, guestUrl);
             } catch (e) {
                 console.error('Error sharing guest link:', e);
@@ -441,17 +441,9 @@ export function bindDomEvents() {
         });
     }
 
-    // Share link URL input (click to copy)
-    const shareLinkUrlInput = document.getElementById('share-link-url');
-    if (shareLinkUrlInput) {
-        shareLinkUrlInput.onclick = async () => {
-            try {
-                await navigator.clipboard.writeText(shareLinkUrlInput.value);
-                shareLinkUrlInput.title = 'Copied!';
-                setTimeout(() => { shareLinkUrlInput.title = 'Click to copy'; }, 1500);
-            } catch (_) { /* silent */ }
-        };
-    }
+    // Share link copy button (explicit user action — never auto-copy)
+    const copyShareLinkBtn = document.getElementById('copy-share-link');
+    if (copyShareLinkBtn) copyShareLinkBtn.onclick = copyShareLink;
 
     // Add tag button
     const addTagBtn = document.getElementById('add-tag-btn');
@@ -474,16 +466,10 @@ export function bindDomEvents() {
     themeToggleFn(localStorage.getItem('theme') === 'dark');
 
     // Hash change listener
+    // Guest mode is path-based (/guest/:token) so it can't change on a
+    // hashchange — leaving guest mode is a full page navigation.
     window.addEventListener('hashchange', () => {
-        const guestMatch = window.location.hash.match(/#\/guest\/([a-zA-Z0-9-]+)/);
         const sessionMatch = window.location.hash.match(/#\/session\/(\d+)/);
-
-        // If navigating away from a guest token URL, reset guest mode flags
-        // so WebSocket reconnects send sessionId instead of guestToken.
-        if (!guestMatch && !window.location.search.includes('token=')) {
-            window.isGuestMode = false;
-            window.guestToken = null;
-        }
 
         if (sessionMatch && sessionMatch[1] !== state.currentSessionId?.toString()) {
             selectSession(sessionMatch[1], { renderQuickTags, closeSidebarFn });
